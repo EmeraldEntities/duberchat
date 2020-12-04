@@ -2,8 +2,8 @@ import java.io.*;
 import java.net.*;
 
 /**
- * [ConnectionHandler]
- * Thread for client connection
+ * [ConnectionHandler] Thread for client connection
+ * 
  * @author Mr. Mangat, Paula Yuan
  * @version 0.1
  */
@@ -15,9 +15,9 @@ public class ConnectionHandler implements Runnable {
     private boolean running;
 
     /**
-     * [ConnectionHandler]
-     * Constructor for this connection handler
-     * @param s     Socket, the socket belonging to this client connection
+     * [ConnectionHandler] Constructor for this connection handler
+     * 
+     * @param s Socket, the socket belonging to this client connection
      */
     ConnectionHandler(Socket s) {
         this.client = s; // constructor assigns client to this
@@ -34,15 +34,12 @@ public class ConnectionHandler implements Runnable {
     } // end of constructor
 
     /**
-     * [run]
-     * Is executed on start of thread
+     * [run] Is executed on start of thread
      */
     public void run() {
 
-        //Get a message from the client
+        // Get a message from the client
         String msg = "";
-
-        // Send a message to the client
 
         // Get a message for the client
         while (running) { // loop until a message is received
@@ -50,11 +47,11 @@ public class ConnectionHandler implements Runnable {
                 if (input.ready()) { // check for an incoming message
                     msg = input.readLine(); // get a message from the client
                     System.out.println("Received: " + msg);
-                    output.println(msg); // echo the message back to the client ** This needs changing for multiple clients
+                    output.println(msg); // echo the message back to the client
                     output.flush();
                 }
             } catch (IOException e) {
-                System.out.pintln("Failed to eceive msg from the client");
+                System.out.println("Failed to receive msg from the client");
                 e.printStackTrace();
             }
         }
@@ -67,7 +64,7 @@ public class ConnectionHandler implements Runnable {
         try {
             input.close();
             output.close();
-            client.clos();
+            client.close();
         } catch (Exception e) {
             System.out.println("Failed to close socket");
         }

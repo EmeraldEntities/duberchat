@@ -20,7 +20,7 @@ public class ChatServer {
     static boolean running = true; // controls if the server is accepting clients
     HashMap<Integer, User> users; // maps user ID to user
     HashMap<String, String> textConversions; // For text commands
-    HashMap<Integer, Channel> channels; //channel id to list of all online users in channel
+    HashMap<Integer, Channel> channels; // channel id to list of all online users in channel
     EventHandlerThread eventsThread;
 
     /**
@@ -41,8 +41,8 @@ public class ChatServer {
         Socket client = null; // hold the client connection
 
         try {
-            serverSock = new ServerSocket(5000); // assigns an port to the server
-            serverSock.setSoTimeout(15000); // 15 second timeout
+            serverSock = new ServerSocket(6969); // assigns an port to the server
+            // serverSock.setSoTimeout(15000); // 15 second timeout
             eventsThread = new EventHandlerThread(new EventHandler(channels));
             eventsThread.start();
             while (running) { // this loops to accept multiple clients
@@ -51,7 +51,8 @@ public class ChatServer {
                 // Note: you might want to keep references to all clients if you plan to
                 // broadcast messages
                 // Also: Queues are good tools to buffer incoming/outgoing messages
-                Thread t = new Thread(new ConnectionHandler(client)); // create a thread for the new client and pass in the
+                Thread t = new Thread(new ConnectionHandler(client)); // create a thread for the new client and pass in
+                                                                      // the
                 // socket
                 t.start(); // start the new thread
             }
@@ -69,7 +70,7 @@ public class ChatServer {
 
     // ***** Inner class - thread for client connection
     class ConnectionHandler implements Runnable {
-        private PrintWriter output; // assign printwriter to network stream
+        private ObjectOutputStream output; // assign printwriter to network stream
         private ObjectInputStream input; // Stream for network input
         private Socket client; // keeps track of the client socket
         private boolean running;
@@ -82,19 +83,18 @@ public class ChatServer {
         ConnectionHandler(Socket s) {
             this.client = s; // constructor assigns client to this
             try { // assign all connections to client
-                this.output = new PrintWriter(client.getOutputStream());
+                this.output = new ObjectOutputStream(client.getOutputStream());
                 this.input = new ObjectInputStream(client.getInputStream());
             } catch (IOException e) {
                 e.printStackTrace();
             }
             running = true;
-        } // end of constructor
+        }
 
         /*
          * run executed on start of thread
          */
         public void run() {
-
             // Get a message from the client
             EventObject obj;
 
@@ -117,8 +117,8 @@ public class ChatServer {
             }
 
             // Send a message to the client
-            output.println("We got your message! Goodbye.");
-            output.flush();
+//            output.println("We got your message! Goodbye.");
+//            output.flush();
 
             // close the socket
             try {
@@ -129,21 +129,23 @@ public class ChatServer {
                 System.out.println("Failed to close socket");
             }
         } // end of run()
-   } // end of inner class
+    } // end of inner class
 
     /**
-     * [EventHandler]
-     * Thread target.
+     * [EventHandler] Thread target.
+     * 
      * @author Paula Yuan
      * @version 0.1
      */
     public class EventHandler implements Runnable {
         private ConcurrentLinkedQueue<EventObject> eventQueue;
         private HashMap<Integer, Channel> channels;
+
         /**
-         * [EventHandler]
-         * Constructor for the events handler.
-         * @param channels      HashMap<Integer, Channel>, a map of all the channel ids to a list of all their online users' threads
+         * [EventHandler] Constructor for the events handler.
+         * 
+         * @param channels HashMap<Integer, Channel>, a map of all the channel ids to a
+         *                 list of all their online users' threads
          */
         public EventHandler(HashMap<Integer, Channel> channels) {
             this.channels = channels;
@@ -151,13 +153,13 @@ public class ChatServer {
         }
 
         /**
-         * run
-         * Executed when the thread starts
+         * run Executed when the thread starts
          */
         public void run() {
             while (true) {
                 EventObject event = this.eventQueue.poll();
-                if (event == null) continue;
+                if (event == null)
+                    continue;
                 if (event instanceof ClientStatusUpdateEvent) {
                     System.out.println("status update event");
                 } else if (event instanceof ClientLoginEvent) {
@@ -175,8 +177,8 @@ public class ChatServer {
         }
 
         /**
-         * getEventQueue
-         * Returns the event queue.
+         * getEventQueue Returns the event queue.
+         * 
          * @return ConcurrentLinkedQueue<EventObject> eventQueue, the event queue
          */
         public ConcurrentLinkedQueue<EventObject> getEventQueue() {
@@ -185,10 +187,10 @@ public class ChatServer {
 
     } // end of inner class
 
-
     /**
-     * [EventHandlerThread]
-     * Thread for handling all events for server-client interaction.
+     * [EventHandlerThread] Thread for handling all events for server-client
+     * interaction.
+     * 
      * @author Paula Yuan
      * @version 0.1
      */
@@ -196,9 +198,9 @@ public class ChatServer {
         private EventHandler target;
 
         /**
-         * [EventHandlerThread]
-         * Constructor for a new event handler thread.
-         * @param target        Runnable, the target object
+         * [EventHandlerThread] Constructor for a new event handler thread.
+         * 
+         * @param target Runnable, the target object
          */
         public EventHandlerThread(EventHandler target) {
             super(target);
@@ -206,9 +208,9 @@ public class ChatServer {
         }
 
         /**
-         * [addEvent]
-         * Adds an event to the event queue.
-         * @param event     EventObject, the new event to add.
+         * [addEvent] Adds an event to the event queue.
+         * 
+         * @param event EventObject, the new event to add.
          */
         public void addEvent(EventObject event) {
             this.target.getEventQueue().add(event);

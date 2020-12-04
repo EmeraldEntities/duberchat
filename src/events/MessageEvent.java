@@ -4,17 +4,17 @@ import java.util.EventObject;
 import chatutil.Message;
 
 public abstract class MessageEvent extends EventObject {
-  static final long serialVersionUID = 1L;
+    static final long serialVersionUID = 1L;
 
-  protected Message message;
+    protected Message message;
 
-  public MessageEvent(Object source, Message message) {
-    super(source);
+    public MessageEvent(Object source, Message message) {
+        super(source);
 
-    this.message = message;
-  }
+        this.message = message;
+    }
 
-  public Message getMessage() {
-    return this.message;
-  }
+    public Message getMessage() {
+        return this.message;
+    }
 }

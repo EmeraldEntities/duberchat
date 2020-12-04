@@ -8,13 +8,9 @@ import java.awt.*;
 import javax.swing.*;
 import java.io.*;
 import java.net.*;
+import java.awt.*;
+import javax.swing.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.EventObject;
-import java.util.HashSet;
-
-import chatutil.*;
-import events.*;
 
 class ChatClient {
 
@@ -22,10 +18,9 @@ class ChatClient {
     private JTextField typeField;
     private JTextArea msgArea;
     private JPanel southPanel;
-    private Socket servSocket;
-
-    private ObjectInputStream input;
-    private ObjectOutputStream output;
+    private Socket mySocket; // socket for connection
+    private BufferedReader input; // reader for network stream
+    private PrintWriter output; // printwriter for network output
     private boolean running = true; // thread status via boolean
 
     public static void main(String[] args) {
@@ -40,16 +35,12 @@ class ChatClient {
         sendButton = new JButton("SEND");
         sendButton.addActionListener(new SendButtonListener());
         clearButton = new JButton("QUIT");
-        clearButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                running = false;
-            }
-        });
+        clearButton.addActionListener(new QuitButtonListener());
 
         JLabel errorLabel = new JLabel("");
 
         typeField = new JTextField(10);
+
         msgArea = new JTextArea();
 
         southPanel.add(typeField);
@@ -60,13 +51,15 @@ class ChatClient {
         window.add(BorderLayout.CENTER, msgArea);
         window.add(BorderLayout.SOUTH, southPanel);
 
-        window.setSize(600, 600);
+        window.setSize(400, 400);
         window.setVisible(true);
 
         // call a method that connects to the server
-        // after connecting loop and keep appending[.append()] to the JTextArea
         connect("127.0.0.1", 5000);
+        // after connecting loop and keep appending[.append()] to the JTextArea
+
         readMessagesFromServer();
+
     }
 
     // Attempts to connect to the server and creates the socket and streams
@@ -74,47 +67,49 @@ class ChatClient {
         System.out.println("Attempting to make a connection..");
 
         try {
-            servSocket = new Socket("127.0.0.1", 6969);
+            mySocket = new Socket("127.0.0.1", 5000); // attempt socket connection (local address). This will wait until
+                                                      // a
+                                                      // connection is made
 
-            input = new ObjectInputStream(servSocket.getInputStream());
-            output = new ObjectOutputStream(servSocket.getOutputStream());
+            InputStreamReader stream1 = new InputStreamReader(mySocket.getInputStream()); // Stream for network input
+            input = new BufferedReader(stream1);
+            output = new PrintWriter(mySocket.getOutputStream()); // assign printwriter to network stream
+
         } catch (IOException e) { // connection error occured
-            System.out.println("Connection to Server Failed.");
+            System.out.println("Connection to Server Failed");
             e.printStackTrace();
         }
 
         System.out.println("Connection made.");
-
-        return servSocket;
+        return mySocket;
     }
 
     // Starts a loop waiting for server input and then displays it on the textArea
     public void readMessagesFromServer() {
+
         while (running) { // loop unit a message is received
             try {
-                if (input.available() > 0) { // check for an incoming messge
-                    EventObject event = (EventObject) input.readObject(); // read the message
-                    System.out.println("received a " + event.getClass().toString() + "obj");
-                    // msgArea.append(msg + "\n");
+
+                if (input.ready()) { // check for an incoming messge
+                    String msg;
+                    msg = input.readLine(); // read the message
+                    System.out.println("received: " + msg);
+                    msgArea.append(msg + "\n");
                 }
 
             } catch (IOException e) {
                 System.out.println("Failed to receive msg from the server");
                 e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                System.out.println("A loaded event could not be identified.");
             }
         }
-
         try { // after leaving the main loop we need to close all the sockets
             input.close();
             output.close();
-            servSocket.close();
-
-            System.out.println("Closed socket.");
+            mySocket.close();
         } catch (Exception e) {
-            System.out.println("Failed to close socket.");
+            System.out.println("Failed to close socket");
         }
+
     }
     // ****** Inner Classes for Action Listeners ****
 
@@ -122,17 +117,17 @@ class ChatClient {
     class SendButtonListener implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             // Send a message to the client
-            Channel chn = new Channel("hi", 1, new ArrayList<User>(), new HashSet<User>());
-            Message msg = new Message(typeField.getText(), -1, chn);
-
-            try {
-                output.writeObject(new MessageSentEvent(ChatClient.this, msg));
-                output.flush();
-            } catch (IOException e) {
-                System.out.println("Message not sent.");
-            }
-
+            output.println(typeField.getText());
+            output.flush();
             typeField.setText("");
         }
     }
+
+    // QuitButtonListener - Quit the program
+    class QuitButtonListener implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+            running = false;
+        }
+    }
+
 }
