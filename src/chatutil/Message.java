@@ -7,12 +7,12 @@ public class Message implements Serializable {
 
   private String message;
   private int messageId;
-  private int channelId;
+  private Channel associatedChannel;
 
-  public Message(String message, int messageId, int channelId) {
+  public Message(String message, int messageId, Channel channel) {
     this.message = message;
     this.messageId = messageId;
-    this.channelId = channelId;
+    this.associatedChannel = channel;
   }
 
   public String getMessage() {
@@ -27,15 +27,7 @@ public class Message implements Serializable {
     return this.messageId;
   }
 
-  public void setMessageId(int messageId) {
-    this.messageId = messageId;
-  }
-
-  public int getChannelId() {
-    return this.channelId;
-  }
-
-  public void setChannelId(int channelId) {
-    this.channelId = channelId;
+  public Channel getChannel() {
+    return this.associatedChannel;
   }
 }

@@ -1,23 +1,26 @@
 package events;
 
+import chatutil.Channel;
+import chatutil.Message;
+
 public class ClientRequestMessageEvent extends ClientEvent {
   static final long serialVersionUID = 1L;
 
-  protected int startMsgId;
-  protected int channelId;
+  protected Message startMsg;
+  protected Channel channel;
 
-  public ClientRequestMessageEvent(Object source, int startMsgId, int channelId) {
+  public ClientRequestMessageEvent(Object source, Message startMsg, Channel channel) {
     super(source);
 
-    this.startMsgId = startMsgId;
-    this.channelId = channelId;
+    this.startMsg = startMsg;
+    this.channel = channel;
   }
 
-  public int getStartMsgId() {
-    return this.startMsgId;
+  public Message getStartMsg() {
+    return this.startMsg;
   }
 
-  public int getChannelId() {
-    return this.channelId;
+  public Channel getChannel() {
+    return this.channel;
   }
 }

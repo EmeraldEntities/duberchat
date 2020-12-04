@@ -1,18 +1,19 @@
 package events;
 
+import chatutil.Channel;
 import java.util.EventObject;
 
 public abstract class ChannelEvent extends EventObject {
   static final long serialVersionUID = 1L;
-  protected int channelId;
+  protected Channel associatedChannel;
 
-  public ChannelEvent(Object source, int channelId) {
+  public ChannelEvent(Object source, Channel channel) {
     super(source);
 
-    this.channelId = channelId;
+    this.associatedChannel = channel;
   }
 
-  public int getChannelId() {
-    return this.channelId;
+  public Channel getChannel() {
+    return this.associatedChannel;
   }
 }

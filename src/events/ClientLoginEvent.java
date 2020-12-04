@@ -6,15 +6,13 @@ public class ClientLoginEvent extends ClientEvent {
   protected boolean isNewUser;
   protected String username;
   protected int hashedPassword;
-  protected int recentChannel;
 
-  public ClientLoginEvent(Object source, boolean isNewUser, String username, String password, int recentChannel) {
+  public ClientLoginEvent(Object source, boolean isNewUser, String username, String password) {
     super(source);
 
     this.isNewUser = isNewUser;
     this.username = username;
     this.hashedPassword = password.hashCode();
-    this.recentChannel = recentChannel;
   }
 
   public boolean getIsNewUser() {
@@ -27,9 +25,5 @@ public class ClientLoginEvent extends ClientEvent {
 
   public int getHashedPassword() {
     return this.hashedPassword;
-  }
-
-  public int getRecentChannel() {
-    return this.recentChannel;
   }
 }
