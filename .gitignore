@@ -1,3 +1,5 @@
-src/*.class
+
+src/**/*.class
 *.java~
 *.swp
+.vscode/
