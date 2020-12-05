@@ -15,8 +15,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import events.*;
 import chatutil.*;
 
-import javax.imageio.ImageIO;
-
 public class ChatServer {
     static int numUsers = new File("users").listFiles().length;
     static int numChannels = new File("channels").listFiles().length;
@@ -53,7 +51,8 @@ public class ChatServer {
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
                 System.out.println("Client connected");
-                Thread t = new Thread(new ConnectionHandler(client));
+                ConnectionHandlerThread t = new ConnectionHandlerThread(new ConnectionHandler(client));
+                ChatServer.this.curUsers.put(t.getTarget().user, t);
                 t.start(); // start the new thread
             }
         } catch (Exception e) {
@@ -73,6 +72,7 @@ public class ChatServer {
         private ObjectOutputStream output; // assign printwriter to network stream
         private ObjectInputStream input; // Stream for network input
         private Socket client; // keeps track of the client socket
+        private User user;
         private boolean running;
 
         /*
@@ -82,6 +82,7 @@ public class ChatServer {
          */
         ConnectionHandler(Socket s) {
             this.client = s; // constructor assigns client to this
+            this.user = null;
             try { // assign all connections to client
                 this.output = new ObjectOutputStream(client.getOutputStream());
                 this.input = new ObjectInputStream(client.getInputStream());
@@ -156,8 +157,8 @@ public class ChatServer {
                     writer.write("default.png" + "\n");
                     writer.write(0 + "\n");
                     writer.close();
-                    User newUser = new User(username, numUsers);
-                    output.writeObject(new AuthSucceedEvent(ChatServer.this, newUser, 
+                    this.user = new User(username, numUsers);
+                    output.writeObject(new AuthSucceedEvent(ChatServer.this, this.user, 
                                        new HashMap<Integer, Channel>()));
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -174,14 +175,14 @@ public class ChatServer {
                 reader.readLine();
                 reader.readLine();
                 String pfpPath = reader.readLine().trim();
-                User user = new User(username, userId, pfpPath);
+                this.user = new User(username, userId, pfpPath);
                 int numChannels = Integer.parseInt(reader.readLine().trim());
                 HashMap<Integer, Channel> userChannels = new HashMap<>();
                 for (int i = 0; i < numChannels; i++) {
                     int channelId = Integer.parseInt(reader.readLine().trim());
                     userChannels.put(channelId, ChatServer.this.channels.get(channelId));
                 }
-                output.writeObject(new AuthSucceedEvent(ChatServer.this, user, userChannels));
+                output.writeObject(new AuthSucceedEvent(ChatServer.this, this.user, userChannels));
                 reader.close();
             } catch (FileNotFoundException e) {
                 try {
@@ -195,13 +196,31 @@ public class ChatServer {
         }
     } // end of inner class
 
+    class ConnectionHandlerThread extends Thread {
+        private ConnectionHandler target;
+
+        /**
+         * [ConnectionHandlerThread] 
+         * Constructor for a new connection handler thread.
+         * @param target Runnable, the target object
+         */
+        public ConnectionHandlerThread(ConnectionHandler target) {
+            super(target);
+            this.target = target;
+        }
+
+        public ConnectionHandler getTarget() {
+            return this.target;
+        }
+    }
+
     /**
      * [EventHandler] Thread target.
      * 
      * @author Paula Yuan
      * @version 0.1
      */
-    public class EventHandler implements Runnable {
+    class EventHandler implements Runnable {
         private ConcurrentLinkedQueue<EventObject> eventQueue;
         private HashMap<Integer, Channel> channels;
 
@@ -264,8 +283,8 @@ public class ChatServer {
         private EventHandler target;
 
         /**
-         * [EventHandlerThread] Constructor for a new event handler thread.
-         * 
+         * [EventHandlerThread] 
+         * Constructor for a new event handler thread.
          * @param target Runnable, the target object
          */
         public EventHandlerThread(EventHandler target) {
@@ -274,8 +293,8 @@ public class ChatServer {
         }
 
         /**
-         * [addEvent] Adds an event to the event queue.
-         * 
+         * [addEvent] 
+         * Adds an event to the event queue.
          * @param event EventObject, the new event to add.
          */
         public void addEvent(EventObject event) {
