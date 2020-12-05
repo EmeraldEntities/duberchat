@@ -42,6 +42,10 @@ public class ChatServer {
      * Go Starts the server
      */
     public void go() {
+        curUsers = new HashMap<>();
+        channels = new HashMap<>();
+        textConversions = new HashMap<>();
+
         System.out.println("Waiting for a client connection..");
 
         Socket client = null; // hold the client connection
@@ -57,7 +61,8 @@ public class ChatServer {
                 Thread t = new Thread(new ConnectionHandler(client));
                 t.start(); // start the new thread
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Error accepting connection");
             // close all and quit
             try {
@@ -166,12 +171,18 @@ public class ChatServer {
                     writer.write("default.png" + "\n");
                     writer.write(0 + "\n");
                     writer.close();
+
+                    System.out.println("Made new user.");
                     this.user = new User(username, numUsers);
                     output.writeObject(new AuthSucceedEvent(ChatServer.this, this.user, 
                                        new HashMap<Integer, Channel>()));
+                    output.flush();
+
+                    System.out.println("SYSTEM: Sent auth event.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 return;
             }
 

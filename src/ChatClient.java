@@ -5,97 +5,160 @@
  */
 
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 import java.io.*;
 import java.net.*;
-import java.awt.event.*;
+
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashSet;
+import java.util.Scanner;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.HashMap;
 
 import chatutil.*;
 import events.*;
 
 class ChatClient {
-
-    private JButton sendButton, clearButton;
-    private JTextField typeField;
-    private JTextArea msgArea;
-    private JPanel southPanel;
     private Socket servSocket;
+    User user;
+    HashMap<Integer, Channel> channels;
 
     private ObjectInputStream input;
     private ObjectOutputStream output;
+
     private boolean running = true; // thread status via boolean
 
+    private Scanner console; // TODO: remove, this is temp
+    private ConcurrentLinkedQueue<EventObject> outgoingEvents;
+
     public static void main(String[] args) {
-        new ChatClient().go();
+        new ChatClient().start();
     }
 
-    public void go() {
-        JFrame window = new JFrame("Chat Client");
-        southPanel = new JPanel();
-        southPanel.setLayout(new GridLayout(2, 0));
+    public void start() {
+        // call a method that connects to the server
+        this.outgoingEvents = new ConcurrentLinkedQueue<>();
 
-        sendButton = new JButton("SEND");
-        sendButton.addActionListener(new SendButtonListener());
-        clearButton = new JButton("QUIT");
-        clearButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                running = false;
+        this.initializeConnectionWorker();
+        this.initializeOutgoingEventWorker();
+
+        Scanner console = new Scanner(System.in);
+
+        this.login();
+
+        console.nextLine();
+        console.close();
+        this.closeSafely();
+    }
+
+    private void login() {
+        boolean currentlyLoggingIn = true;
+
+        LoginScreen loginWindow = new LoginScreen(this, outgoingEvents);
+        loginWindow.setVisible(true);
+
+        EventObject authEvent;
+        while (currentlyLoggingIn) {
+            try {
+                if (this.servSocket != null) {
+                    authEvent = (EventObject) input.readObject();
+                    System.out.println("SYSTEM: Auth received.");
+
+                    if (authEvent instanceof AuthSucceedEvent) {
+                        AuthSucceedEvent authSuccess = (AuthSucceedEvent) authEvent;
+
+                        this.user = authSuccess.getUser();
+                        this.channels = authSuccess.getChannels();
+
+                        currentlyLoggingIn = false;
+                        System.out.println("SYSTEM: login succeeded!");
+                    } else {
+                        loginWindow.reload();
+                        System.out.println("SYSTEM: login failed.");
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("SYSTEM: A connection issue occured.");
+            } catch (ClassNotFoundException e) {
+                System.out.println("SYSTEM: An error occured while reading from the server.");
+            }
+        }
+    }
+
+    private void initializeConnectionWorker() {
+        Thread connectorWorker = new Thread(new Runnable() {
+            public synchronized void run() {
+                boolean connected = false;
+                while (!connected) {
+                    connected = connect("127.0.0.1", 6969);
+
+                    if (!connected) {
+                        System.out.println("SYSTEM: Error connecting.");
+
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e2) {
+                            System.out.println("SYSTEM: Error waiting.");
+                        }
+                    }
+                }
+
+                System.out.println("SYSTEM: Connection made.");
             }
         });
 
-        JLabel errorLabel = new JLabel("");
-
-        typeField = new JTextField(10);
-        msgArea = new JTextArea();
-
-        southPanel.add(typeField);
-        southPanel.add(sendButton);
-        southPanel.add(errorLabel);
-        southPanel.add(clearButton);
-
-        window.add(BorderLayout.CENTER, msgArea);
-        window.add(BorderLayout.SOUTH, southPanel);
-
-        window.setSize(600, 600);
-        window.setVisible(true);
-
-        // call a method that connects to the server
-        // after connecting loop and keep appending[.append()] to the JTextArea
-        connect("127.0.0.1", 5000);
-        readMessagesFromServer();
+        connectorWorker.start();
     }
 
-    // Attempts to connect to the server and creates the socket and streams
-    public Socket connect(String ip, int port) {
-        System.out.println("Attempting to make a connection..");
+    private void initializeOutgoingEventWorker() {
+        Thread outgoingEventWorker = new Thread(new Runnable() {
+            public synchronized void run() {
+                while (true) {
+                    // if (outgoingEvents.peek() != null)
+                    // System.out.println("Event present at top of queue!");
+                    if (servSocket != null && outgoingEvents.peek() != null) {
+                        System.out.println("SYSTEM: logged event in queue.");
+                        EventObject event = outgoingEvents.remove();
+                        try {
+                            output.writeObject(event);
+                            output.flush();
+                            System.out.println("SYSTEM: sent event.");
+                        } catch (IOException e) {
+                            System.out.println("SYSTEM: Could not send a " + event.getClass().toString());
+                        }
+                    }
+                }
+            }
+        });
+
+        outgoingEventWorker.start();
+    }
+
+    public boolean connect(String ip, int port) {
+        System.out.println("SYSTEM: Attempting to connect to central servers...");
 
         try {
-            servSocket = new Socket("127.0.0.1", 6969);
+            this.servSocket = new Socket("127.0.0.1", port);
 
             input = new ObjectInputStream(servSocket.getInputStream());
             output = new ObjectOutputStream(servSocket.getOutputStream());
         } catch (IOException e) { // connection error occured
-            System.out.println("Connection to Server Failed.");
-            e.printStackTrace();
+            System.out.println("SYSTEM: Connection to server failed.");
+            return false;
         }
 
-        System.out.println("Connection made.");
-
-        return servSocket;
+        return true;
     }
 
-    // Starts a loop waiting for server input and then displays it on the textArea
     public void readMessagesFromServer() {
-        while (running) { // loop unit a message is received
+        while (running) {
             try {
-                if (input.available() > 0) { // check for an incoming messge
-                    EventObject event = (EventObject) input.readObject(); // read the message
+                if (input.available() > 0) {
+                    EventObject event = (EventObject) input.readObject();
                     System.out.println("received a " + event.getClass().toString() + "obj");
-                    // msgArea.append(msg + "\n");
                 }
 
             } catch (IOException e) {
@@ -106,33 +169,29 @@ class ChatClient {
             }
         }
 
-        try { // after leaving the main loop we need to close all the sockets
-            input.close();
-            output.close();
-            servSocket.close();
-
-            System.out.println("Closed socket.");
-        } catch (Exception e) {
-            System.out.println("Failed to close socket.");
-        }
+        // close the sockets
+        closeSafely();
     }
-    // ****** Inner Classes for Action Listeners ****
 
-    // send - send msg to server (also flush), then clear the JTextField
-    class SendButtonListener implements ActionListener {
-        public void actionPerformed(ActionEvent event) {
-            // Send a message to the client
-            Channel chn = new Channel("hi", 1, new ArrayList<User>(), new HashSet<User>());
-            Message msg = new Message(typeField.getText(), -1, chn);
+    private void closeSafely() {
+        outgoingEvents.offer(new ClientStatusUpdateEvent(this, User.OFFLINE));
 
-            try {
-                output.writeObject(new MessageSentEvent(ChatClient.this, msg));
-                output.flush();
-            } catch (IOException e) {
-                System.out.println("Message not sent.");
+        boolean hasClosed = false;
+        while (!hasClosed) {
+            // Make sure all outgoing events are served
+            if (this.outgoingEvents.peek() == null) {
+                try {
+                    input.close();
+                    output.close();
+                    servSocket.close();
+        
+                    System.out.println("Closed socket.");
+                } catch (Exception e) {
+                    System.out.println("Failed to close socket.");
+                }
+
+                hasClosed = true;
             }
-
-            typeField.setText("");
         }
     }
 }
