@@ -36,8 +36,8 @@ public class ChatServer {
     EventHandlerThread eventsThread;
 
     public ChatServer() {
-        this.numUsers = new File("users").listFiles().length;
-        this.numChannels = new File("channels").listFiles().length;
+        this.numUsers = new File("data/users").listFiles().length;
+        this.numChannels = new File("data/channels").listFiles().length;
     }
 
     /**

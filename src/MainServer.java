@@ -7,6 +7,7 @@ public class MainServer {
      * @param args parameters from command line
      */
     public static void main(String[] args) {
-        new ChatServer().go(); // start the server
+        ChatServer chatServer = new ChatServer();
+        chatServer.go();
     }
 }

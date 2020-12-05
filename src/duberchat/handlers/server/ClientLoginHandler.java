@@ -34,7 +34,7 @@ public class ClientLoginHandler implements Handleable {
   public void handleEvent() {
     String username = event.getUsername();
     int hashedPassword = event.getHashedPassword();
-    File userFile = new File("users/" + username + ".txt");
+    File userFile = new File("data/users/" + username + ".txt");
 
     // Case 1: new user
     if (event.getIsNewUser()) {
@@ -49,8 +49,6 @@ public class ClientLoginHandler implements Handleable {
 
         // Create the new user file.
         FileWriter writer = new FileWriter(userFile);
-        int numUsers = server.getNumUsers();
-        writer.write(numUsers + "\n");
         writer.write(username + "\n");
         writer.write(hashedPassword + "\n");
         writer.write("default.png" + "\n");
@@ -58,7 +56,7 @@ public class ClientLoginHandler implements Handleable {
         writer.close();
 
         System.out.println("Made new user.");
-        this.associatedUser = new User(username, numUsers);
+        this.associatedUser = new User(username);
         output.writeObject(new AuthSucceedEvent(server, this.associatedUser, new HashMap<Integer, Channel>()));
         output.flush();
 
@@ -72,14 +70,13 @@ public class ClientLoginHandler implements Handleable {
 
     // Case 2: already registered user
     try {
-      BufferedReader reader = new BufferedReader(new FileReader(userFile));
-      int userId = Integer.parseInt(reader.readLine().trim());
+        BufferedReader reader = new BufferedReader(new FileReader(userFile));
       // skip over username and password lines
       // assumption is made that file was titled correctly (aka file title = username)
       reader.readLine();
       reader.readLine();
       String pfpPath = reader.readLine().trim();
-      associatedUser = new User(username, userId, pfpPath);
+      associatedUser = new User(username, pfpPath);
       int numChannels = Integer.parseInt(reader.readLine().trim());
       HashMap<Integer, Channel> userChannels = new HashMap<>();
       for (int i = 0; i < numChannels; i++) {

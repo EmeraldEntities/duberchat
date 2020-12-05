@@ -29,7 +29,6 @@ public class User implements Serializable {
     public static final int DND = 3;
     public static final int TOTAL_STATUSES = 4;
 
-    private int userId;
     private String username;
     private int status;
     private transient BufferedImage pfp;
@@ -39,16 +38,13 @@ public class User implements Serializable {
      * an account.
      * 
      * @param username The user's username.
-     * @param userId   The user's id, corresponding to being the nth user registered
-     *                 on the server.
      */
-    public User(String username, int userId) {
-        this.userId = userId;
+    public User(String username) {
         this.username = username;
 
         this.status = ONLINE;
         try {
-            this.pfp = ImageIO.read(new File("images/default.png"));
+            this.pfp = ImageIO.read(new File("data/images/default.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -58,17 +54,14 @@ public class User implements Serializable {
      * Constructor for a user when the profile picture exists.
      * 
      * @param username The user's username.
-     * @param userId   The user's id, corresponding to being the nth user registered
-     *                 on the server.
      * @param pfpPath  The file name of the user's profile picture.
      */
-    public User(String username, int userId, String pfpPath) {
-        this.userId = userId;
+    public User(String username, String pfpPath) {
         this.username = username;
 
         this.status = ONLINE;
         try {
-            this.pfp = ImageIO.read(new File("images/" + pfpPath));
+            this.pfp = ImageIO.read(new File("data/images/" + pfpPath));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -95,16 +88,6 @@ public class User implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         this.pfp = ImageIO.read(in);
-    }
-
-    /**
-     * Retrieves the user's id number, which corresponds to being the nth user in
-     * the server.
-     * 
-     * @return int, the user id.
-     */
-    public int getUserId() {
-        return this.userId;
     }
 
     /**

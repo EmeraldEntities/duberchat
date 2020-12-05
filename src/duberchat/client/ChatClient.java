@@ -50,6 +50,49 @@ public class ChatClient {
 
         console.nextLine();
         console.close();
+
+        // TODO: TEMP
+        Channel newChannel;
+        while (true) {
+            try {
+
+                HashSet<String> usernames = new HashSet<>();
+                usernames.add("EmeraldPhony");
+                outgoingEvents.offer(new ChannelCreateEvent(this, null, usernames));
+                EventObject incoming = (EventObject) input.readObject();
+
+                if (incoming instanceof RequestFailedEvent) {
+                    System.out.println("request failed");
+                } else {
+                    newChannel = ((ChannelCreateEvent) incoming).getChannel();
+                    break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // TODO: TEMP
+        while (true) {
+            String str = console.nextLine();
+            if (str.equals("quit"))
+                break;
+
+            outgoingEvents.offer(new MessageSentEvent(this, new Message(str, this.user.getUsername(), -1, newChannel)));
+
+            try {
+                EventObject response = (EventObject) input.readObject();
+
+                if (response instanceof MessageSentEvent) {
+                    Message msg = ((MessageSentEvent) response).getMessage();
+                    System.out.println("Received message " + msg.getMessage() + " with user " + msg.getSenderUsername()
+                            + " with an id of " + msg.getMessageId());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         this.closeSafely();
     }
 

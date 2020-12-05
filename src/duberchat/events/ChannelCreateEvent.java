@@ -2,6 +2,8 @@ package duberchat.events;
 
 import duberchat.chatutil.Channel;
 
+import java.util.HashSet;
+
 /**
  * A {@code ChannelCreateEvent} is an event that is created when a new channel
  * is created.
@@ -21,13 +23,27 @@ import duberchat.chatutil.Channel;
 public class ChannelCreateEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
 
+    protected HashSet<String> usernames;
+
     /**
      * Constructs a new {@code ChannelCreateEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param source    The source of this event.
+     * @param channel   The associated channel with this event.
+     * @param usernames The usernames of the users to add initially.
      */
-    public ChannelCreateEvent(Object source, Channel channel) {
+    public ChannelCreateEvent(Object source, Channel channel, HashSet<String> usernames) {
         super(source, channel);
+
+        this.usernames = usernames;
+    }
+
+    /**
+     * Retrieves the usernames to add to the channel.
+     * 
+     * @return a {@code HashSet} with the usernames of the users to add.
+     */
+    public HashSet<String> getUsernames() {
+        return this.usernames;
     }
 }

@@ -3,6 +3,7 @@ package duberchat.chatutil;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 
 public class Channel implements Serializable {
     static final long serialVersionUID = 1L;
@@ -45,7 +46,7 @@ public class Channel implements Serializable {
     }
 
     /**
-     * Loads a m ssage cluster and appends it to the end of this channel's messages,
+     * Loads a message cluster and appends it to the end of this channel's messages,
      * if possible.
      * <p>
      * The mess ge cluster must be the same size or less as dictated in the class
