@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
+import duberchat.handlers.server.*;
 import duberchat.chatutil.*;
 
 /**
@@ -24,15 +25,20 @@ import duberchat.chatutil.*;
  * @author Mr. Mangat, Paula Yuan
  */
 public class ChatServer {
-    static int numUsers = new File("users").listFiles().length;
-    static int numChannels = new File("channels").listFiles().length;
+    private int numUsers;
+    private int numChannels;
     ServerSocket serverSock;// server socket for connection
     static boolean running = true; // controls if the server is accepting clients
     // HashMap<Integer, User> users; // maps user ID to user
-    HashMap<String, String> textConversions; // For text commands
-    HashMap<Integer, Channel> channels; // channel id to list of all online users in channel
-    HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
+    private HashMap<String, String> textConversions; // For text commands
+    private HashMap<Integer, Channel> channels; // channel id to list of all online users in channel
+    private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
     EventHandlerThread eventsThread;
+
+    public ChatServer() {
+        this.numUsers = new File("users").listFiles().length;
+        this.numChannels = new File("channels").listFiles().length;
+    }
 
     /**
      * Go Starts the server
@@ -70,6 +76,18 @@ public class ChatServer {
         }
     }
 
+    public int getNumUsers() {
+        return this.numUsers;
+    }
+
+    public int getNumChannels() {
+        return this.numChannels;
+    }
+
+    public HashMap<Integer, Channel> getChannels() {
+        return this.channels;
+    }
+
     // ***** Inner class - thread for client connection
     class ConnectionHandler implements Runnable {
         private ObjectOutputStream output; // assign printwriter to network stream
@@ -101,7 +119,9 @@ public class ChatServer {
         public void run() {
             // Get a message from the client
             EventObject event;
-            // not sure if this is the right place to put this?
+            //not sure if this is the right place to put this?
+            // also, wonder if we'll ever run into an error where we've put the user into the map
+            // but the user isn't actually initialized
             ChatServer.this.curUsers.put(user, this);
 
             // Send a message to the client
@@ -111,8 +131,13 @@ public class ChatServer {
                 try {
                     event = (EventObject) input.readObject(); // get a message from the client
                     System.out.println("Received a message");
+
+                    // ClientLoginEvents are handled separately because there may be no user-thread
+                    // mapping that can inform the handler of what client to output to.
                     if (event instanceof ClientLoginEvent) {
-                        handleLoginEvent((ClientLoginEvent) event);
+                        new ClientLoginHandler((ClientLoginEvent) event, ChatServer.this, output, 
+                                                user).handleEvent();
+                        continue;
                     }
                     eventsThread.addEvent(event);
                 } catch (IOException e) {
@@ -134,84 +159,6 @@ public class ChatServer {
             }
         } // end of run()
 
-        /**
-         * handleLoginEvent takes a client login event and processes it.
-         * <p>
-         * It gets back the appropriate user associated with the event and relays such
-         * information (or a notification of failure) to said client. This event is
-         * handled separately from the rest because it is the sole event where the
-         * appopriate clients to communicate with cannot be determined from user-thread
-         * mapping.
-         * 
-         * @param event The login event that needs to be processed.
-         */
-        private void handleLoginEvent(ClientLoginEvent event) {
-            String username = event.getUsername();
-            int hashedPassword = event.getHashedPassword();
-            File userFile = new File(username + ".txt");
-
-            // Case 1: new user
-            if (event.getIsNewUser()) {
-                boolean created = false;
-                try {
-                    created = userFile.createNewFile();
-                    // If the username is already taken, send auth failed event
-                    if (!created) {
-                        output.writeObject(new AuthFailedEvent(ChatServer.this));
-                        return;
-                    }
-
-                    // Create the new user file.
-                    FileWriter writer = new FileWriter(username + ".txt");
-                    writer.write(numUsers + "\n");
-                    writer.write(username + "\n");
-                    writer.write(hashedPassword + "\n");
-                    writer.write("default.png" + "\n");
-                    writer.write(0 + "\n");
-                    writer.close();
-
-                    System.out.println("Made new user.");
-                    this.user = new User(username, numUsers);
-                    output.writeObject(
-                            new AuthSucceedEvent(ChatServer.this, this.user, new HashMap<Integer, Channel>()));
-                    output.flush();
-
-                    System.out.println("SYSTEM: Sent auth event.");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                return;
-            }
-
-            // Case 2: already registered user
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(userFile));
-                int userId = Integer.parseInt(reader.readLine().trim());
-                // skip over username and password lines
-                // assumption is made that file was titled correctly (aka file title = username)
-                reader.readLine();
-                reader.readLine();
-                String pfpPath = reader.readLine().trim();
-                this.user = new User(username, userId, pfpPath);
-                int numChannels = Integer.parseInt(reader.readLine().trim());
-                HashMap<Integer, Channel> userChannels = new HashMap<>();
-                for (int i = 0; i < numChannels; i++) {
-                    int channelId = Integer.parseInt(reader.readLine().trim());
-                    userChannels.put(channelId, ChatServer.this.channels.get(channelId));
-                }
-                output.writeObject(new AuthSucceedEvent(ChatServer.this, this.user, userChannels));
-                reader.close();
-            } catch (FileNotFoundException e) {
-                try {
-                    output.writeObject(new AuthFailedEvent(ChatServer.this));
-                } catch (IOException e2) {
-                    e2.printStackTrace();
-                }
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-        }
     } // end of inner class
 
     /**
