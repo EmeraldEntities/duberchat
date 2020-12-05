@@ -195,9 +195,9 @@ public class ChatServer {
                     System.out.println("message delete event");
                 } else if (event instanceof MessageEditEvent) {
                     System.out.println("message edit event");
-                } else if (event instanceof ChannelRemoveEvent) {
+                } else if (event instanceof ChannelRemoveMemberEvent) {
                 } else if (event instanceof ChannelCreateEvent) {
-                } else if (event instanceof ChannelAddEvent) {
+                } else if (event instanceof ChannelAddMemberEvent) {
                 } else if (event instanceof ChannelDeleteEvent) {
                 }
             }
