@@ -1,20 +1,23 @@
-/* [ChatServer.java]
- * You will need to modify this so that received messages are broadcast to all clients
- * @author Mangat
- * @ version 1.0a
- */
-
-//imports for network communication
 import java.io.*;
 import java.net.*;
 import java.util.EventObject;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import events.*;
 import chatutil.*;
 
+/**
+ * This is the ChatServer class, representing the server that manages Duber Chat.
+ * <p>
+ * The server constantly looks for and establishes connections with clients.
+ * It also constantly accepts client events, putting them into an event queue,
+ * and later processes them through the dedicated event handler.
+ * <p> 2020-12-03
+ * @since 0.1
+ * @version 0.1
+ * @author Mr. Mangat, Paula Yuan
+ */
 public class ChatServer {
     static int numUsers = new File("users").listFiles().length;
     static int numChannels = new File("channels").listFiles().length;
@@ -119,10 +122,6 @@ public class ChatServer {
                 }
             }
 
-            // Send a message to the client
-//            output.println("We got your message! Goodbye.");
-//            output.flush();
-
             // close the socket
             try {
                 output.close();
@@ -133,7 +132,15 @@ public class ChatServer {
             }
         } // end of run()
 
-
+        /**
+         * handleLoginEvent takes a client login event and processes it.
+         * <p>
+         * It gets back the appropriate user associated with the event and relays such information
+         * (or a notification of failure) to said client. This event is handled separately from the
+         * rest because it is the sole event where the appopriate clients to communicate with cannot
+         * be determined from user-thread mapping.
+         * @param event The login event that needs to be processed.
+         */
         private void handleLoginEvent(ClientLoginEvent event) {
             String username = event.getUsername();
             int hashedPassword = event.getHashedPassword();
@@ -150,6 +157,7 @@ public class ChatServer {
                         return;
                     }
 
+                    // Create the new user file.
                     FileWriter writer = new FileWriter(username + ".txt");
                     writer.write(numUsers + "\n");
                     writer.write(username + "\n");
