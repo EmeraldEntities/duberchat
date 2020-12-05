@@ -11,16 +11,21 @@ import java.util.EventObject;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
 import events.*;
 import chatutil.*;
 
-public class ChatServer {
+import javax.imageio.ImageIO;
 
+public class ChatServer {
+    static int numUsers = new File("users").listFiles().length;
+    static int numChannels = new File("channels").listFiles().length;
     ServerSocket serverSock;// server socket for connection
     static boolean running = true; // controls if the server is accepting clients
-    HashMap<Integer, User> users; // maps user ID to user
+    // HashMap<Integer, User> users; // maps user ID to user
     HashMap<String, String> textConversions; // For text commands
     HashMap<Integer, Channel> channels; // channel id to list of all online users in channel
+    HashMap<User, Thread> curUsers; // map of all the online users to their threads
     EventHandlerThread eventsThread;
 
     /**
@@ -48,12 +53,7 @@ public class ChatServer {
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
                 System.out.println("Client connected");
-                // Note: you might want to keep references to all clients if you plan to
-                // broadcast messages
-                // Also: Queues are good tools to buffer incoming/outgoing messages
-                Thread t = new Thread(new ConnectionHandler(client)); // create a thread for the new client and pass in
-                                                                      // the
-                // socket
+                Thread t = new Thread(new ConnectionHandler(client));
                 t.start(); // start the new thread
             }
         } catch (Exception e) {
@@ -96,17 +96,19 @@ public class ChatServer {
          */
         public void run() {
             // Get a message from the client
-            EventObject obj;
+            EventObject event;
 
             // Send a message to the client
 
             // Get a message from the client
             while (running) { // loop unit a message is received
                 try {
-                    obj = (EventObject) input.readObject(); // get a message from the client
+                    event = (EventObject) input.readObject(); // get a message from the client
                     System.out.println("Received a message");
-                    eventsThread.addEvent(obj);
-                    output.flush();
+                    if (event instanceof ClientLoginEvent) {
+                        handleLoginEvent((ClientLoginEvent) event);
+                    }
+                    eventsThread.addEvent(event);
                 } catch (IOException e) {
                     System.out.println("Failed to receive msg from the client");
                     e.printStackTrace();
@@ -122,13 +124,75 @@ public class ChatServer {
 
             // close the socket
             try {
-                input.close();
                 output.close();
+                input.close();
                 client.close();
             } catch (Exception e) {
                 System.out.println("Failed to close socket");
             }
         } // end of run()
+
+
+        private void handleLoginEvent(ClientLoginEvent event) {
+            String username = event.getUsername();
+            int hashedPassword = event.getHashedPassword();
+            File userFile = new File(username + ".txt");
+
+            // Case 1: new user
+            if (event.getIsNewUser()) {
+                boolean created = false;
+                try {
+                    created = userFile.createNewFile();
+                    // If the username is already taken, send auth failed event
+                    if (!created) {
+                        output.writeObject(new AuthFailedEvent(ChatServer.this));
+                        return;
+                    }
+
+                    FileWriter writer = new FileWriter(username + ".txt");
+                    writer.write(numUsers + "\n");
+                    writer.write(username + "\n");
+                    writer.write(hashedPassword + "\n");
+                    writer.write("default.png" + "\n");
+                    writer.write(0 + "\n");
+                    writer.close();
+                    User newUser = new User(username, numUsers);
+                    output.writeObject(new AuthSucceedEvent(ChatServer.this, newUser, 
+                                       new HashMap<Integer, Channel>()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
+
+            // Case 2: already registered user                                
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(userFile));
+                int userId = Integer.parseInt(reader.readLine().trim());
+                // skip over username and password lines
+                // assumption is made that file was titled correctly (aka file title = username)
+                reader.readLine();
+                reader.readLine();
+                String pfpPath = reader.readLine().trim();
+                User user = new User(username, userId, pfpPath);
+                int numChannels = Integer.parseInt(reader.readLine().trim());
+                HashMap<Integer, Channel> userChannels = new HashMap<>();
+                for (int i = 0; i < numChannels; i++) {
+                    int channelId = Integer.parseInt(reader.readLine().trim());
+                    userChannels.put(channelId, ChatServer.this.channels.get(channelId));
+                }
+                output.writeObject(new AuthSucceedEvent(ChatServer.this, user, userChannels));
+                reader.close();
+            } catch (FileNotFoundException e) {
+                try {
+                    output.writeObject(new AuthFailedEvent(ChatServer.this));
+                } catch (IOException e2) {                           
+                    e2.printStackTrace();
+                } 
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
     } // end of inner class
 
     /**
@@ -162,8 +226,6 @@ public class ChatServer {
                     continue;
                 if (event instanceof ClientStatusUpdateEvent) {
                     System.out.println("status update event");
-                } else if (event instanceof ClientLoginEvent) {
-                    System.out.println("client login event");
                 } else if (event instanceof ClientRequestMessageEvent) {
                     System.out.println("client request message event");
                 } else if (event instanceof MessageSentEvent) {
@@ -172,6 +234,10 @@ public class ChatServer {
                     System.out.println("message delete event");
                 } else if (event instanceof MessageEditEvent) {
                     System.out.println("message edit event");
+                } else if (event instanceof ChannelRemoveEvent) {
+                } else if (event instanceof ChannelCreateEvent) {
+                } else if (event instanceof ChannelAddEvent) {
+                } else if (event instanceof ChannelDeleteEvent) {
                 }
             }
         }
@@ -188,7 +254,7 @@ public class ChatServer {
     } // end of inner class
 
     /**
-     * [EventHandlerThread] Thread for handling all events for server-client
+     * EventHandlerThread Thread for handling all events for server-client
      * interaction.
      * 
      * @author Paula Yuan
