@@ -26,7 +26,7 @@ public class ChatServer {
     // HashMap<Integer, User> users; // maps user ID to user
     HashMap<String, String> textConversions; // For text commands
     HashMap<Integer, Channel> channels; // channel id to list of all online users in channel
-    HashMap<User, Thread> curUsers; // map of all the online users to their threads
+    HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
     EventHandlerThread eventsThread;
 
     /**
@@ -49,13 +49,12 @@ public class ChatServer {
         try {
             serverSock = new ServerSocket(6969); // assigns an port to the server
             // serverSock.setSoTimeout(15000); // 15 second timeout
-            eventsThread = new EventHandlerThread(new EventHandler(channels));
+            eventsThread = new EventHandlerThread(new EventHandler());
             eventsThread.start();
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
                 System.out.println("Client connected");
-                ConnectionHandlerThread t = new ConnectionHandlerThread(new ConnectionHandler(client));
-                ChatServer.this.curUsers.put(t.getTarget().user, t);
+                Thread t = new Thread(new ConnectionHandler(client));
                 t.start(); // start the new thread
             }
         } catch (Exception e) {
@@ -101,6 +100,8 @@ public class ChatServer {
         public void run() {
             // Get a message from the client
             EventObject event;
+            //not sure if this is the right place to put this?
+            ChatServer.this.curUsers.put(user, this);
 
             // Send a message to the client
 
@@ -204,24 +205,6 @@ public class ChatServer {
         }
     } // end of inner class
 
-    class ConnectionHandlerThread extends Thread {
-        private ConnectionHandler target;
-
-        /**
-         * [ConnectionHandlerThread] 
-         * Constructor for a new connection handler thread.
-         * @param target Runnable, the target object
-         */
-        public ConnectionHandlerThread(ConnectionHandler target) {
-            super(target);
-            this.target = target;
-        }
-
-        public ConnectionHandler getTarget() {
-            return this.target;
-        }
-    }
-
     /**
      * [EventHandler] Thread target.
      * 
@@ -230,16 +213,11 @@ public class ChatServer {
      */
     class EventHandler implements Runnable {
         private ConcurrentLinkedQueue<EventObject> eventQueue;
-        private HashMap<Integer, Channel> channels;
 
         /**
          * [EventHandler] Constructor for the events handler.
-         * 
-         * @param channels HashMap<Integer, Channel>, a map of all the channel ids to a
-         *                 list of all their online users' threads
          */
-        public EventHandler(HashMap<Integer, Channel> channels) {
-            this.channels = channels;
+        public EventHandler() {
             this.eventQueue = new ConcurrentLinkedQueue<EventObject>();
         }
 
