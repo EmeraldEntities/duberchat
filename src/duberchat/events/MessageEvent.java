@@ -1,6 +1,5 @@
 package duberchat.events;
 
-import java.util.EventObject;
 import duberchat.chatutil.Message;
 
 /**
@@ -19,7 +18,7 @@ import duberchat.chatutil.Message;
  * @author Joseph Wang
  * @see duberchat.chatutil.Message
  */
-public abstract class MessageEvent extends EventObject {
+public abstract class MessageEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
 
     protected Message message;

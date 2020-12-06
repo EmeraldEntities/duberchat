@@ -1,5 +1,7 @@
 package duberchat.events;
 
+import java.util.HashSet;
+
 import duberchat.chatutil.Channel;
 
 /**
@@ -16,10 +18,11 @@ import duberchat.chatutil.Channel;
  * 
  * @since 1.0.0
  * @version 1.0.0
- * @author Joseph Wang
+ * @author Joseph Wang, Paula Yuan
  */
 public class ChannelAddMemberEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
+    protected HashSet<String> usernames;
 
     /**
      * Constructs a new {@code ChannelAddMemberEvent}.
@@ -27,7 +30,8 @@ public class ChannelAddMemberEvent extends ChannelEvent {
      * @param source  The source of this event.
      * @param channel The associated channel with this event.
      */
-    public ChannelAddMemberEvent(Object source, Channel channel) {
+    public ChannelAddMemberEvent(Object source, Channel channel, HashSet<String> usernames) {
         super(source, channel);
+        this.usernames = usernames;
     }
 }

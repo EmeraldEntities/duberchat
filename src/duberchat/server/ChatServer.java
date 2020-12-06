@@ -2,13 +2,15 @@ package duberchat.server;
 
 import java.io.*;
 import java.net.*;
-import java.util.EventObject;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
 import duberchat.handlers.server.*;
 import duberchat.chatutil.*;
+import duberchat.client.ChatClient;
 
 /**
  * This is the ChatServer class, representing the server that manages Duber
@@ -25,28 +27,55 @@ import duberchat.chatutil.*;
  * @author Mr. Mangat, Paula Yuan
  */
 public class ChatServer {
-    private int numUsers;
-    private int numChannels;
     ServerSocket serverSock;// server socket for connection
     static boolean running = true; // controls if the server is accepting clients
-    // HashMap<Integer, User> users; // maps user ID to user
     private HashMap<String, String> textConversions; // For text commands
-    private HashMap<Integer, Channel> channels; // channel id to list of all online users in channel
+    private HashMap<Integer, Channel> channels; // channel id to all channels
     private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
+    private HashMap<String, User> allUsers; // map of all the usernames to their users
     EventHandlerThread eventsThread;
 
     public ChatServer() {
-        this.numUsers = new File("data/users").listFiles().length;
-        this.numChannels = new File("data/channels").listFiles().length;
+        this.curUsers = new HashMap<>();
+        this.channels = new HashMap<>();
+        this.textConversions = new HashMap<>();
+        this.allUsers = new HashMap<>();
     }
 
     /**
      * Go Starts the server
      */
     public void go() {
-        curUsers = new HashMap<>();
-        channels = new HashMap<>();
-        textConversions = new HashMap<>();
+        try {
+            for (File userFile : new File("data/users").listFiles()) {
+                BufferedReader reader = new BufferedReader(new FileReader(userFile));
+                String username = reader.readLine().trim();
+                // skip over password line
+                reader.readLine();
+                String pfpPath = reader.readLine().trim();
+                this.allUsers.put(username, new User(username, pfpPath));
+                reader.close();
+            }
+            for (File channelFile : new File("data/channels").listFiles()) {
+                BufferedReader reader = new BufferedReader(new FileReader(channelFile));
+                int id = Integer.parseInt(reader.readLine().trim());
+                String name = reader.readLine().trim();
+                int numAdmins = Integer.parseInt(reader.readLine().trim());
+                HashSet<User> admins = new HashSet<>();
+                for (int i = 0; i < numAdmins; i++)  {
+                    admins.add(allUsers.get(reader.readLine().trim()));
+                }
+                int numUsers = Integer.parseInt(reader.readLine().trim());
+                ArrayList<User> users = new ArrayList<>();
+                for (int i = 0; i < numUsers; i++) {
+                    users.add(allUsers.get(reader.readLine().trim()));
+                }
+                channels.put(id, new Channel(name, id, users, admins));
+                reader.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         System.out.println("Waiting for a client connection..");
 
@@ -76,23 +105,24 @@ public class ChatServer {
         }
     }
 
-    public int getNumUsers() {
-        return this.numUsers;
-    }
-
-    public int getNumChannels() {
-        return this.numChannels;
-    }
-
     public HashMap<Integer, Channel> getChannels() {
         return this.channels;
     }
 
+    public HashMap<String, User> getAllUsers() {
+        return this.allUsers;
+    }
+
+    public HashMap<User, ConnectionHandler> getCurUsers() {
+        return this.curUsers;
+    }
+
     // ***** Inner class - thread for client connection
-    class ConnectionHandler implements Runnable {
-        private ObjectOutputStream output; // assign printwriter to network stream
-        private ObjectInputStream input; // Stream for network input
-        private Socket client; // keeps track of the client socket
+    public class ConnectionHandler implements Runnable, Serializable {
+        private static final long serialVersionUID = 1L;
+        private transient ObjectOutputStream output; // assign printwriter to network stream
+        private transient ObjectInputStream input; // Stream for network input
+        private transient Socket client; // keeps track of the client socket
         private User user;
         private boolean running;
 
@@ -118,25 +148,23 @@ public class ChatServer {
          */
         public void run() {
             // Get a message from the client
-            EventObject event;
-            //not sure if this is the right place to put this?
-            // also, wonder if we'll ever run into an error where we've put the user into the map
-            // but the user isn't actually initialized
-            ChatServer.this.curUsers.put(user, this);
+            SerializableEvent event;
 
             // Send a message to the client
 
             // Get a message from the client
-            while (running) { // loop unit a message is received
+            while (running) { // loop until a message is received
                 try {
-                    event = (EventObject) input.readObject(); // get a message from the client
+                    event = (SerializableEvent) input.readObject(); // get a message from the client
+                    System.out.println(event);
+                    System.out.println((User) event.getSource());
                     System.out.println("Received a message");
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
                     // mapping that can inform the handler of what client to output to.
                     if (event instanceof ClientLoginEvent) {
-                        new ClientLoginHandler((ClientLoginEvent) event, ChatServer.this, output, 
-                                                user).handleEvent();
+                        handleLogin((ClientLoginEvent) event);
+                        //new ClientLoginHandler(channels, allUsers, user, output).handleEvent(event);
                         continue;
                     }
                     eventsThread.addEvent(event);
@@ -159,6 +187,91 @@ public class ChatServer {
             }
         } // end of run()
 
+        public void handleLogin(ClientLoginEvent event) {
+            String username = event.getUsername();
+            int hashedPassword = event.getHashedPassword();
+            File userFile = new File("data/users/" + username + ".txt");
+
+            // Case 1: new user
+            if (event.getIsNewUser()) {
+                boolean created = false;
+                try {
+                    created = userFile.createNewFile();
+                    // If the username is already taken, send auth failed event
+                    if (!created) {
+                        // TODO: fix null source
+                        output.writeObject(new AuthFailedEvent(null));
+                        output.flush();
+                        return;
+                    }
+
+                    // Create the new user file.
+                    FileWriter writer = new FileWriter(userFile);
+                    writer.write(username + "\n");
+                    writer.write(hashedPassword + "\n");
+                    writer.write("default.png" + "\n");
+                    writer.write(0 + "\n");
+                    writer.close();
+
+                    System.out.println("Made new user.");
+                    user = new User(username);
+                    // TODO: NOTE: NOT THREAD SAFE
+                    ChatServer.this.allUsers.put(username, user);
+                    ChatServer.this.curUsers.put(user, this);
+                    // TODO: fix null source
+                    output.writeObject(
+                            new AuthSucceedEvent(null, user, new HashMap<Integer, Channel>()));
+                    output.flush();
+
+                    System.out.println("SYSTEM: Sent auth event.");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return;
+            }
+
+            // Case 2: already registered user
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(userFile));
+                // skip over username, password, and pfp lines
+                // assumption is made that file was titled correctly (aka file title = username)
+                for (int i = 0; i < 3; i++) {
+                    reader.readLine();
+                }
+                // user should never be null; if it's null, FileNotFoundException
+                // would've been caught
+                user = allUsers.get(username);
+                curUsers.put(user, this);
+                User testUser = new User(user.getUsername());
+                System.out.println("confirm usernames equal " + testUser.getUsername().equals(user.getUsername()));
+                System.out.println("test: " + this + " " + curUsers.get(testUser));
+                int numChannels = Integer.parseInt(reader.readLine().trim());
+                HashMap<Integer, Channel> userChannels = new HashMap<>();
+                for (int i = 0; i < numChannels; i++) {
+                    int channelId = Integer.parseInt(reader.readLine().trim());
+                    userChannels.put(channelId, channels.get(channelId));
+                }
+                // TODO: fix null source
+                output.writeObject(new AuthSucceedEvent(null, user, userChannels));
+                output.flush();
+                reader.close();
+            } catch (FileNotFoundException e) {
+                try {
+                    // TODO: fix null source
+                    output.writeObject(new AuthFailedEvent(null));
+                } catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+
+        public ObjectOutputStream getOutputStream() {
+            return this.output;
+        }
+
     } // end of inner class
 
     /**
@@ -168,13 +281,13 @@ public class ChatServer {
      * @version 0.1
      */
     class EventHandler implements Runnable {
-        private ConcurrentLinkedQueue<EventObject> eventQueue;
+        private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
 
         /**
          * [EventHandler] Constructor for the events handler.
          */
         public EventHandler() {
-            this.eventQueue = new ConcurrentLinkedQueue<EventObject>();
+            this.eventQueue = new ConcurrentLinkedQueue<SerializableEvent>();
         }
 
         /**
@@ -182,7 +295,7 @@ public class ChatServer {
          */
         public void run() {
             while (true) {
-                EventObject event = this.eventQueue.poll();
+                SerializableEvent event = this.eventQueue.poll();
                 if (event == null)
                     continue;
                 if (event instanceof ClientStatusUpdateEvent) {
@@ -197,6 +310,7 @@ public class ChatServer {
                     System.out.println("message edit event");
                 } else if (event instanceof ChannelRemoveMemberEvent) {
                 } else if (event instanceof ChannelCreateEvent) {
+                    new ServerChannelCreateHandler(curUsers, allUsers, channels).handleEvent(event);
                 } else if (event instanceof ChannelAddMemberEvent) {
                 } else if (event instanceof ChannelDeleteEvent) {
                 }
@@ -206,9 +320,9 @@ public class ChatServer {
         /**
          * getEventQueue Returns the event queue.
          * 
-         * @return ConcurrentLinkedQueue<EventObject> eventQueue, the event queue
+         * @return ConcurrentLinkedQueue<SerializableEvent> eventQueue, the event queue
          */
-        public ConcurrentLinkedQueue<EventObject> getEventQueue() {
+        public ConcurrentLinkedQueue<SerializableEvent> getEventQueue() {
             return this.eventQueue;
         }
 
@@ -237,9 +351,9 @@ public class ChatServer {
         /**
          * [addEvent] Adds an event to the event queue.
          * 
-         * @param event EventObject, the new event to add.
+         * @param event SerializableEvent, the new event to add.
          */
-        public void addEvent(EventObject event) {
+        public void addEvent(SerializableEvent event) {
             this.target.getEventQueue().add(event);
         }
     } // end of inner class

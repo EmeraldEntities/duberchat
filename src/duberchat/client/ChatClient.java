@@ -7,7 +7,6 @@ import java.io.*;
 import java.net.*;
 
 import java.util.ArrayList;
-import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -26,7 +25,7 @@ import duberchat.frames.*;
 
 public class ChatClient {
     private Socket servSocket;
-    User user;
+    private User user;
     HashMap<Integer, Channel> channels;
 
     private ObjectInputStream input;
@@ -35,7 +34,7 @@ public class ChatClient {
     private boolean running = true; // thread status via boolean
 
     private Scanner console; // TODO: remove, this is temp
-    private ConcurrentLinkedQueue<EventObject> outgoingEvents;
+    private ConcurrentLinkedQueue<SerializableEvent> outgoingEvents;
 
     public void start() {
         // call a method that connects to the server
@@ -44,12 +43,24 @@ public class ChatClient {
         this.initializeConnectionWorker();
         this.initializeOutgoingEventWorker();
 
+     // try {
+     //     Thread.sleep(3000);
+     // } catch (InterruptedException e1) {
+     //     // TODO Auto-generated catch block
+     //     e1.printStackTrace();
+     // }
+     // try {
+     //     this.user = new User("boop");
+     //     ChannelCreateEvent test = new ChannelCreateEvent(this, null, null);
+     //     output.writeObject(test);
+     // } catch (IOException e) {
+     //     e.printStackTrace();
+     // }
+
         Scanner console = new Scanner(System.in);
 
         this.login();
 
-        console.nextLine();
-        console.close();
 
         // TODO: TEMP
         Channel newChannel;
@@ -58,13 +69,14 @@ public class ChatClient {
 
                 HashSet<String> usernames = new HashSet<>();
                 usernames.add("EmeraldPhony");
-                outgoingEvents.offer(new ChannelCreateEvent(this, null, usernames));
-                EventObject incoming = (EventObject) input.readObject();
+                outgoingEvents.offer(new ChannelCreateEvent(this.user, null, usernames));
+                SerializableEvent incoming = (SerializableEvent) input.readObject();
 
                 if (incoming instanceof RequestFailedEvent) {
                     System.out.println("request failed");
                 } else {
                     newChannel = ((ChannelCreateEvent) incoming).getChannel();
+                    System.out.println("Channel created!");
                     break;
                 }
             } catch (Exception e) {
@@ -81,7 +93,7 @@ public class ChatClient {
             outgoingEvents.offer(new MessageSentEvent(this, new Message(str, this.user.getUsername(), -1, newChannel)));
 
             try {
-                EventObject response = (EventObject) input.readObject();
+                SerializableEvent response = (SerializableEvent) input.readObject();
 
                 if (response instanceof MessageSentEvent) {
                     Message msg = ((MessageSentEvent) response).getMessage();
@@ -93,6 +105,7 @@ public class ChatClient {
             }
         }
 
+        console.close();
         this.closeSafely();
     }
 
@@ -102,11 +115,11 @@ public class ChatClient {
         LoginScreen loginWindow = new LoginScreen(this, outgoingEvents);
         loginWindow.setVisible(true);
 
-        EventObject authEvent;
+        SerializableEvent authEvent;
         while (currentlyLoggingIn) {
             try {
                 if (this.servSocket != null) {
-                    authEvent = (EventObject) input.readObject();
+                    authEvent = (SerializableEvent) input.readObject();
                     System.out.println("SYSTEM: Auth received.");
 
                     if (authEvent instanceof AuthSucceedEvent) {
@@ -161,15 +174,21 @@ public class ChatClient {
                 while (true) {
                     // if (outgoingEvents.peek() != null)
                     // System.out.println("Event present at top of queue!");
-                    if (servSocket != null && outgoingEvents.peek() != null) {
-                        System.out.println("SYSTEM: logged event in queue.");
-                        EventObject event = outgoingEvents.remove();
-                        try {
-                            output.writeObject(event);
-                            output.flush();
-                            System.out.println("SYSTEM: sent event.");
-                        } catch (IOException e) {
-                            System.out.println("SYSTEM: Could not send a " + event.getClass().toString());
+                    synchronized (outgoingEvents) {
+                        if (servSocket != null && outgoingEvents.peek() != null) {
+                            System.out.println("SYSTEM: logged event in queue.");
+                            SerializableEvent event = outgoingEvents.remove();
+                            try {
+                                if (event instanceof ChannelCreateEvent) {
+                                    System.out.println("i swear... " + ((User) event.getSource()));
+                                    System.out.println("username? " + ((User) event.getSource()).getUsername());
+                                }
+                                output.writeObject(event);
+                                output.flush();
+                                System.out.println("SYSTEM: sent event.");
+                            } catch (IOException e) {
+                                System.out.println("SYSTEM: Could not send a " + event.getClass().toString());
+                            }
                         }
                     }
                 }
@@ -199,7 +218,7 @@ public class ChatClient {
         while (running) {
             try {
                 if (input.available() > 0) {
-                    EventObject event = (EventObject) input.readObject();
+                    Event event = (Event) input.readObject();
                     System.out.println("received a " + event.getClass().toString() + "obj");
                 }
 
@@ -236,4 +255,9 @@ public class ChatClient {
             }
         }
     }
+    
+    public User getUser() {
+        return this.user;
+    }
+
 }

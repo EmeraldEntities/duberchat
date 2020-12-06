@@ -1,7 +1,6 @@
 package duberchat.events;
 
 import duberchat.chatutil.Channel;
-import java.util.EventObject;
 
 /**
  * A {@code ChannelEvent} is a generic, abstract event that represents any
@@ -19,7 +18,7 @@ import java.util.EventObject;
  * @author Joseph Wang
  * @see duberchat.chatutil.Channel
  */
-public abstract class ChannelEvent extends EventObject {
+public abstract class ChannelEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
     protected Channel associatedChannel;
 

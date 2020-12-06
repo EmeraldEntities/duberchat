@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import java.util.EventObject;
-
 /**
  * A {@code RequestFailedEvent} is a generic event that represents a failure
  * that cannot be classified as an existing event, or if a small and generic
@@ -20,7 +18,7 @@ import java.util.EventObject;
  * @version 1.0.0
  * @author Joseph Wang
  */
-public class RequestFailedEvent extends EventObject {
+public class RequestFailedEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
 
     /**

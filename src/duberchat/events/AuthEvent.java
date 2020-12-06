@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import java.util.EventObject;
-
 /**
  * An {@code AuthEvent} is a generic, abstract class that represents an
  * authentication event sent by the server.
@@ -17,7 +15,7 @@ import java.util.EventObject;
  * @version 1.0.0
  * @author Joseph Wang
  */
-public abstract class AuthEvent extends EventObject {
+public abstract class AuthEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
 
     /**

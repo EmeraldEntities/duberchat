@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import java.util.EventObject;
-
 /**
  * A {@code ClientEvent} is a generic, abstract event that represents any event
  * that involves modification of the sending client, a generic action the client
@@ -20,7 +18,7 @@ import java.util.EventObject;
  * @version 1.0.0
  * @author Joseph Wang
  */
-public abstract class ClientEvent extends EventObject {
+public abstract class ClientEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
 
     /**

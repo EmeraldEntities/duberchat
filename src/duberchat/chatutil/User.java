@@ -68,6 +68,29 @@ public class User implements Serializable {
     }
 
     /**
+     * Custom equals method because we need to know if the values are equal, not the references.
+     * 
+     * @param user The other user we're checking equality with.
+     * @return boolean, whether the two users are the same (based on username)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } 
+        if (obj == null || !(obj instanceof User)) {
+            return false;
+        }
+        User user = (User) obj;
+        return (this.username.equals(user.getUsername()));
+    }
+
+    @Override
+    public int hashCode() {
+        return this.username.hashCode();
+    }
+
+    /**
      * Custom writeObject method because Images are not serializable.
      * 
      * @param out The output stream writing out this user.
@@ -77,7 +100,7 @@ public class User implements Serializable {
         out.defaultWriteObject();
         ImageIO.write(this.pfp, "png", out);
     }
-
+ 
     /**
      * Custom readObject method because Images are not serializable.
      * 
@@ -89,7 +112,7 @@ public class User implements Serializable {
         in.defaultReadObject();
         this.pfp = ImageIO.read(in);
     }
-
+ 
     /**
      * Retrieves the user's username.
      * 

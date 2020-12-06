@@ -23,9 +23,9 @@ public class LoginScreen extends ReloadableGridbagFrame {
     GridBagConstraints constraints;
 
     ChatClient client;
-    ConcurrentLinkedQueue<EventObject> output;
+    ConcurrentLinkedQueue<SerializableEvent> output;
 
-    public LoginScreen(ChatClient client, ConcurrentLinkedQueue<EventObject> outgoingEvents) {
+    public LoginScreen(ChatClient client, ConcurrentLinkedQueue<SerializableEvent> outgoingEvents) {
         super("DuberChat");
 
         this.client = client;
@@ -98,7 +98,7 @@ public class LoginScreen extends ReloadableGridbagFrame {
 
             boolean isNewUser = newUserCheckbox.isSelected();
 
-            LoginScreen.this.output.offer(new ClientLoginEvent(client, isNewUser, username, password));
+            LoginScreen.this.output.offer(new ClientLoginEvent(client.getUser(), isNewUser, username, password));
             System.out.println("SYSTEM: offered login request.");
         }
     }
