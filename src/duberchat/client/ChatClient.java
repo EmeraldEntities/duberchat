@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -43,20 +44,6 @@ public class ChatClient {
         this.initializeConnectionWorker();
         this.initializeOutgoingEventWorker();
 
-     // try {
-     //     Thread.sleep(3000);
-     // } catch (InterruptedException e1) {
-     //     // TODO Auto-generated catch block
-     //     e1.printStackTrace();
-     // }
-     // try {
-     //     this.user = new User("boop");
-     //     ChannelCreateEvent test = new ChannelCreateEvent(this, null, null);
-     //     output.writeObject(test);
-     // } catch (IOException e) {
-     //     e.printStackTrace();
-     // }
-
         Scanner console = new Scanner(System.in);
 
         this.login();
@@ -90,7 +77,10 @@ public class ChatClient {
             if (str.equals("quit"))
                 break;
 
-            outgoingEvents.offer(new MessageSentEvent(this, new Message(str, this.user.getUsername(), -1, newChannel)));
+            outgoingEvents.offer(new MessageSentEvent(this.user, new Message(str, 
+                                                                             this.user.getUsername(), 
+                                                                             -1, new Date(), 
+                                                                             newChannel)));
 
             try {
                 SerializableEvent response = (SerializableEvent) input.readObject();
