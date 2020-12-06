@@ -84,6 +84,7 @@ public class ServerChannelCreateHandler implements Handleable {
       for (User user : channelUsers) {
         writer.write(user.getUsername() + "\n");
       }
+      writer.close();
       //TODO: fix null source
       output.writeObject(new ChannelCreateEvent(null, newChannel, usersFound));
       output.flush();

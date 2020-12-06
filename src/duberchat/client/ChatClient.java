@@ -179,10 +179,6 @@ public class ChatClient {
                             System.out.println("SYSTEM: logged event in queue.");
                             SerializableEvent event = outgoingEvents.remove();
                             try {
-                                if (event instanceof ChannelCreateEvent) {
-                                    System.out.println("i swear... " + ((User) event.getSource()));
-                                    System.out.println("username? " + ((User) event.getSource()).getUsername());
-                                }
                                 output.writeObject(event);
                                 output.flush();
                                 System.out.println("SYSTEM: sent event.");

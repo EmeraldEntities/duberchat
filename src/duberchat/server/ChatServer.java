@@ -156,8 +156,6 @@ public class ChatServer {
             while (running) { // loop until a message is received
                 try {
                     event = (SerializableEvent) input.readObject(); // get a message from the client
-                    System.out.println(event);
-                    System.out.println((User) event.getSource());
                     System.out.println("Received a message");
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
@@ -243,9 +241,6 @@ public class ChatServer {
                 // would've been caught
                 user = allUsers.get(username);
                 curUsers.put(user, this);
-                User testUser = new User(user.getUsername());
-                System.out.println("confirm usernames equal " + testUser.getUsername().equals(user.getUsername()));
-                System.out.println("test: " + this + " " + curUsers.get(testUser));
                 int numChannels = Integer.parseInt(reader.readLine().trim());
                 HashMap<Integer, Channel> userChannels = new HashMap<>();
                 for (int i = 0; i < numChannels; i++) {
