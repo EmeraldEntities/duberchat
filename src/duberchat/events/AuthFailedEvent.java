@@ -5,7 +5,7 @@ package duberchat.events;
  * an authentication failed error.
  * <p>
  * This should be the class used to indicate a failed in authentication (eg.
- * username/passwords do not match, token is invalid, etc.)
+ * username/passwords do not match, a username was already taken, etc.)
  * 
  * <p>
  * Since <b>2020-12-04</b>.

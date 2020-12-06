@@ -4,12 +4,18 @@ package duberchat.events;
  * <p>
  * The root class from which all event state objects shall be derived.
  * <p>
- * All Events are constructed with a reference to the object, the "source",
- * that is logically deemed to be the object upon which the Event in question
- * initially occurred upon.
- *
+ * All Events are constructed with a reference to the object, the "source", that
+ * is logically deemed to be the object upon which the Event in question
+ * initially occurred upon. As opposed to the generic java EventObject, this event
+ * is fully serializable (including the source), and thus the source is expected to
+ * be serializable, as well as any inheriting subclasses.
+ * <p>
+ * created <b>2020-12-05</b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Paula Yuan
  */
-
 public class SerializableEvent implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -17,34 +23,30 @@ public class SerializableEvent implements java.io.Serializable {
     /**
      * The object on which the Event initially occurred.
      */
-    protected Object  source;
+    protected Object source;
 
     /**
-     * Constructs a prototypical Event.
+     * Constructs a {@code SerializableEvent}.
      *
-     * @param    source    The object on which the Event initially occurred.
-     * @exception  IllegalArgumentException  if source is null.
+     * @param source the object on which the Event initially occurred.
      */
     public SerializableEvent(Object source) {
-   //   if (source == null)
-   //       throw new IllegalArgumentException("null source");
-
         this.source = source;
     }
 
     /**
      * The object on which the Event initially occurred.
      *
-     * @return   The object on which the Event initially occurred.
+     * @return the object on which the Event initially occurred.
      */
     public Object getSource() {
         return source;
     }
 
     /**
-     * Returns a String representation of this EventObject.
+     * Returns a String representation of this SerializableEvent.
      *
-     * @return  A a String representation of this EventObject.
+     * @return a String representation of this SerializableEvent.
      */
     public String toString() {
         return getClass().getName() + "[source=" + source + "]";

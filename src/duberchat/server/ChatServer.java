@@ -157,6 +157,7 @@ public class ChatServer {
                 try {
                     event = (SerializableEvent) input.readObject(); // get a message from the client
                     System.out.println("Received a message");
+                    System.out.println(event);
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
                     // mapping that can inform the handler of what client to output to.
@@ -293,6 +294,7 @@ public class ChatServer {
                 SerializableEvent event = this.eventQueue.poll();
                 if (event == null)
                     continue;
+
                 if (event instanceof ClientStatusUpdateEvent) {
                     System.out.println("status update event");
                 } else if (event instanceof ClientRequestMessageEvent) {
@@ -304,10 +306,13 @@ public class ChatServer {
                 } else if (event instanceof MessageEditEvent) {
                     System.out.println("message edit event");
                 } else if (event instanceof ChannelRemoveMemberEvent) {
+                    System.out.println("channel remove event");
                 } else if (event instanceof ChannelCreateEvent) {
                     new ServerChannelCreateHandler(curUsers, allUsers, channels).handleEvent(event);
                 } else if (event instanceof ChannelAddMemberEvent) {
+                    System.out.println("channel add event");
                 } else if (event instanceof ChannelDeleteEvent) {
+                    System.out.println("channel delete event");
                 }
             }
         }

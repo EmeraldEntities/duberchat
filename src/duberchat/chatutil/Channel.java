@@ -45,6 +45,14 @@ public class Channel implements Serializable {
         this.messageClusters = 0;
     }
 
+    public Channel(String channelName) {
+        this.messages = new ArrayList<>(LOCAL_SAVE_AMT);
+        this.channelName = channelName;
+        this.channelId = -1;
+
+        this.messageClusters = 0;
+    }
+
     /**
      * Loads a message cluster and appends it to the end of this channel's messages,
      * if possible.

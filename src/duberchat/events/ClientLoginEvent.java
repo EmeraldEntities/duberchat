@@ -39,8 +39,8 @@ public class ClientLoginEvent extends ClientEvent {
      * @param isNewUser Whether the client is logging into an existing user or
      *                  creating a new user.
      * @param username  The username to be used.
-     * @param password  The plaintext password to be used. This will be hashed
-     *                  before sending.
+     * @param password  The plaintext password to be used. This will be stored
+     *                  hashed.
      */
     public ClientLoginEvent(Object source, boolean isNewUser, String username, String password) {
         super(source);
