@@ -3,14 +3,15 @@ package duberchat.server;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
+import duberchat.handlers.Handleable;
 import duberchat.handlers.server.*;
 import duberchat.chatutil.*;
-import duberchat.client.ChatClient;
 
 /**
  * This is the ChatServer class, representing the server that manages Duber
@@ -34,12 +35,16 @@ public class ChatServer {
     private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
     private HashMap<String, User> allUsers; // map of all the usernames to their users
     EventHandlerThread eventsThread;
+    private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
 
     public ChatServer() {
         this.curUsers = new HashMap<>();
         this.channels = new HashMap<>();
         this.textConversions = new HashMap<>();
         this.allUsers = new HashMap<>();
+        this.eventHandlers = new HashMap<>();
+        eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(curUsers, allUsers, channels));
+        eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(channels, curUsers));
     }
 
     /**
@@ -62,13 +67,20 @@ public class ChatServer {
                 String name = reader.readLine().trim();
                 int numAdmins = Integer.parseInt(reader.readLine().trim());
                 HashSet<User> admins = new HashSet<>();
-                for (int i = 0; i < numAdmins; i++)  {
+                for (int i = 0; i < numAdmins; i++) {
                     admins.add(allUsers.get(reader.readLine().trim()));
                 }
                 int numUsers = Integer.parseInt(reader.readLine().trim());
                 ArrayList<User> users = new ArrayList<>();
                 for (int i = 0; i < numUsers; i++) {
                     users.add(allUsers.get(reader.readLine().trim()));
+                }
+                Channel newChannel = new Channel(name, id, users, admins);
+                int numMsgs = Integer.parseInt(reader.readLine().trim());
+                for (int i = 0; i < numMsgs; i++) {
+                    String[] messageInfo = reader.readLine().trim().split(" ");
+                    newChannel.addMessage(new Message(messageInfo[3], messageInfo[2], Integer.parseInt(messageInfo[0]),
+                            new Date(Long.parseLong(messageInfo[1])), newChannel));
                 }
                 channels.put(id, new Channel(name, id, users, admins));
                 reader.close();
@@ -163,7 +175,6 @@ public class ChatServer {
                     // mapping that can inform the handler of what client to output to.
                     if (event instanceof ClientLoginEvent) {
                         handleLogin((ClientLoginEvent) event);
-                        //new ClientLoginHandler(channels, allUsers, user, output).handleEvent(event);
                         continue;
                     }
                     eventsThread.addEvent(event);
@@ -198,8 +209,7 @@ public class ChatServer {
                     created = userFile.createNewFile();
                     // If the username is already taken, send auth failed event
                     if (!created) {
-                        // TODO: fix null source
-                        output.writeObject(new AuthFailedEvent(null));
+                        output.writeObject(new AuthFailedEvent(event));
                         output.flush();
                         return;
                     }
@@ -217,9 +227,7 @@ public class ChatServer {
                     // TODO: NOTE: NOT THREAD SAFE
                     ChatServer.this.allUsers.put(username, user);
                     ChatServer.this.curUsers.put(user, this);
-                    // TODO: fix null source
-                    output.writeObject(
-                            new AuthSucceedEvent(null, user, new HashMap<Integer, Channel>()));
+                    output.writeObject(new AuthSucceedEvent(event, user, new HashMap<Integer, Channel>()));
                     output.flush();
 
                     System.out.println("SYSTEM: Sent auth event.");
@@ -248,14 +256,12 @@ public class ChatServer {
                     int channelId = Integer.parseInt(reader.readLine().trim());
                     userChannels.put(channelId, channels.get(channelId));
                 }
-                // TODO: fix null source
-                output.writeObject(new AuthSucceedEvent(null, user, userChannels));
+                output.writeObject(new AuthSucceedEvent(event, user, userChannels));
                 output.flush();
                 reader.close();
             } catch (FileNotFoundException e) {
                 try {
-                    // TODO: fix null source
-                    output.writeObject(new AuthFailedEvent(null));
+                    output.writeObject(new AuthFailedEvent(event));
                 } catch (IOException e2) {
                     e2.printStackTrace();
                 }
@@ -294,26 +300,7 @@ public class ChatServer {
                 SerializableEvent event = this.eventQueue.poll();
                 if (event == null)
                     continue;
-
-                if (event instanceof ClientStatusUpdateEvent) {
-                    System.out.println("status update event");
-                } else if (event instanceof ClientRequestMessageEvent) {
-                    System.out.println("client request message event");
-                } else if (event instanceof MessageSentEvent) {
-                    System.out.println("message sent event");
-                } else if (event instanceof MessageDeleteEvent) {
-                    System.out.println("message delete event");
-                } else if (event instanceof MessageEditEvent) {
-                    System.out.println("message edit event");
-                } else if (event instanceof ChannelRemoveMemberEvent) {
-                    System.out.println("channel remove event");
-                } else if (event instanceof ChannelCreateEvent) {
-                    new ServerChannelCreateHandler(curUsers, allUsers, channels).handleEvent(event);
-                } else if (event instanceof ChannelAddMemberEvent) {
-                    System.out.println("channel add event");
-                } else if (event instanceof ChannelDeleteEvent) {
-                    System.out.println("channel delete event");
-                }
+                ChatServer.this.eventHandlers.get(event.getClass()).handleEvent(event);
             }
         }
 

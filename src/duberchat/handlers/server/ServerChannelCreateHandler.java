@@ -49,8 +49,7 @@ public class ServerChannelCreateHandler implements Handleable {
     channelName.trim();
     if (!foundAUser) {
       try {
-        //TODO: fix null source
-        output.writeObject(new RequestFailedEvent(null));
+        output.writeObject(new RequestFailedEvent(event));
         output.flush();
       } catch (IOException e) {
         e.printStackTrace();
@@ -84,9 +83,9 @@ public class ServerChannelCreateHandler implements Handleable {
       for (User user : channelUsers) {
         writer.write(user.getUsername() + "\n");
       }
+      writer.write(0 + "\n");
       writer.close();
-      //TODO: fix null source
-      output.writeObject(new ChannelCreateEvent(null, newChannel, usersFound));
+      output.writeObject(new ChannelCreateEvent((User) event.getSource(), newChannel, usersFound));
       output.flush();
     } catch (IOException e) {
       e.printStackTrace();
