@@ -6,6 +6,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Date;
 
 import duberchat.events.*;
 import sun.misc.resources.Messages;
@@ -62,7 +63,7 @@ public class MainMenuFrame extends DynamicFrame {
                     return;
                 }
 
-                Message msg = new Message(typeField.getText(), client.getUser().getUsername(), -1,
+                Message msg = new Message(typeField.getText(), client.getUser().getUsername(), -1, new Date(),
                         client.getCurrentChannel());
                 output.offer(new MessageSentEvent(client, msg));
                 typeField.setText("");
