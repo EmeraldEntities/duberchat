@@ -2,9 +2,9 @@ package duberchat.handlers.server;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
@@ -119,6 +119,29 @@ public class ServerChannelCreateHandler implements Handleable {
       }
       msgArr[channelUsers.size() + 6] = "0 \n";
       server.getFileAppendQueue().add(msgArr);
+      
+      // update all the user files with new # of channels they're in and those channels
+      for (User user : channelUsers) {
+        // first find and replace the current # of channels
+        String filePath = "data/users/" + user.getUsername() + ".txt";
+        File userFile = new File(filePath);
+        BufferedReader fileReader = new BufferedReader(new FileReader(userFile));
+        // Skip reading the lines we don't care about
+        for (int i = 0; i < 3; i++) {
+          fileReader.readLine();
+        }
+        int numChannels = Integer.parseInt(fileReader.readLine().trim());
+        fileReader.close();
+        HashMap<String, HashMap<Integer, String>> rewriteMap = new HashMap<>();
+        HashMap<Integer, String> innerMap = new HashMap<>();
+        innerMap.put(4, (numChannels + 1) + "\n");
+        rewriteMap.put(filePath, innerMap);
+        server.getFileRewriteQueue().add(rewriteMap);
+
+        // then, append the new channel id to the end of the user file
+        String[] newMsg = {filePath, id + "\n"};
+        server.getFileAppendQueue().add(newMsg);
+      }
 
       // Output a corresponding event to the client who made the channel
       output.writeObject(new ChannelCreateEvent((User) event.getSource(), newChannel, usersFound));

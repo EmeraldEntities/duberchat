@@ -18,18 +18,30 @@ import duberchat.chatutil.Channel;
  * 
  * @since 1.0.0
  * @version 1.0.0
- * @author Joseph Wang
+ * @author Joseph Wang, Paula Yuan
  */
 public class ChannelRemoveMemberEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
+    private String username;
 
     /**
      * Constructs a new {@code ChannelRemoveMemberEvent}.
      * 
      * @param source  The source of this event.
      * @param channel The associated channel with this event.
+     * @param username  The username of the user to remove.
      */
-    public ChannelRemoveMemberEvent(Object source, Channel channel) {
+    public ChannelRemoveMemberEvent(Object source, Channel channel, String username) {
         super(source, channel);
+        this.username = username;
+    }
+
+    /**
+     * Retrieves the {@code String} username of the user to remove.
+     * 
+     * @returns String, the username of the user to remove.
+     */
+    public String getUsername() {
+        return this.username;
     }
 }

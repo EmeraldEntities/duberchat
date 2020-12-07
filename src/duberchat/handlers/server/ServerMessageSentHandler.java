@@ -3,6 +3,7 @@ package duberchat.handlers.server;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Date;
+import java.util.HashMap;
 
 import duberchat.chatutil.*;
 import duberchat.events.MessageSentEvent;
@@ -56,8 +57,14 @@ public class ServerMessageSentHandler implements Handleable {
         try {
             // Add the new message with the appropriate file path to the file write queue.
             // Messages are formatted like this: id tismeStamp senderUsername msg
-            String[] msgArr = {"data/channels/" + destination.getChannelId() + ".txt",
-                                msgId + " " + timeStamp + " " + senderUsername + " " + 
+            String filePath = "data/channels/" + destination.getChannelId() + ".txt";
+            HashMap<String, HashMap<Integer, String>> rewriteMap = new HashMap<>();
+            HashMap<Integer, String> rewriteInnerMap = new HashMap<>();
+            int lineNum = destination.getUsers().size() + destination.getAdminUsers().size() + 5;
+            rewriteInnerMap.put(lineNum, (serverDestinationChannel.getMessages().size() + 1) + "\n");
+            rewriteMap.put(filePath,  rewriteInnerMap);
+            server.getFileRewriteQueue().add(rewriteMap);
+            String[] msgArr = {filePath, msgId + " " + timeStamp + " " + senderUsername + " " + 
                                 msgString + "\n"};
             server.getFileAppendQueue().add(msgArr);
 
