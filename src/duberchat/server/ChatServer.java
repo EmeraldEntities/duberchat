@@ -34,7 +34,8 @@ public class ChatServer {
     private HashMap<Integer, Channel> channels; // channel id to all channels
     private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
     private HashMap<String, User> allUsers; // map of all the usernames to their users
-    EventHandlerThread eventsThread;
+    private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
+    private ConcurrentLinkedQueue<String[]> fileWriteQueue;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
 
     public ChatServer() {
@@ -43,14 +44,18 @@ public class ChatServer {
         this.textConversions = new HashMap<>();
         this.allUsers = new HashMap<>();
         this.eventHandlers = new HashMap<>();
-        eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(curUsers, allUsers, channels));
-        eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(channels, curUsers));
+        this.eventQueue = new ConcurrentLinkedQueue<>();
+        this.fileWriteQueue = new ConcurrentLinkedQueue<>();
+        eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
+        eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
     }
 
     /**
      * Go Starts the server
      */
     public void go() {
+
+        // load up all users and channels
         try {
             for (File userFile : new File("data/users").listFiles()) {
                 BufferedReader reader = new BufferedReader(new FileReader(userFile));
@@ -95,9 +100,42 @@ public class ChatServer {
 
         try {
             serverSock = new ServerSocket(6969); // assigns an port to the server
-            // serverSock.setSoTimeout(15000); // 15 second timeout
-            eventsThread = new EventHandlerThread(new EventHandler());
+
+            // start new thread to handle events
+            Thread eventsThread = new Thread(new Runnable() {
+                public void run() {
+                    while (true) {
+                        SerializableEvent event = eventQueue.poll();
+                        if (event == null) continue;
+                        eventHandlers.get(event.getClass()).handleEvent(event);
+                    }
+                }
+            });
             eventsThread.start();
+
+            // start new thread to handle file writing
+            Thread fileWriteThread = new Thread(new Runnable() {
+                public void run() {
+                    while (true) {
+                        String[] msgs = fileWriteQueue.poll();
+                        if (msgs == null) continue;
+                        File toWriteTo = new File(msgs[0]);
+                        try {
+                            toWriteTo.createNewFile();
+                            FileWriter writer = new FileWriter(toWriteTo, true);
+                            for (int i = 1; i < msgs.length; i++) {
+                                writer.write(msgs[i]);
+                            }
+                            writer.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }
+            });
+            fileWriteThread.start();
+
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
                 System.out.println("Client connected");
@@ -127,6 +165,10 @@ public class ChatServer {
 
     public HashMap<User, ConnectionHandler> getCurUsers() {
         return this.curUsers;
+    }
+
+    public ConcurrentLinkedQueue<String[]> getFileWriteQueue() {
+        return this.fileWriteQueue;
     }
 
     // ***** Inner class - thread for client connection
@@ -177,7 +219,7 @@ public class ChatServer {
                         handleLogin((ClientLoginEvent) event);
                         continue;
                     }
-                    eventsThread.addEvent(event);
+                    eventQueue.add(event);
                 } catch (IOException e) {
                     System.out.println("Failed to receive msg from the client");
                     e.printStackTrace();
@@ -200,27 +242,22 @@ public class ChatServer {
         public void handleLogin(ClientLoginEvent event) {
             String username = event.getUsername();
             int hashedPassword = event.getHashedPassword();
-            File userFile = new File("data/users/" + username + ".txt");
 
             // Case 1: new user
             if (event.getIsNewUser()) {
                 boolean created = false;
                 try {
-                    created = userFile.createNewFile();
                     // If the username is already taken, send auth failed event
-                    if (!created) {
+                    if (ChatServer.this.allUsers.containsKey(username)) {
                         output.writeObject(new AuthFailedEvent(event));
                         output.flush();
                         return;
                     }
 
-                    // Create the new user file.
-                    FileWriter writer = new FileWriter(userFile);
-                    writer.write(username + "\n");
-                    writer.write(hashedPassword + "\n");
-                    writer.write("default.png" + "\n");
-                    writer.write(0 + "\n");
-                    writer.close();
+                    // Add new user file to file write queue.
+                    String[] msgArr = {"data/users/" + username + ".txt", username + "\n",
+                                       hashedPassword + "\n", "default.png\n", "0\n"};
+                    ChatServer.this.fileWriteQueue.add(msgArr);
 
                     System.out.println("Made new user.");
                     user = new User(username);
@@ -240,6 +277,7 @@ public class ChatServer {
 
             // Case 2: already registered user
             try {
+                File userFile = new File("data/users/" + username + ".txt");
                 BufferedReader reader = new BufferedReader(new FileReader(userFile));
                 // skip over username, password, and pfp lines
                 // assumption is made that file was titled correctly (aka file title = username)
@@ -274,74 +312,5 @@ public class ChatServer {
             return this.output;
         }
 
-    } // end of inner class
-
-    /**
-     * [EventHandler] Thread target.
-     * 
-     * @author Paula Yuan
-     * @version 0.1
-     */
-    class EventHandler implements Runnable {
-        private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
-
-        /**
-         * [EventHandler] Constructor for the events handler.
-         */
-        public EventHandler() {
-            this.eventQueue = new ConcurrentLinkedQueue<SerializableEvent>();
-        }
-
-        /**
-         * run Executed when the thread starts
-         */
-        public void run() {
-            while (true) {
-                SerializableEvent event = this.eventQueue.poll();
-                if (event == null)
-                    continue;
-                ChatServer.this.eventHandlers.get(event.getClass()).handleEvent(event);
-            }
-        }
-
-        /**
-         * getEventQueue Returns the event queue.
-         * 
-         * @return ConcurrentLinkedQueue<SerializableEvent> eventQueue, the event queue
-         */
-        public ConcurrentLinkedQueue<SerializableEvent> getEventQueue() {
-            return this.eventQueue;
-        }
-
-    } // end of inner class
-
-    /**
-     * EventHandlerThread Thread for handling all events for server-client
-     * interaction.
-     * 
-     * @author Paula Yuan
-     * @version 0.1
-     */
-    public class EventHandlerThread extends Thread {
-        private EventHandler target;
-
-        /**
-         * [EventHandlerThread] Constructor for a new event handler thread.
-         * 
-         * @param target Runnable, the target object
-         */
-        public EventHandlerThread(EventHandler target) {
-            super(target);
-            this.target = target;
-        }
-
-        /**
-         * [addEvent] Adds an event to the event queue.
-         * 
-         * @param event SerializableEvent, the new event to add.
-         */
-        public void addEvent(SerializableEvent event) {
-            this.target.getEventQueue().add(event);
-        }
     } // end of inner class
 } // end of Class

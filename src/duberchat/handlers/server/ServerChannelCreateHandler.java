@@ -12,41 +12,33 @@ import duberchat.events.ChannelCreateEvent;
 import duberchat.events.RequestFailedEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
-import duberchat.server.ChatServer.ConnectionHandler;
+import duberchat.server.ChatServer;
 import duberchat.client.ChatClient;
 
 public class ServerChannelCreateHandler implements Handleable {
-  private HashMap<User, ConnectionHandler> onlineUsers;
-  private HashMap<String, User> serverUsers;
-  private HashMap<Integer, Channel> serverChannels;
+  ChatServer server;
 
-  public ServerChannelCreateHandler(HashMap<User, ConnectionHandler> onlineUsers,
-                                    HashMap<String, User> serverUsers, 
-                                    HashMap<Integer, Channel> serverChannels) {
-    this.onlineUsers = onlineUsers;
-    this.serverUsers = serverUsers;
-    this.serverChannels = serverChannels;
+  public ServerChannelCreateHandler(ChatServer server) {
+    this.server = server;
   }
 
   public void handleEvent(SerializableEvent newEvent) {
     ChannelCreateEvent event = (ChannelCreateEvent) newEvent;
-    ObjectOutputStream output = onlineUsers.get((User) event.getSource()).getOutputStream();
+    ObjectOutputStream output = server.getCurUsers().get((User) event.getSource()).getOutputStream();
     HashSet<String> usersFound = new HashSet<>();
     ArrayList<User> channelUsers = new ArrayList<>();
-    String channelName = "";
+    String channelName = event.getChannel().getChannelName();
     boolean foundAUser = false;
     Iterator<String> itr = event.getUsernames().iterator();
     while (itr.hasNext()) {
       String username = itr.next();
-      User user = serverUsers.get(username);
+      User user = server.getAllUsers().get(username);
       if (user != null) {
         foundAUser = true;
         usersFound.add(username);
         channelUsers.add(user);
-        channelName += username + " ";
       }
     }
-    channelName.trim();
     if (!foundAUser) {
       try {
         output.writeObject(new RequestFailedEvent(event));
@@ -60,31 +52,26 @@ public class ServerChannelCreateHandler implements Handleable {
     channelUsers.add(creator);
     HashSet<User> admins = new HashSet<>();
     admins.add(creator);
-    int id = serverChannels.size();
+    int id = server.getChannels().size();
     Channel newChannel = new Channel(channelName, id, channelUsers, admins);
-    serverChannels.put(id, newChannel);
-    File channelFile = new File("data/channels/" + id + ".txt");
+    server.getChannels().put(id, newChannel);
     try {
-      boolean created = channelFile.createNewFile();
-      // If the id is already taken, something has gone extremely wrong.
-      if (!created) {
-        // TODO: should i throw an exception here or somethign?
-        System.out.println("go check that map");
-        return;
-      }
 
-      // Create the new channel file.
-      FileWriter writer = new FileWriter(channelFile);
-      writer.write(id + "\n");
-      writer.write(channelName + "\n");
-      writer.write(1 + "\n");
-      writer.write(creator.getUsername() + "\n");
-      writer.write(channelUsers.size() + "\n");
-      for (User user : channelUsers) {
-        writer.write(user.getUsername() + "\n");
+      // Add the new channel information and the appropriate filepath to the file write queue.
+      String[] msgArr = new String[channelUsers.size() + 7];
+      msgArr[0] = "data/channels/" + id + ".txt";
+      msgArr[1] = id + "\n";
+      msgArr[2] = channelName + "\n";
+      msgArr[3] = "1\n";
+      msgArr[4] = creator.getUsername() + "\n";
+      msgArr[5] = channelUsers.size() + "\n";
+      for (int i = 0; i < channelUsers.size(); i++) {
+        msgArr[6 + i] = channelUsers.get(i).getUsername() + "\n";
       }
-      writer.write(0 + "\n");
-      writer.close();
+      msgArr[channelUsers.size() + 6] = "0 \n";
+      server.getFileWriteQueue().add(msgArr);
+
+      // Output a corresponding event to the client who made the channel
       output.writeObject(new ChannelCreateEvent((User) event.getSource(), newChannel, usersFound));
       output.flush();
     } catch (IOException e) {
