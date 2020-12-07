@@ -33,8 +33,6 @@ public class ServerChannelAddMemberHandler implements Handleable {
         return;
       }
 
-      serverToAddTo.addUser(toAdd);
-
       // Lots of file updates:
       // Update this channel's file to include the new user.
       HashMap<String, HashMap<Integer, String>> fileInfo = new HashMap<>();
@@ -68,8 +66,12 @@ public class ServerChannelAddMemberHandler implements Handleable {
       String[] newMsg = {filePath, toAddTo.getChannelId() + "\n" };
       server.getFileAppendQueue().add(newMsg);
 
+      serverToAddTo.addUser(toAdd);
+      toAddTo.addUser(toAdd);   // technically unnecessary, but added for posterity
+
       // Send back a add member event to every online user in the channel
       for (User member : serverToAddTo.getUsers()) {
+        // skip offline users
         if (!server.getCurUsers().containsKey(member)) continue;
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         output.writeObject(new ChannelAddMemberEvent((User) event.getSource(), serverToAddTo, newUserUsername));

@@ -70,6 +70,7 @@ public class ServerMessageSentHandler implements Handleable {
 
             // Send back a message sent event to every online user in the channel
             for (User member : serverDestinationChannel.getUsers()) {
+                // skip offline users
                 if (!server.getCurUsers().containsKey(member)) continue;
                 ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
                 output.writeObject(new MessageSentEvent((User) event.getSource(), newMessage));

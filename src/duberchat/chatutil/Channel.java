@@ -115,7 +115,7 @@ public class Channel implements Serializable {
     /**
      * Adds a user to this channel's list of users.
      * 
-     * @param user the user to be removed.
+     * @param user the user to be added.
      */
     public void addUser(User user) {
         this.users.add(user);

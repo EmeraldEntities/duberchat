@@ -52,6 +52,7 @@ public class ChatServer {
         eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
         eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
         eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
+        eventHandlers.put(ChannelRemoveMemberEvent.class, new ServerChannelRemoveMemberHandler(this));
     }
 
     /**
