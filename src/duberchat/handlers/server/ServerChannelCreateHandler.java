@@ -95,17 +95,19 @@ public class ServerChannelCreateHandler implements Handleable {
         }
       }
     }
+
     HashSet<User> admins = new HashSet<>();
     admins.add(creator);
     // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
     if (channelUsers.size() == 2) {
       admins.add(channelUsers.get(0));
     }
-    int id = server.getChannels().size();
+    int id = server.getNumChannelsCreated() + 1;
+    server.setNumChannelsCreated(id);
     Channel newChannel = new Channel(channelName, id, channelUsers, admins);
     server.getChannels().put(id, newChannel);
-    try {
 
+    try {
       // Add the new channel information and the appropriate filepath to the file write queue.
       String[] msgArr = new String[channelUsers.size() + 7];
       msgArr[0] = "data/channels/" + id + ".txt";

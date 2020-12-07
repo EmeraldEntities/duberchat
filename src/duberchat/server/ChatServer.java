@@ -33,6 +33,7 @@ public class ChatServer {
     static boolean running = true; // controls if the server is accepting clients
     private HashMap<String, String> textConversions; // For text commands
     private HashMap<Integer, Channel> channels; // channel id to all channels
+    private int numChannelsCreated;
     private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
     private HashMap<String, User> allUsers; // map of all the usernames to their users
     private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
@@ -198,6 +199,14 @@ public class ChatServer {
 
     public HashMap<Integer, Channel> getChannels() {
         return this.channels;
+    }
+
+    public int getNumChannelsCreated() {
+        return this.numChannelsCreated;
+    }
+
+    public void setNumChannelsCreated(int newNum) {
+        this.numChannelsCreated = newNum;
     }
 
     public HashMap<String, User> getAllUsers() {

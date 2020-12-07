@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import java.util.HashSet;
-
 import duberchat.chatutil.Channel;
 
 /**
