@@ -28,7 +28,7 @@ public class ChannelCreateEvent extends ChannelEvent {
      * Constructs a new {@code ChannelCreateEvent}.
      * 
      * @param source    The source of this event.
-     * @param channel   The associated channel with this event.
+     * @param channel   The channel associated with this event.
      * @param usernames The usernames of the users to add initially.
      */
     public ChannelCreateEvent(Object source, Channel channel, HashSet<String> usernames) {

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
@@ -35,7 +36,8 @@ public class ChatServer {
     private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
     private HashMap<String, User> allUsers; // map of all the usernames to their users
     private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
-    private ConcurrentLinkedQueue<String[]> fileWriteQueue;
+    private ConcurrentLinkedQueue<String[]> fileAppendQueue;
+    private ConcurrentLinkedQueue<HashMap<String, HashMap<Integer, String>>> fileRewriteQueue;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
 
     public ChatServer() {
@@ -45,9 +47,11 @@ public class ChatServer {
         this.allUsers = new HashMap<>();
         this.eventHandlers = new HashMap<>();
         this.eventQueue = new ConcurrentLinkedQueue<>();
-        this.fileWriteQueue = new ConcurrentLinkedQueue<>();
+        this.fileAppendQueue = new ConcurrentLinkedQueue<>();
+        this.fileRewriteQueue = new ConcurrentLinkedQueue<>();
         eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
         eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
+        eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
     }
 
     /**
@@ -113,11 +117,13 @@ public class ChatServer {
             });
             eventsThread.start();
 
-            // start new thread to handle file writing
-            Thread fileWriteThread = new Thread(new Runnable() {
+            // Start new thread to handle file appending.
+            // File appending is separated from file find&replace because find&replace involves
+            // reading through (possibly) the whole file and rewriting it all, which is costly.
+            Thread fileAppendThread = new Thread(new Runnable() {
                 public void run() {
                     while (true) {
-                        String[] msgs = fileWriteQueue.poll();
+                        String[] msgs = fileAppendQueue.poll();
                         if (msgs == null) continue;
                         File toWriteTo = new File(msgs[0]);
                         try {
@@ -134,7 +140,41 @@ public class ChatServer {
                     }
                 }
             });
-            fileWriteThread.start();
+            fileAppendThread.start();
+
+            Thread fileRewriteThread = new Thread(new Runnable() {
+                public void run() {
+                    while (true) {
+                        HashMap<String, HashMap<Integer, String>> toRewrite = fileRewriteQueue.poll();
+                        if (toRewrite == null) continue;
+                        for (Map.Entry<String, HashMap<Integer, String>> entry : 
+                             toRewrite.entrySet()) {
+                            File rewriteFile = new File(entry.getKey());
+                            HashMap<Integer, String> linesToRewrite = entry.getValue();
+                            try {
+                                BufferedReader reader = new BufferedReader(new FileReader(rewriteFile));
+                                FileWriter writer = new FileWriter(rewriteFile);
+                                int lineNum = 1;
+                                String curLine = reader.readLine();
+                                while (curLine != null) {
+                                    if (linesToRewrite.containsKey(lineNum)) {
+                                        writer.write(linesToRewrite.get(lineNum));
+                                    } else {
+                                        writer.write(curLine + "\n");
+                                    }
+                                    curLine = reader.readLine();
+                                    lineNum++;
+                                }
+                                reader.close();
+                                writer.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            });
+            fileRewriteThread.start();
 
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
@@ -167,8 +207,12 @@ public class ChatServer {
         return this.curUsers;
     }
 
-    public ConcurrentLinkedQueue<String[]> getFileWriteQueue() {
-        return this.fileWriteQueue;
+    public ConcurrentLinkedQueue<String[]> getFileAppendQueue() {
+        return this.fileAppendQueue;
+    }
+
+    public ConcurrentLinkedQueue<HashMap<String, HashMap<Integer, String>>> getFileRewriteQueue() {
+        return this.fileRewriteQueue;
     }
 
     // ***** Inner class - thread for client connection
@@ -257,7 +301,7 @@ public class ChatServer {
                     // Add new user file to file write queue.
                     String[] msgArr = {"data/users/" + username + ".txt", username + "\n",
                                        hashedPassword + "\n", "default.png\n", "0\n"};
-                    ChatServer.this.fileWriteQueue.add(msgArr);
+                    ChatServer.this.fileAppendQueue.add(msgArr);
 
                     System.out.println("Made new user.");
                     user = new User(username);

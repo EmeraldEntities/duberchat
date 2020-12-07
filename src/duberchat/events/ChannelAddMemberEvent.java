@@ -22,7 +22,7 @@ import duberchat.chatutil.Channel;
  */
 public class ChannelAddMemberEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
-    protected HashSet<String> usernames;
+    protected String newUserUsername;
 
     /**
      * Constructs a new {@code ChannelAddMemberEvent}.
@@ -30,8 +30,12 @@ public class ChannelAddMemberEvent extends ChannelEvent {
      * @param source  The source of this event.
      * @param channel The associated channel with this event.
      */
-    public ChannelAddMemberEvent(Object source, Channel channel, HashSet<String> usernames) {
+    public ChannelAddMemberEvent(Object source, Channel channel, String newUserUsername) {
         super(source, channel);
-        this.usernames = usernames;
+        this.newUserUsername = newUserUsername;
+    }
+
+    public String getNewUserUsername() {
+        return this.newUserUsername;
     }
 }

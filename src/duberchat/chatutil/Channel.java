@@ -3,7 +3,6 @@ package duberchat.chatutil;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.HashMap;
 
 public class Channel implements Serializable {
     static final long serialVersionUID = 1L;

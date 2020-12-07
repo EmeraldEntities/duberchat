@@ -10,14 +10,16 @@ import java.io.ObjectOutputStream;
 import javax.imageio.ImageIO;
 
 /**
- * This is the user class, representing one user in the server.
+ * A {@code User} represents a single user account, with all related information.
  * <p>
- * The user class contains all user-related and user-specific informtion.
- * <p>
- * 2020-12-03
+ * Each client is associated with one user. The user is also used as an identifier and 
+ * passed around as client information.
  * 
- * @since 0.1
- * @version 0.1
+ * <p>
+ * Since <b>2020-12-04</b>.
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {

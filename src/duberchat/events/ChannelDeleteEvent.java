@@ -22,7 +22,7 @@ public class ChannelDeleteEvent extends ChannelEvent {
      * Constructs a new {@code ChannelDeleteEvent}.
      * 
      * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param channel The channel associated with this event.
      */
     public ChannelDeleteEvent(Object source, Channel channel) {
         super(source, channel);
