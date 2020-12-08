@@ -72,6 +72,7 @@ public class ChatServer {
                 this.allUsers.put(username, new User(username, pfpPath));
                 reader.close();
             }
+
             for (File channelFile : new File("data/channels").listFiles()) {
                 BufferedReader reader = new BufferedReader(new FileReader(channelFile));
                 int id = Integer.parseInt(reader.readLine().trim());

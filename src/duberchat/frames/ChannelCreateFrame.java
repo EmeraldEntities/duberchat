@@ -3,6 +3,7 @@ package duberchat.frames;
 import java.awt.event.*;
 
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 
 import duberchat.events.ChannelCreateEvent;
 import duberchat.events.SerializableEvent;
+import duberchat.frames.filters.TextLengthFilter;
 import duberchat.client.ChatClient;
 import duberchat.chatutil.Channel;
 
@@ -58,11 +60,13 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         nameField.setBackground(TEXTBOX_COLOR);
         nameField.setForeground(BRIGHT_TEXT_COLOR);
         nameField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        ((AbstractDocument) nameField.getDocument()).setDocumentFilter(new TextLengthFilter(30));
 
         usersField = new JTextField(40);
         usersField.setBackground(TEXTBOX_COLOR);
         usersField.setForeground(BRIGHT_TEXT_COLOR);
         usersField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        ((AbstractDocument) usersField.getDocument()).setDocumentFilter(new TextLengthFilter(2000));
 
         JLabel channelNameLabel = new JLabel("Channel Name:");
         JLabel userLabel = new JLabel("Invite users.");
@@ -93,7 +97,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(4, 0, 4, 0));
         addConstrainedComponent(userExampleLabel, mainPanel, layout, constraints, 0, 5, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(4, 0, 8, 0));
-        addConstrainedComponent(usersField, mainPanel, layout, constraints, 0, 6, 1, 2, GridBagConstraints.HORIZONTAL,
+        addConstrainedComponent(usersField, mainPanel, layout, constraints, 0, 6, 1, 2, GridBagConstraints.BOTH,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
         addConstrainedComponent(submitButton, mainPanel, layout, constraints, 0, 8, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
@@ -114,7 +118,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         JLabel failedText = new JLabel("Failed. Add at least one existing user!");
         failedText.setForeground(Color.RED);
 
-        addConstrainedComponent(failedText, mainPanel, layout, constraints, 0, 8, 1, 1, GridBagConstraints.REMAINDER,
+        addConstrainedComponent(failedText, mainPanel, layout, constraints, 0, 9, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
 
         mainPanel.revalidate();

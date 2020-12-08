@@ -97,14 +97,16 @@ public class Channel implements Serializable {
      * the number of messages exceed the {@code LOCAL_SAVE_AMOUNT} constant (plus
      * any additional message clusters that have been loaded), the most recent
      * message will be deleted.
+     * <p>
+     * The most recent message will be added to the head of the arraylist.
      * 
      * @param message a {@code Message} object to add.
      */
     public void addMessage(Message message) {
         // no matter what end we adjust, we'll still have to adjust indexes
         // adding to the top allows us to use addAll
-        if (this.messages.size() >= LOCAL_SAVE_AMT + (messageClusters * MESSAGE_CLUSTER_AMT)) {
-            this.messages.remove(this.messages.size());
+        if (this.messages.size() > LOCAL_SAVE_AMT + (messageClusters * MESSAGE_CLUSTER_AMT)) {
+            this.messages.remove(this.messages.size() - 1);
         }
 
         this.messages.add(0, message);
@@ -225,5 +227,20 @@ public class Channel implements Serializable {
      */
     public void setTotalMessages(int newTotal) {
         this.totalMessages = newTotal;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+
+        if (o.getClass() == this.getClass()) {
+            return false;
+        }
+
+        Channel otherChannel = (Channel) o;
+        // TODO: check if we need to compare names too...
+        return otherChannel.getChannelId() == this.channelId;
     }
 }

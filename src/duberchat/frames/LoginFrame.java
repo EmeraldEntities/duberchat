@@ -2,6 +2,7 @@ package duberchat.frames;
 
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 
 import java.util.EventObject;
@@ -9,14 +10,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
 import duberchat.client.ChatClient;
+import duberchat.frames.filters.TextLengthFilter;
 
 @SuppressWarnings("serial")
 public class LoginFrame extends DynamicGridbagFrame {
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
-    private static final Color MAIN_COLOR = new Color(60, 60, 60);
-    private static final Color TEXTBOX_COLOR = new Color(40, 40, 40);
-    private static final Color TEXT_COLOR = new Color(150, 150, 150);
-    private static final Color BRIGHT_TEXT_COLOR = new Color(220, 220, 220);
 
     JPanel mainPanel;
     // JPanel contentPanel;
@@ -25,6 +23,7 @@ public class LoginFrame extends DynamicGridbagFrame {
     JPasswordField passwordField;
     JCheckBox newUserCheckbox;
     JButton submitButton;
+    JButton optionsButton;
     GridBagLayout loginLayout;
     GridBagConstraints constraints;
 
@@ -32,6 +31,7 @@ public class LoginFrame extends DynamicGridbagFrame {
     JLabel failedText;
 
     ChatClient client;
+    LoginSettingFrame settingsFrame;
     ConcurrentLinkedQueue<SerializableEvent> output;
 
     boolean alreadySentRequest = false;
@@ -52,7 +52,7 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         mainPanel = new JPanel();
         mainPanel.setSize(this.getSize());
-        mainPanel.setBackground(MAIN_COLOR);
+        mainPanel.setBackground(MainMenuFrame.MAIN_COLOR);
         mainPanel.setLayout(loginLayout);
 
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -61,32 +61,51 @@ public class LoginFrame extends DynamicGridbagFrame {
         // =============================================
 
         usernameField = new JTextField(20);
-        usernameField.setBackground(TEXTBOX_COLOR);
-        usernameField.setForeground(BRIGHT_TEXT_COLOR);
+        usernameField.setBackground(MainMenuFrame.SIDE_COLOR);
+        usernameField.setForeground(MainMenuFrame.BRIGHT_TEXT_COLOR);
         usernameField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        ((AbstractDocument) usernameField.getDocument()).setDocumentFilter(new TextLengthFilter(16));
 
         passwordField = new JPasswordField(20);
-        passwordField.setBackground(TEXTBOX_COLOR);
-        passwordField.setForeground(BRIGHT_TEXT_COLOR);
+        passwordField.setBackground(MainMenuFrame.SIDE_COLOR);
+        passwordField.setForeground(MainMenuFrame.BRIGHT_TEXT_COLOR);
         passwordField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         JLabel usernameLabel = new JLabel("Username");
-        usernameLabel.setForeground(TEXT_COLOR);
+        usernameLabel.setForeground(MainMenuFrame.TEXT_COLOR);
 
         JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setForeground(TEXT_COLOR);
+        passwordLabel.setForeground(MainMenuFrame.TEXT_COLOR);
 
         newUserCheckbox = new JCheckBox("I am a new user!");
-        newUserCheckbox.setBackground(TEXTBOX_COLOR);
-        newUserCheckbox.setForeground(TEXT_COLOR);
+        newUserCheckbox.setBackground(MainMenuFrame.SIDE_COLOR);
+        newUserCheckbox.setForeground(MainMenuFrame.TEXT_COLOR);
 
         submitButton = new JButton("Start DuberChatting!");
+        submitButton.setBackground(MainMenuFrame.TEXT_COLOR);
+        submitButton.setForeground(MainMenuFrame.MAIN_COLOR);
         submitButton.addActionListener(new SubmitActionListener());
-        submitButton.setBackground(TEXT_COLOR);
-        submitButton.setForeground(MAIN_COLOR);
+
+        optionsButton = new JButton("⚙️");
+        optionsButton.setBackground(MainMenuFrame.TEXT_COLOR);
+        optionsButton.setForeground(MainMenuFrame.MAIN_COLOR);
+        optionsButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (settingsFrame != null) {
+                    if (settingsFrame.isVisible()) {
+                        return;
+                    }
+
+                    settingsFrame.destroy();
+                }
+
+                settingsFrame = new LoginSettingFrame(client);
+                settingsFrame.setVisible(true);
+            }
+        });
 
         connectingText = new JLabel("Connecting...");
-        connectingText.setForeground(TEXT_COLOR);
+        connectingText.setForeground(MainMenuFrame.TEXT_COLOR);
 
         failedText = new JLabel("Login failed! Try again.");
         failedText.setForeground(Color.RED);
@@ -110,6 +129,8 @@ public class LoginFrame extends DynamicGridbagFrame {
                 GridBagConstraints.NONE, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
         addConstrainedComponent(submitButton, mainPanel, loginLayout, constraints, 0, 5, 1, 1,
                 GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
+        addConstrainedComponent(optionsButton, mainPanel, loginLayout, constraints, 0, 6, 1, 1, GridBagConstraints.NONE,
+                GridBagConstraints.CENTER, new Insets(16, 0, 0, 0));
 
         this.add(mainPanel);
     }
@@ -142,11 +163,11 @@ public class LoginFrame extends DynamicGridbagFrame {
             mainPanel.remove(connectingText);
         }
 
-        addConstrainedComponent(failedText, mainPanel, loginLayout, constraints, 0, 6, 1, 1, GridBagConstraints.NONE,
+        addConstrainedComponent(failedText, mainPanel, loginLayout, constraints, 0, 7, 1, 1, GridBagConstraints.NONE,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
 
-        mainPanel.revalidate();
-        mainPanel.repaint();
+        this.revalidate();
+        this.repaint();
 
         // Reset request sent status
         alreadySentRequest = false;
@@ -169,7 +190,7 @@ public class LoginFrame extends DynamicGridbagFrame {
 
             // Add connecting... text to aid user
             mainPanel.remove(failedText); // attempt to remove failed text
-            addConstrainedComponent(connectingText, mainPanel, loginLayout, constraints, 0, 6, 1, 1,
+            addConstrainedComponent(connectingText, mainPanel, loginLayout, constraints, 0, 7, 1, 1,
                     GridBagConstraints.NONE, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
             mainPanel.revalidate();
             mainPanel.repaint();

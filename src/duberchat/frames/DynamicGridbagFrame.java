@@ -53,6 +53,4 @@ public abstract class DynamicGridbagFrame extends DynamicFrame {
         addConstrainedComponent(comp, cont, layout, gbc, rows, cols, width, height, GridBagConstraints.NONE,
                 GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
     }
-
-    public abstract void reload();
 }

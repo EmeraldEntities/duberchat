@@ -145,10 +145,30 @@ public class User implements Serializable {
     /**
      * Assigns the user's status.
      * 
-     * @param status This user's new status
+     * @param status this user's new status
      */
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    /**
+     * Retrieves this user's status, as a string.
+     * 
+     * @return a string with this user's status.
+     */
+    public String getStringStatus() {
+        switch (this.status) {
+            case OFFLINE:
+                return "offline";
+            case ONLINE:
+                return "online";
+            case AWAY:
+                return "away";
+            case DND:
+                return "DND";
+            default:
+                return "unknown";
+        }
     }
 
     /**

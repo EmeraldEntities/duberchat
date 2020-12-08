@@ -1,7 +1,9 @@
 package duberchat.frames;
 
+import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
+import duberchat.events.SerializableEvent;
 
 /**
  * A {@code DynamicFrame} is used for frames that are dynamic - that is, they
@@ -36,4 +38,18 @@ public abstract class DynamicFrame extends JFrame implements Reloadable, Destroy
     }
 
     public abstract void reload();
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * By default, calling a reload with a source simply calls the other
+     * {@link #reload() reload function}, and the source is discarded. However, the
+     * frame may decide to implement different functionality with reloads with a
+     * source.
+     * 
+     * @param source {@inheritDoc}
+     */
+    public void reload(SerializableEvent source) {
+        this.reload();
+    }
 }

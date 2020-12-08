@@ -27,6 +27,9 @@ import duberchat.handlers.client.*;
  */
 
 public class ChatClient {
+    private String ip = "";
+    private int port = -1;
+
     private Socket servSocket;
     private User user;
     private HashMap<Integer, Channel> channels;
@@ -40,7 +43,6 @@ public class ChatClient {
     private boolean running = true; // thread status via boolean
     private boolean currentlyLoggingIn = true;
 
-    private Scanner console; // TODO: remove, this is temp
     private ConcurrentLinkedQueue<SerializableEvent> outgoingEvents;
 
     private LoginFrame loginWindow;
@@ -48,11 +50,11 @@ public class ChatClient {
 
     public void start() {
         // call a method that connects to the server
-        this.initializeHandlers();
         this.outgoingEvents = new ConcurrentLinkedQueue<>();
-
-        this.initializeConnectionWorker();
+        this.initializeHandlers();
         this.initializeOutgoingEventWorker();
+        this.initializeConnectionInformation();
+        this.attemptConnection();
 
         this.login();
 
@@ -75,6 +77,27 @@ public class ChatClient {
 
         // testMessages(console);
         this.closeSafely();
+    }
+
+    private void initializeConnectionInformation() {
+        try {
+            File ipSettings = new File("data/ipconfig");
+
+            if (!ipSettings.exists()) {
+                this.ip = "127.0.0.1";
+                this.port = 6969;
+                return;
+            }
+
+            BufferedReader reader = new BufferedReader(new FileReader(ipSettings));
+            this.ip = reader.readLine();
+            this.port = Integer.parseInt(reader.readLine());
+            reader.close();
+
+            System.out.println("SYSTEM: IP settings loaded. " + this.ip + ":" + this.port);
+        } catch (IOException e) {
+            System.out.println("SYSTEM: Could not load IP settings.");
+        }
     }
 
     private void initializeHandlers() {
@@ -102,6 +125,8 @@ public class ChatClient {
                         this.user = authSuccess.getUser();
                         this.channels = authSuccess.getChannels();
 
+                        System.out.println("SYSTEM: current channels: " + channels.size());
+
                         this.currentlyLoggingIn = false;
                         System.out.println("SYSTEM: login succeeded!");
                     } else {
@@ -120,12 +145,20 @@ public class ChatClient {
         loginWindow.destroy();
     }
 
-    private void initializeConnectionWorker() {
+    public void attemptConnection() {
+        if (servSocket != null) {
+            return;
+        }
+
         Thread connectorWorker = new Thread(new Runnable() {
             public synchronized void run() {
                 boolean connected = false;
                 while (!connected) {
-                    connected = connect("127.0.0.1", 6969);
+                    if (ip.equals("")) {
+                        continue;
+                    }
+
+                    connected = connect(ip, port);
 
                     if (!connected) {
                         System.out.println("SYSTEM: Error connecting.");
@@ -174,7 +207,7 @@ public class ChatClient {
         System.out.println("SYSTEM: Attempting to connect to central servers...");
 
         try {
-            this.servSocket = new Socket("127.0.0.1", port);
+            this.servSocket = new Socket(ip, port);
 
             input = new ObjectInputStream(servSocket.getInputStream());
             output = new ObjectOutputStream(servSocket.getOutputStream());
@@ -215,11 +248,20 @@ public class ChatClient {
 
     /**
      * Sets this client's current channel to a provided current channel.
+     * <p>
+     * As channels are not necessarily linked or pointing to each other, this method
+     * is inheritly dangerous. If the channel cannot be confirmed to be a reference
+     * of an existing channel in this client's list of channels, try using
+     * {@link #setCurrentChannel(int) the other set method} instead.
      * 
      * @param currentChannel the new current channel.
      */
     public void setCurrentChannel(Channel currentChannel) {
         this.currentChannel = currentChannel;
+    }
+
+    public void setCurrentChannel(int channelId) {
+        this.currentChannel = this.channels.get(channelId);
     }
 
     /**
@@ -241,14 +283,76 @@ public class ChatClient {
     }
 
     /**
+     * Retrieves this client's connecting IP.
+     * 
+     * @return this client's connecting IP.
+     */
+    public String getIp() {
+        return this.ip;
+    }
+
+    /**
+     * Sets this client's connecting IP.
+     * 
+     * @param ip this client's new connecting IP.
+     */
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    /**
+     * Retrieves this client's connecting port.
+     * 
+     * @return this client's connecting port.
+     */
+    public int getPort() {
+        return this.port;
+    }
+
+    /**
+     * Sets this client's connecting port.
+     * 
+     * @param ip this client's new connecting port.
+     */
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    /**
+     * Spawns a worker thread that saves the client's current ip settings.
+     * <p>
+     * These settings will be written directly to "data/".
+     */
+    public void saveIpSettings() {
+        Thread saveIpSettingWorker = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    File ipSettings = new File("data/ipconfig");
+
+                    if (!ipSettings.exists()) {
+                        ipSettings.createNewFile();
+                    }
+
+                    FileWriter writer = new FileWriter(ipSettings);
+                    writer.write(ip + "\n" + Integer.toString(port) + "\n"); // TODO: replace with buffered?
+                    writer.close();
+
+                    System.out.println("SYSTEM: IP settings saved!.");
+                } catch (IOException e) {
+                    System.out.println("SYSTEM: Could not save IP settings.");
+                }
+            }
+        });
+        saveIpSettingWorker.start();
+    }
+
+    /**
      * Safely closes this client and its associated socket.
      * <p>
      * This method should be used whenever this client must be closed, and will
      * ensure that any to-be-outgoing events will be served before closing.
      */
     private void closeSafely() {
-        outgoingEvents.offer(new ClientStatusUpdateEvent(this, User.OFFLINE));
-
         boolean hasClosed = false;
         while (!hasClosed) {
             // Make sure all outgoing events are served
@@ -279,7 +383,7 @@ public class ChatClient {
      */
     public void logout() {
         if (!currentlyLoggingIn) {
-            outgoingEvents.offer(new ClientStatusUpdateEvent(this, User.OFFLINE));
+            outgoingEvents.offer(new ClientStatusUpdateEvent(this.user, User.OFFLINE));
         }
 
         this.closeSafely();
