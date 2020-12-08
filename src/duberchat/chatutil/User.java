@@ -72,8 +72,8 @@ public class User implements Serializable {
     /**
      * Custom equals method because we need to know if the values are equal, not the references.
      * 
-     * @param user The other user we're checking equality with.
-     * @return boolean, whether the two users are the same (based on username)
+     * @param obj The other object we're checking equality with.
+     * @return boolean, whether the two objects are the same 
      */
     @Override
     public boolean equals(Object obj) {

@@ -86,14 +86,15 @@ public class ChatServer {
                 for (int i = 0; i < numUsers; i++) {
                     users.add(allUsers.get(reader.readLine().trim()));
                 }
-                Channel newChannel = new Channel(name, id, users, admins);
-                int numMsgs = Integer.parseInt(reader.readLine().trim());
-                for (int i = 0; i < numMsgs; i++) {
-                    String[] messageInfo = reader.readLine().trim().split(" ");
+                int numTotalMsgs = Integer.parseInt(reader.readLine().trim());
+                Channel newChannel = new Channel(name, id, users, admins, numTotalMsgs);
+                String curLine = reader.readLine();
+                while (curLine != null) {
+                    String[] messageInfo = curLine.trim().split(" ");
                     newChannel.addMessage(new Message(messageInfo[3], messageInfo[2], Integer.parseInt(messageInfo[0]),
                             new Date(Long.parseLong(messageInfo[1])), newChannel));
                 }
-                channels.put(id, new Channel(name, id, users, admins));
+                channels.put(id, newChannel);
                 reader.close();
             }
         } catch (IOException e) {
@@ -299,7 +300,6 @@ public class ChatServer {
 
             // Case 1: new user
             if (event.getIsNewUser()) {
-                boolean created = false;
                 try {
                     // If the username is already taken, send auth failed event
                     if (ChatServer.this.allUsers.containsKey(username)) {

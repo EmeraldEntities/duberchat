@@ -78,6 +78,7 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         output.writeObject(new ChannelRemoveMemberEvent((User) event.getSource(), 
                                                         serverToDeleteFrom, username));
+        output.flush();
       }
     } catch (IOException e) {
       e.printStackTrace();

@@ -21,6 +21,24 @@ public class Message implements Serializable {
         this.associatedChannel = channel;
     }
 
+    /**
+     * Custom equals method because we need to know if the values are equal, not the references.
+     * 
+     * @param obj The other user we're checking equality with.
+     * @return boolean, whether the two users are the same (based on username)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } 
+        if (obj == null || !(obj instanceof Message)) {
+            return false;
+        }
+        Message message = (Message) obj;
+        return (this.messageId == message.getMessageId());
+    }
+
     public String getSenderUsername() {
         return this.senderUsername;
     }

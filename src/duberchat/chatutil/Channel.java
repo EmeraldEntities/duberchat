@@ -23,6 +23,8 @@ public class Channel implements Serializable {
     private String channelName;
     /** The channel ID of this channel. Read only. */
     private int channelId;
+    /** The total number of messags sent to this channel. */
+    private int totalMessages;
 
     /**
      * Constructs a new Channel object.
@@ -32,14 +34,18 @@ public class Channel implements Serializable {
      * @param users       A starting list of users.
      * @param adminUsers  A starting list of admin users. All users in here should
      *                    be in the users list as well.
+     * @param totalMessages The total number of messages that have been sent to this channel
      */
-    public Channel(String channelName, int channelId, ArrayList<User> users, HashSet<User> adminUsers) {
+    public Channel(String channelName, int channelId, ArrayList<User> users, 
+                   HashSet<User> adminUsers, int totalMessages) {
         this.messages = new ArrayList<>(LOCAL_SAVE_AMT);
         this.users = users;
         this.adminUsers = adminUsers;
 
         this.channelName = channelName;
         this.channelId = channelId;
+
+        this.totalMessages = totalMessages;
 
         this.messageClusters = 0;
     }
@@ -56,7 +62,7 @@ public class Channel implements Serializable {
      * Loads a message cluster and appends it to the end of this channel's messages,
      * if possible.
      * <p>
-     * The mess ge cluster must be the same size or less as dictated in the class
+     * The message cluster must be the same size or less as dictated in the class
      * constant {@code MESSAGE_CLUSTER_AMT}, or the load will fail. exists so that,
      * for example, channels with 15 messages left will still load.
      * 
@@ -67,7 +73,8 @@ public class Channel implements Serializable {
     public boolean loadMessageCluster(ArrayList<Message> messageCluster) {
         if (messageCluster.size() <= MESSAGE_CLUSTER_AMT) {
             this.messageClusters++;
-            this.messages.addAll(messageCluster);
+            messageCluster.addAll(this.messages);
+            this.messages = messageCluster;
             return true;
         }
 
@@ -199,5 +206,24 @@ public class Channel implements Serializable {
      */
     public int getChannelId() {
         return this.channelId;
+    }
+
+    /**
+     * Gets the total # of messages that have been sent in this channel.
+     * 
+     * @return the total number of messages.
+     */
+    public int getTotalMessages() {
+        return this.totalMessages;
+    }
+
+
+    /**
+     * Sets the total number of messages to the new one.
+     * 
+     * @param newTotal the new total # of messages.
+     */
+    public void setTotalMessages(int newTotal) {
+        this.totalMessages = newTotal;
     }
 }

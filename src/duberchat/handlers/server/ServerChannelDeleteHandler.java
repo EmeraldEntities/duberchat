@@ -53,6 +53,7 @@ public class ServerChannelDeleteHandler implements Handleable {
         if (!server.getCurUsers().containsKey(user)) continue;
         ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
         output.writeObject(new ChannelDeleteEvent((User) event.getSource(), serverToDelete));
+        output.flush();
       }
 
       //Remove the channel file

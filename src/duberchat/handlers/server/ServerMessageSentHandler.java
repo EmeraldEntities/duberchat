@@ -48,20 +48,22 @@ public class ServerMessageSentHandler implements Handleable {
         String msgString = toSend.getMessage();
         String senderUsername = toSend.getSenderUsername();
         Channel destination = toSend.getChannel();
-        int msgId = destination.getMessages().size();
+        Channel serverDestination = server.getChannels().get(destination.getChannelId());
+        int msgId = serverDestination.getTotalMessages();
         long timeStamp = toSend.getTimestamp().getTime();
-        Channel serverDestinationChannel = server.getChannels().get(destination.getChannelId());
         Message newMessage = new Message(msgString, senderUsername, msgId, new Date(timeStamp), 
-                                         serverDestinationChannel);
-        serverDestinationChannel.addMessage(newMessage);
+                                         serverDestination);
+        serverDestination.addMessage(newMessage);
+        serverDestination.setTotalMessages(msgId + 1);
+        destination.setTotalMessages(msgId + 1);   // added for clarity TODO
         try {
             // Add the new message with the appropriate file path to the file write queue.
-            // Messages are formatted like this: id tismeStamp senderUsername msg
+            // Messages are formatted like this: id timestamp senderUsername msg
             String filePath = "data/channels/" + destination.getChannelId() + ".txt";
             HashMap<String, HashMap<Integer, String>> rewriteMap = new HashMap<>();
             HashMap<Integer, String> rewriteInnerMap = new HashMap<>();
             int lineNum = destination.getUsers().size() + destination.getAdminUsers().size() + 5;
-            rewriteInnerMap.put(lineNum, (serverDestinationChannel.getMessages().size() + 1) + "\n");
+            rewriteInnerMap.put(lineNum, (msgId + 1) + "\n");
             rewriteMap.put(filePath,  rewriteInnerMap);
             server.getFileRewriteQueue().add(rewriteMap);
             String[] msgArr = {filePath, msgId + " " + timeStamp + " " + senderUsername + " " + 
@@ -69,7 +71,7 @@ public class ServerMessageSentHandler implements Handleable {
             server.getFileAppendQueue().add(msgArr);
 
             // Send back a message sent event to every online user in the channel
-            for (User member : serverDestinationChannel.getUsers()) {
+            for (User member : serverDestination.getUsers()) {
                 // skip offline users
                 if (!server.getCurUsers().containsKey(member)) continue;
                 ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();

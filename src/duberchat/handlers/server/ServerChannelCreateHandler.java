@@ -104,7 +104,7 @@ public class ServerChannelCreateHandler implements Handleable {
     }
     int id = server.getNumChannelsCreated() + 1;
     server.setNumChannelsCreated(id);
-    Channel newChannel = new Channel(channelName, id, channelUsers, admins);
+    Channel newChannel = new Channel(channelName, id, channelUsers, admins, 0);
     server.getChannels().put(id, newChannel);
 
     try {
@@ -119,7 +119,7 @@ public class ServerChannelCreateHandler implements Handleable {
       for (int i = 0; i < channelUsers.size(); i++) {
         msgArr[6 + i] = channelUsers.get(i).getUsername() + "\n";
       }
-      msgArr[channelUsers.size() + 6] = "0 \n";
+      msgArr[channelUsers.size() + 6] = "0\n";
       server.getFileAppendQueue().add(msgArr);
       
       // update all the user files with new # of channels they're in and those channels
