@@ -93,6 +93,7 @@ public class ChatServer {
                     String[] messageInfo = curLine.trim().split(" ");
                     newChannel.addMessage(new Message(messageInfo[3], messageInfo[2], Integer.parseInt(messageInfo[0]),
                             new Date(Long.parseLong(messageInfo[1])), newChannel));
+                    curLine = reader.readLine();
                 }
                 channels.put(id, newChannel);
                 reader.close();
