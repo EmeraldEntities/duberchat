@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import duberchat.events.*;
 import duberchat.client.ChatClient;
 import duberchat.frames.filters.TextLengthFilter;
+import duberchat.frames.util.ComponentFactory;
 
 @SuppressWarnings("serial")
 public class LoginFrame extends DynamicGridbagFrame {
@@ -52,7 +53,7 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         mainPanel = new JPanel();
         mainPanel.setSize(this.getSize());
-        mainPanel.setBackground(MainMenuFrame.MAIN_COLOR);
+        mainPanel.setBackground(MainFrame.MAIN_COLOR);
         mainPanel.setLayout(loginLayout);
 
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -60,35 +61,23 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         // =============================================
 
-        usernameField = new JTextField(20);
-        usernameField.setBackground(MainMenuFrame.SIDE_COLOR);
-        usernameField.setForeground(MainMenuFrame.BRIGHT_TEXT_COLOR);
-        usernameField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        ((AbstractDocument) usernameField.getDocument()).setDocumentFilter(new TextLengthFilter(16));
+        usernameField = ComponentFactory.createTextBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.SIDE_COLOR,
+                new TextLengthFilter(16), BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        passwordField = ComponentFactory.createPasswordBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.SIDE_COLOR,
+                new TextLengthFilter(40), BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        passwordField = new JPasswordField(20);
-        passwordField.setBackground(MainMenuFrame.SIDE_COLOR);
-        passwordField.setForeground(MainMenuFrame.BRIGHT_TEXT_COLOR);
-        passwordField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        JLabel usernameLabel = ComponentFactory.createLabel("Username", MainFrame.TEXT_COLOR);
+        JLabel passwordLabel = ComponentFactory.createLabel("Password", MainFrame.TEXT_COLOR);
+        connectingText = ComponentFactory.createLabel("Connecting...", MainFrame.TEXT_COLOR);
+        failedText = ComponentFactory.createLabel("Login failed! Try again.", Color.RED);
 
-        JLabel usernameLabel = new JLabel("Username");
-        usernameLabel.setForeground(MainMenuFrame.TEXT_COLOR);
+        newUserCheckbox = ComponentFactory.createCheckbox("I am a new user", MainFrame.TEXT_COLOR,
+                MainFrame.SIDE_COLOR);
 
-        JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setForeground(MainMenuFrame.TEXT_COLOR);
+        submitButton = ComponentFactory.createButton("Start DuberChatting", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
+                new SubmitActionListener());
 
-        newUserCheckbox = new JCheckBox("I am a new user!");
-        newUserCheckbox.setBackground(MainMenuFrame.SIDE_COLOR);
-        newUserCheckbox.setForeground(MainMenuFrame.TEXT_COLOR);
-
-        submitButton = new JButton("Start DuberChatting!");
-        submitButton.setBackground(MainMenuFrame.TEXT_COLOR);
-        submitButton.setForeground(MainMenuFrame.MAIN_COLOR);
-        submitButton.addActionListener(new SubmitActionListener());
-
-        optionsButton = new JButton("⚙️");
-        optionsButton.setBackground(MainMenuFrame.TEXT_COLOR);
-        optionsButton.setForeground(MainMenuFrame.MAIN_COLOR);
+        optionsButton = ComponentFactory.createButton("⚙️", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR);
         optionsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (settingsFrame != null) {
@@ -103,12 +92,6 @@ public class LoginFrame extends DynamicGridbagFrame {
                 settingsFrame.setVisible(true);
             }
         });
-
-        connectingText = new JLabel("Connecting...");
-        connectingText.setForeground(MainMenuFrame.TEXT_COLOR);
-
-        failedText = new JLabel("Login failed! Try again.");
-        failedText.setForeground(Color.RED);
         // JLabel image = new JLabel(new ImageIcon("/data/server/duberchat.png"));
         // constraints.gridx = 0;
         // constraints.gridy = 0;

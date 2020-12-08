@@ -11,7 +11,7 @@ import java.util.Date;
 
 import duberchat.events.*;
 import duberchat.frames.filters.TextLengthFilter;
-import duberchat.frames.util.DuberComponentFactory;
+import duberchat.frames.util.ComponentFactory;
 import duberchat.client.ChatClient;
 
 import duberchat.chatutil.Channel;
@@ -19,7 +19,7 @@ import duberchat.chatutil.Message;
 import duberchat.chatutil.User;
 
 @SuppressWarnings("serial")
-public class MainMenuFrame extends DynamicFrame {
+public class MainFrame extends DynamicFrame {
     public static final Dimension DEFAULT_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
     public static final Color MAIN_COLOR = new Color(60, 60, 60);
     public static final Color SIDE_COLOR = new Color(40, 40, 40);
@@ -57,13 +57,13 @@ public class MainMenuFrame extends DynamicFrame {
     // private ArrayList<User> lastUpdatedUsers;
     // private Message lastMessage;
 
-    public MainMenuFrame(String title, ChatClient client, ConcurrentLinkedQueue<SerializableEvent> outgoingEvents) {
+    public MainFrame(String title, ChatClient client, ConcurrentLinkedQueue<SerializableEvent> outgoingEvents) {
         super(title);
         this.client = client;
         this.output = outgoingEvents;
 
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        this.setSize(MainMenuFrame.DEFAULT_SIZE);
+        this.setSize(MainFrame.DEFAULT_SIZE);
         this.setResizable(true);
 
         typingPanel = new JPanel();
@@ -89,7 +89,7 @@ public class MainMenuFrame extends DynamicFrame {
         configPanel.add(channelConfigPanel);
 
         // INITIALIZE BUTTONS ====================================================
-        profileButton = DuberComponentFactory.createButton(client.getUser().getUsername(), MAIN_COLOR, TEXT_COLOR,
+        profileButton = ComponentFactory.createButton(client.getUser().getUsername(), MAIN_COLOR, TEXT_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
                         System.out.println("You pressed the profile button!");
@@ -97,27 +97,26 @@ public class MainMenuFrame extends DynamicFrame {
                 });
         profileConfigPanel.add(profileButton);
 
-        deleteChannelButton = DuberComponentFactory.createButton("DELETE CHANNEL", MAIN_COLOR, TEXT_COLOR,
+        deleteChannelButton = ComponentFactory.createButton("DELETE CHANNEL", MAIN_COLOR, TEXT_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
                         System.out.println("I hope that wasn't a mistake.");
                     }
                 });
 
-        addUserButton = DuberComponentFactory.createButton("ADD USER", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+        addUserButton = ComponentFactory.createButton("ADD USER", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 System.out.println("User added!");
             }
         });
 
-        deleteUserButton = DuberComponentFactory.createButton("REMOVE USER", MAIN_COLOR, TEXT_COLOR,
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        System.out.println("User added!");
-                    }
-                });
+        deleteUserButton = ComponentFactory.createButton("REMOVE USER", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                System.out.println("User added!");
+            }
+        });
 
-        sendButton = DuberComponentFactory.createButton("SEND", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+        sendButton = ComponentFactory.createButton("SEND", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 if (client.getCurrentChannel() == null) {
                     return;
@@ -126,7 +125,7 @@ public class MainMenuFrame extends DynamicFrame {
             }
         });
 
-        quitButton = DuberComponentFactory.createButton("QUIT", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+        quitButton = ComponentFactory.createButton("QUIT", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("SYSTEM: Exiting application!");
 
@@ -135,23 +134,20 @@ public class MainMenuFrame extends DynamicFrame {
             }
         });
 
-        addChannelButton = DuberComponentFactory.createButton("CREATE CHANNEL", MAIN_COLOR, TEXT_COLOR,
+        addChannelButton = ComponentFactory.createButton("CREATE CHANNEL", MAIN_COLOR, TEXT_COLOR,
                 new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (hasActiveChannelCreateFrame()) {
-                    return;
-                }
+                    public void actionPerformed(ActionEvent e) {
+                        if (hasActiveChannelCreateFrame()) {
+                            return;
+                        }
 
-                addChannelFrame = new ChannelCreateFrame(client, output);
-                addChannelFrame.setVisible(true);
-            }
-        });
+                        addChannelFrame = new ChannelCreateFrame(client, output);
+                        addChannelFrame.setVisible(true);
+                    }
+                });
 
         // INITIALIZE TYPING AREA =================================================
-        typeField = new JTextField(20);
-        typeField.setBackground(TEXTBOX_COLOR);
-        typeField.setForeground(BRIGHT_TEXT_COLOR);
-        ((AbstractDocument) typeField.getDocument()).setDocumentFilter(new TextLengthFilter(100));
+        typeField = ComponentFactory.createTextBox(20, BRIGHT_TEXT_COLOR, TEXTBOX_COLOR, new TextLengthFilter(100));
         typeField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -170,9 +166,8 @@ public class MainMenuFrame extends DynamicFrame {
         msgArea.setForeground(BRIGHT_TEXT_COLOR);
         msgArea.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        channelIndicator = new JLabel("No channel selected.");
+        channelIndicator = ComponentFactory.createLabel("No channel selected.", SECONDARY_TEXT_COLOR);
         channelIndicator.setFont(new Font("Courier", Font.BOLD, 16));
-        channelIndicator.setForeground(SECONDARY_TEXT_COLOR);
 
         typingPanel.add(typeField);
         typingPanel.add(sendButton);

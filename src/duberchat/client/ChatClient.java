@@ -6,11 +6,6 @@ import javax.swing.*;
 import java.io.*;
 import java.net.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Scanner;
-
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.HashMap;
 
@@ -46,7 +41,7 @@ public class ChatClient {
     private ConcurrentLinkedQueue<SerializableEvent> outgoingEvents;
 
     private LoginFrame loginWindow;
-    private MainMenuFrame mainMenu;
+    private MainFrame mainMenu;
 
     public void start() {
         // call a method that connects to the server
@@ -58,7 +53,7 @@ public class ChatClient {
 
         this.login();
 
-        mainMenu = new MainMenuFrame("duberchat", this, this.outgoingEvents);
+        mainMenu = new MainFrame("duberchat", this, this.outgoingEvents);
         mainMenu.setVisible(true);
 
         while (running) {
@@ -269,7 +264,7 @@ public class ChatClient {
      * 
      * @return this client's main menu frame.
      */
-    public MainMenuFrame getMainMenuFrame() {
+    public MainFrame getMainMenuFrame() {
         return this.mainMenu;
     }
 

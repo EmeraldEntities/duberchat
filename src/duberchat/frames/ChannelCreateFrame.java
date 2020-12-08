@@ -12,6 +12,7 @@ import java.util.Arrays;
 import duberchat.events.ChannelCreateEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.frames.filters.TextLengthFilter;
+import duberchat.frames.util.ComponentFactory;
 import duberchat.client.ChatClient;
 import duberchat.chatutil.Channel;
 
@@ -19,10 +20,6 @@ import duberchat.chatutil.Channel;
 //TODO: this should be a controlled frame so maybe work it so that it doesnt need output
 public class ChannelCreateFrame extends DynamicGridbagFrame {
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
-    private static final Color MAIN_COLOR = new Color(60, 60, 60);
-    private static final Color TEXTBOX_COLOR = new Color(40, 40, 40);
-    private static final Color TEXT_COLOR = new Color(150, 150, 150);
-    private static final Color BRIGHT_TEXT_COLOR = new Color(220, 220, 220);
 
     private ChatClient client;
     private ConcurrentLinkedQueue<SerializableEvent> output;
@@ -48,7 +45,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         mainPanel = new JPanel();
-        mainPanel.setBackground(MAIN_COLOR);
+        mainPanel.setBackground(MainFrame.MAIN_COLOR);
 
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();
@@ -56,34 +53,22 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         mainPanel.setLayout(layout);
         mainPanel.setSize(this.getSize());
 
-        nameField = new JTextField(20);
-        nameField.setBackground(TEXTBOX_COLOR);
-        nameField.setForeground(BRIGHT_TEXT_COLOR);
-        nameField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        ((AbstractDocument) nameField.getDocument()).setDocumentFilter(new TextLengthFilter(30));
+        nameField = ComponentFactory.createTextBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.TEXTBOX_COLOR,
+                new TextLengthFilter(50), BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        usersField = ComponentFactory.createTextBox(40, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.TEXTBOX_COLOR,
+                new TextLengthFilter(2000), BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        usersField = new JTextField(40);
-        usersField.setBackground(TEXTBOX_COLOR);
-        usersField.setForeground(BRIGHT_TEXT_COLOR);
-        usersField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        ((AbstractDocument) usersField.getDocument()).setDocumentFilter(new TextLengthFilter(2000));
+        JLabel channelNameLabel = ComponentFactory.createLabel("Channel Name:", MainFrame.BRIGHT_TEXT_COLOR);
+        JLabel userLabel = ComponentFactory.createLabel("Invite users.", MainFrame.BRIGHT_TEXT_COLOR);
+        JLabel userDescriptionLabel = ComponentFactory.createLabel("Only existing users will be invited.",
+                MainFrame.TEXT_COLOR);
+        JLabel userSyntaxLabel = ComponentFactory.createLabel("Seperate users using a comma, and put @ before name.",
+                MainFrame.TEXT_COLOR);
+        JLabel userExampleLabel = ComponentFactory.createLabel("(eg. @EmeraldPhony, @PolyEntities)",
+                MainFrame.TEXT_COLOR);
 
-        JLabel channelNameLabel = new JLabel("Channel Name:");
-        JLabel userLabel = new JLabel("Invite users.");
-        JLabel userDescriptionLabel = new JLabel("Only existing users will be invited.");
-        JLabel userSyntaxLabel = new JLabel("Seperate users using a comma, and put @ before name.");
-        JLabel userExampleLabel = new JLabel("(eg. @EmeraldPhony, @PolyEntities)");
-
-        channelNameLabel.setForeground(BRIGHT_TEXT_COLOR);
-        userLabel.setForeground(BRIGHT_TEXT_COLOR);
-        userDescriptionLabel.setForeground(TEXT_COLOR);
-        userSyntaxLabel.setForeground(TEXT_COLOR);
-        userExampleLabel.setForeground(TEXT_COLOR);
-
-        submitButton = new JButton("Start DuberChatting!");
-        submitButton.addActionListener(new CreateChannelActionListener());
-        submitButton.setBackground(TEXT_COLOR);
-        submitButton.setForeground(MAIN_COLOR);
+        submitButton = ComponentFactory.createButton("Start DuberChatting!", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
+                new CreateChannelActionListener());
 
         addConstrainedComponent(channelNameLabel, mainPanel, layout, constraints, 0, 0, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));

@@ -6,6 +6,7 @@ import javax.swing.text.*;
 import java.awt.*;
 
 import duberchat.frames.filters.LimitingRegexFilter;
+import duberchat.frames.util.ComponentFactory;
 import duberchat.client.ChatClient;
 
 @SuppressWarnings("serial")
@@ -35,43 +36,28 @@ public class LoginSettingFrame extends DynamicGridbagFrame {
         constraints = new GridBagConstraints();
         mainPanel = new JPanel();
         mainPanel.setSize(this.getSize());
-        mainPanel.setBackground(MainMenuFrame.MAIN_COLOR);
+        mainPanel.setBackground(MainFrame.MAIN_COLOR);
         mainPanel.setLayout(layout);
 
-        JLabel ipLabel = new JLabel("IP");
-        ipLabel.setForeground(MainMenuFrame.TEXT_COLOR);
+        JLabel ipLabel = ComponentFactory.createLabel("IP", MainFrame.TEXT_COLOR);
+        JLabel portLabel = ComponentFactory.createLabel("PORT", MainFrame.TEXT_COLOR);
+        savedText = ComponentFactory.createLabel("Saved!", Color.CYAN);
 
-        JLabel portLabel = new JLabel("PORT");
-        portLabel.setForeground(MainMenuFrame.TEXT_COLOR);
+        ipField = ComponentFactory.createTextBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.DARK_TEXTBOX_COLOR,
+                new LimitingRegexFilter(15, "^[0-9.]+$"));
+        portField = ComponentFactory.createTextBox(10, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.DARK_TEXTBOX_COLOR,
+                new LimitingRegexFilter(6, "^\\d+$"));
 
-        savedText = new JLabel("Saved!");
-        savedText.setForeground(Color.CYAN);
+        submitButton = ComponentFactory.createButton("Save", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        client.setIp(ipField.getText());
+                        client.setPort(Integer.parseInt(portField.getText()));
+                        client.saveIpSettings();
 
-        ipField = new JTextField(20);
-        ipField.setBackground(MainMenuFrame.DARK_TEXTBOX_COLOR);
-        ipField.setForeground(MainMenuFrame.BRIGHT_TEXT_COLOR);
-        ((AbstractDocument) ipField.getDocument()).setDocumentFilter(new LimitingRegexFilter(15, "^[0-9.]+$"));
-
-        portField = new JTextField(10);
-        portField.setBackground(MainMenuFrame.DARK_TEXTBOX_COLOR);
-        portField.setForeground(MainMenuFrame.BRIGHT_TEXT_COLOR);
-        ((AbstractDocument) portField.getDocument()).setDocumentFilter(new LimitingRegexFilter(6, "^\\d+$"));
-
-        submitButton = new JButton("Save");
-        submitButton.setBackground(MainMenuFrame.TEXT_COLOR);
-        submitButton.setForeground(MainMenuFrame.MAIN_COLOR);
-        submitButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                client.setIp(ipField.getText());
-                client.setPort(Integer.parseInt(portField.getText()));
-                client.saveIpSettings();
-
-                reload();
-            }
-        });
-
-        JLabel savedText = new JLabel("Saved!");
-        savedText.setForeground(MainMenuFrame.TEXT_COLOR);
+                        reload();
+                    }
+                });
 
         addConstrainedComponent(ipLabel, mainPanel, layout, constraints, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL,
                 GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
@@ -79,7 +65,7 @@ public class LoginSettingFrame extends DynamicGridbagFrame {
                 GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
         addConstrainedComponent(portLabel, mainPanel, layout, constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL,
                 GridBagConstraints.CENTER, new Insets(30, 0, 0, 0));
-        addConstrainedComponent(portField, mainPanel, layout, constraints, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL,
+        addConstrainedComponent(portField, mainPanel, layout, constraints, 0, 3, 1, 1, GridBagConstraints.NONE,
                 GridBagConstraints.CENTER, new Insets(8, 0, 16, 0));
         addConstrainedComponent(submitButton, mainPanel, layout, constraints, 0, 4, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
