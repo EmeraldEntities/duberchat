@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Channel implements Serializable {
-    static final long serialVersionUID = 2L;
+    static final long serialVersionUID = 3L;
 
     public static final int MESSAGE_CLUSTER_AMT = 30;
     public static final int LOCAL_SAVE_AMT = MESSAGE_CLUSTER_AMT;
@@ -56,6 +56,18 @@ public class Channel implements Serializable {
         this.channelId = -1;
 
         this.messageClusters = 0;
+    }
+
+    public Channel(Channel fullChannel, ArrayList<Message> messageBlock) {
+        this.messages = messageBlock;
+        this.users = fullChannel.getUsers();
+        this.adminUsers = fullChannel.getAdminUsers();
+
+        this.channelName = fullChannel.getChannelName();
+        this.channelId = fullChannel.getChannelId();
+
+        this.totalMessages = fullChannel.getTotalMessages();
+        this.messageClusters = fullChannel.getMessageClusters();
     }
 
     /**
@@ -229,14 +241,40 @@ public class Channel implements Serializable {
         this.totalMessages = newTotal;
     }
 
+    /**
+     * Gets the total # of message clusters in this channel.
+     * 
+     * @return the total number of message clusters.
+     */
+    public int getMessageClusters() {
+        return this.messageClusters;
+    }
+
+    /**
+     * Sets the total number of message clusters to the new one.
+     * 
+     * @param newNum the new number of message clusters.
+     */
+    public void setMessageClusters(int newNum) {
+        this.messageClusters = newNum;
+    }
+
+    /**
+     * Custom equals method because we need to know if the values are equal, not the references.
+     * 
+     * @param obj The other user we're checking equality with.
+     * @return boolean, whether the two users are the same (based on id)
+     */
     @Override
-    public boolean equals(Object o) {
-        if (o == null || !(o instanceof Channel)) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } 
+        if (obj == null || !(obj instanceof Channel)) {
             return false;
         }
-
-        Channel otherChannel = (Channel) o;
-        // TODO: check if we need to compare names too...
-        return otherChannel.getChannelId() == this.channelId;
+        Channel channel = (Channel) obj;
+        return (this.channelId == channel.getChannelId());
     }
+
 }

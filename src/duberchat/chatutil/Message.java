@@ -25,7 +25,7 @@ public class Message implements Serializable {
      * Custom equals method because we need to know if the values are equal, not the references.
      * 
      * @param obj The other user we're checking equality with.
-     * @return boolean, whether the two users are the same (based on username)
+     * @return boolean, whether the two users are the same (based on id)
      */
     @Override
     public boolean equals(Object obj) {

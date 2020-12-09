@@ -1,10 +1,9 @@
 package duberchat.handlers.server;
 
 import java.io.*;
-import java.util.HashMap;
+import java.util.ArrayList;
 
-import duberchat.chatutil.Channel;
-import duberchat.chatutil.User;
+import duberchat.chatutil.*;
 import duberchat.events.ChannelAddMemberEvent;
 import duberchat.events.FileWriteEvent;
 import duberchat.events.RequestFailedEvent;
@@ -36,7 +35,7 @@ public class ServerChannelAddMemberHandler implements Handleable {
       }
       
       serverToAddTo.addUser(toAdd);
-      toAddTo.addUser(toAdd);   // technically unnecessary? TODO
+      toAddTo.addUser(toAdd);   
       toAdd.getChannels().add(id);
 
       // Update this channel's file to include the new user.
@@ -52,7 +51,7 @@ public class ServerChannelAddMemberHandler implements Handleable {
         // skip offline users
         if (!server.getCurUsers().containsKey(member)) continue;
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
-        output.writeObject(new ChannelAddMemberEvent((User) event.getSource(), serverToAddTo, 
+        output.writeObject(new ChannelAddMemberEvent((User) event.getSource(), toAddTo, 
                                                      newUserUsername));
         output.flush();
       }

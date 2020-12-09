@@ -44,10 +44,14 @@ public class ChatServer {
         this.eventHandlers = new HashMap<>();
         this.eventQueue = new ConcurrentLinkedQueue<>();
         this.fileWriteQueue = new ConcurrentLinkedQueue<>();
-        eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
         eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
+        eventHandlers.put(MessageDeleteEvent.class, new ServerMessageDeleteHandler(this));
+        eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
         eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
         eventHandlers.put(ChannelRemoveMemberEvent.class, new ServerChannelRemoveMemberHandler(this));
+        eventHandlers.put(ChannelDeleteEvent.class, new ServerChannelDeleteHandler(this));
+        eventHandlers.put(ClientStatusUpdateEvent.class, new ServerStatusChangeHandler(this));
+        eventHandlers.put(ClientRequestMessageEvent.class, new ServerRequestMessageHandler(this));
     }
 
     /**
@@ -200,9 +204,15 @@ public class ChatServer {
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
                     // mapping that can inform the handler of what client to output to.
+                    // ClientStatusUpdateEvents are handled separately if they indicate that the 
+                    // user is logging out, since after this event the handler should not keep 
+                    // looking for events to handle.
                     if (event instanceof ClientLoginEvent) {
                         handleLogin((ClientLoginEvent) event);
                         continue;
+                    } else if (event instanceof ClientStatusUpdateEvent &&
+                               ((ClientStatusUpdateEvent) event).getStatus() == 0) {
+                        eventHandlers.get(ClientStatusUpdateEvent.class).handleEvent(event);
                     }
                     eventQueue.add(event);
                 } catch (IOException e) {

@@ -8,7 +8,6 @@ import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
 import java.io.*;
-import java.util.HashMap;
 
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;

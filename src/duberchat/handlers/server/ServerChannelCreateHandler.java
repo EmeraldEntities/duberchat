@@ -6,8 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import duberchat.chatutil.Channel;
-import duberchat.chatutil.User;
+import duberchat.chatutil.*;
 import duberchat.events.ChannelCreateEvent;
 import duberchat.events.FileWriteEvent;
 import duberchat.events.RequestFailedEvent;
@@ -83,12 +82,19 @@ public class ServerChannelCreateHandler implements Handleable {
     if (channelUsers.size() == 2) {
       for (int channelId : creator.getChannels()) {
         Channel channel = server.getChannels().get(channelId);
+        ArrayList<Message> messageBlock = new ArrayList<>();
+        ArrayList<Message> fullMessages = channel.getMessages();
+        for (int i = 0; i < 30; i++) {
+          messageBlock.add(fullMessages.get(fullMessages.size() - i));
+        }
         User user1 = channel.getUsers().get(0);
         User user2 = channel.getUsers().get(1);
         if ((channelUsers.get(0).equals(user1) && creator.equals(user2))
             || (channelUsers.get(0).equals(user2) && creator.equals(user1))) {
           try {
-            output.writeObject(new ChannelCreateEvent((User) event.getSource(), channel, usersFound));
+            output.writeObject(new ChannelCreateEvent((User) event.getSource(), 
+                                                      new Channel(channel, messageBlock), 
+                                                      usersFound));
             output.flush();
           } catch (IOException e) {
             e.printStackTrace();
