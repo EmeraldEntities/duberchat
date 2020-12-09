@@ -12,6 +12,7 @@ import duberchat.events.*;
 import duberchat.client.ChatClient;
 import duberchat.frames.filters.TextLengthFilter;
 import duberchat.frames.util.ComponentFactory;
+import duberchat.frames.util.FrameFactory;
 
 @SuppressWarnings("serial")
 public class LoginFrame extends DynamicGridbagFrame {
@@ -80,12 +81,17 @@ public class LoginFrame extends DynamicGridbagFrame {
         optionsButton = ComponentFactory.createButton("⚙️", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR);
         optionsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                // JOptionPane pain = ComponentFactory.createRequestPane();
+                // String text = JOptionPane.showInputDialog(pain, "please help me");
+                // JDialog helpme = pain.createDialog(pain, "PAIIIN");
+                // helpme.setVisible(true);
+
                 if (settingsFrame != null) {
                     if (settingsFrame.isVisible()) {
                         return;
                     }
 
-                    settingsFrame.destroy();
+                settingsFrame.destroy();
                 }
 
                 settingsFrame = new LoginSettingFrame(client);
@@ -161,7 +167,7 @@ public class LoginFrame extends DynamicGridbagFrame {
             // Ensure that multiple login events aren't performed
             if (alreadySentRequest)
                 return;
-
+                       
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
 

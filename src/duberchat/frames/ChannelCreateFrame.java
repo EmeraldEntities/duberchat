@@ -3,7 +3,6 @@ package duberchat.frames;
 import java.awt.event.*;
 
 import javax.swing.*;
-import javax.swing.text.*;
 import java.awt.*;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -35,7 +34,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
     private boolean alreadySentRequest = false;
 
     public ChannelCreateFrame(ChatClient client, ConcurrentLinkedQueue<SerializableEvent> output) {
-        super("Add a new channel...");
+        super("Add a new channel");
 
         this.client = client;
         this.output = output;
@@ -58,8 +57,8 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         usersField = ComponentFactory.createTextBox(40, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.TEXTBOX_COLOR,
                 new TextLengthFilter(2000), BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        JLabel channelNameLabel = ComponentFactory.createLabel("Channel Name:", MainFrame.BRIGHT_TEXT_COLOR);
-        JLabel userLabel = ComponentFactory.createLabel("Invite users.", MainFrame.BRIGHT_TEXT_COLOR);
+        JLabel channelNameLabel = ComponentFactory.createLabel("Channel Name:");
+        JLabel userLabel = ComponentFactory.createLabel("Invite users.");
         JLabel userDescriptionLabel = ComponentFactory.createLabel("Only existing users will be invited.",
                 MainFrame.TEXT_COLOR);
         JLabel userSyntaxLabel = ComponentFactory.createLabel("Seperate users using a comma, and put @ before name.",
@@ -100,8 +99,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
     }
 
     private void handleFailedEvent() {
-        JLabel failedText = new JLabel("Failed. Add at least one existing user!");
-        failedText.setForeground(Color.RED);
+        JLabel failedText = ComponentFactory.createLabel("Failed. Add at least one existing user!", Color.RED);
 
         addConstrainedComponent(failedText, mainPanel, layout, constraints, 0, 9, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));

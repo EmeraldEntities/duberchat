@@ -1,6 +1,5 @@
 package duberchat.frames;
 
-import javax.swing.*;
 import java.awt.*;
 
 /**

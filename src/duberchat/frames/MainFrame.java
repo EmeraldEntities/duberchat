@@ -12,6 +12,7 @@ import java.util.Date;
 import duberchat.events.*;
 import duberchat.frames.filters.TextLengthFilter;
 import duberchat.frames.util.ComponentFactory;
+import duberchat.frames.util.FrameFactory;
 import duberchat.client.ChatClient;
 
 import duberchat.chatutil.Channel;
@@ -88,6 +89,20 @@ public class MainFrame extends DynamicFrame {
         configPanel.add(profileConfigPanel);
         configPanel.add(channelConfigPanel);
 
+        // Initialize defaults
+        UIManager.put("OptionPane.background", MAIN_COLOR);
+        UIManager.getLookAndFeelDefaults().put("OptionPane.background", MAIN_COLOR);
+        UIManager.put("Button.background", TEXT_COLOR);
+        UIManager.getLookAndFeelDefaults().put("Button.background", TEXT_COLOR);
+        UIManager.put("Button.foreground", MAIN_COLOR);
+        UIManager.getLookAndFeelDefaults().put("Button.foreground", MAIN_COLOR);
+        UIManager.put("Label.foreground", BRIGHT_TEXT_COLOR);
+        UIManager.getLookAndFeelDefaults().put("Label.foreground", BRIGHT_TEXT_COLOR);
+        UIManager.put("TextField.background", DARK_TEXTBOX_COLOR);
+        UIManager.getLookAndFeelDefaults().put("TextField.background", DARK_TEXTBOX_COLOR);
+        UIManager.put("TextField.foreground", BRIGHT_TEXT_COLOR);
+        UIManager.getLookAndFeelDefaults().put("TextField.foreground", BRIGHT_TEXT_COLOR);
+
         // INITIALIZE BUTTONS ====================================================
         profileButton = ComponentFactory.createButton(client.getUser().getUsername(), MAIN_COLOR, TEXT_COLOR,
                 new ActionListener() {
@@ -100,19 +115,70 @@ public class MainFrame extends DynamicFrame {
         deleteChannelButton = ComponentFactory.createButton("DELETE CHANNEL", MAIN_COLOR, TEXT_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        System.out.println("I hope that wasn't a mistake.");
+                        JLabel label = ComponentFactory.createLabel("Are you sure you want to delete this channel?",
+                                BRIGHT_TEXT_COLOR);
+                        ActionListener action = new ActionListener() {
+                            public void actionPerformed(ActionEvent evt2) {
+                                output.offer(new ChannelDeleteEvent(client.getUser(), client.getCurrentChannel()));
+
+                                System.out.println(
+                                        "SYSTEM: Deleting channel " + client.getCurrentChannel().getChannelName());
+                            }
+                        };
+
+                        JFrame deleteChannel = FrameFactory.createConfirmFrame("Delete channel", MAIN_COLOR, label,
+                                action);
+                        deleteChannel.setVisible(true);
                     }
                 });
 
         addUserButton = ComponentFactory.createButton("ADD USER", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                System.out.println("User added!");
+                JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
+                        BRIGHT_TEXT_COLOR);
+                JTextField input = ComponentFactory.createTextBox(20);
+                JButton submit = ComponentFactory.createButton("Add User", new ActionListener() {
+                    public void actionPerformed(ActionEvent evt2) {
+
+                        if (input.getText() != "") {
+                            output.offer(new ChannelAddMemberEvent(client.getUser(), client.getCurrentChannel(),
+                                    input.getText().replaceFirst("@", "")));
+
+                            System.out.println("SYSTEM: Adding user " + input.getText().replaceFirst("@", ""));
+                        }
+                    }
+                });
+
+                JFrame addUser = FrameFactory.createRequestFrame("Add user", MAIN_COLOR, label, input, submit);
+                addUser.setVisible(true);
             }
         });
 
         deleteUserButton = ComponentFactory.createButton("REMOVE USER", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                System.out.println("User added!");
+                JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
+                        BRIGHT_TEXT_COLOR);
+                JTextField input = ComponentFactory.createTextBox(20);
+                JButton submit = ComponentFactory.createButton("Remove User", new ActionListener() {
+                    public void actionPerformed(ActionEvent evt2) {
+
+                        if (input.getText() != "") {
+                            String username = input.getText().replaceFirst("@", "");
+                            // Create a temp new user to check if they exist
+                            User tempUser = new User(username);
+                            if (!client.getCurrentChannel().getUsers().contains(tempUser))
+                                return;
+
+                            output.offer(new ChannelRemoveMemberEvent(client.getUser(), client.getCurrentChannel(),
+                                    username));
+
+                            System.out.println("SYSTEM: Removing user " + username);
+                        }
+                    }
+                });
+
+                JFrame removeUser = FrameFactory.createRequestFrame("Remove user", MAIN_COLOR, label, input, submit);
+                removeUser.setVisible(true);
             }
         });
 

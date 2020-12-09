@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Channel implements Serializable {
-    static final long serialVersionUID = 1L;
+    static final long serialVersionUID = 2L;
 
     public static final int MESSAGE_CLUSTER_AMT = 30;
     public static final int LOCAL_SAVE_AMT = MESSAGE_CLUSTER_AMT;
@@ -231,11 +231,7 @@ public class Channel implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        }
-
-        if (o.getClass() == this.getClass()) {
+        if (o == null || !(o instanceof Channel)) {
             return false;
         }
 

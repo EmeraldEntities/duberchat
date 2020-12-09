@@ -140,6 +140,7 @@ public class User implements Serializable {
 
     /**
      * Returns the user's status (e.g. online, offline, etc.)
+                        
      * 
      * @return int, the user's status.
      */
