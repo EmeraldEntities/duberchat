@@ -1,14 +1,15 @@
 package duberchat.handlers.server;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
 import duberchat.events.ChannelCreateEvent;
+import duberchat.events.FileWriteEvent;
 import duberchat.events.RequestFailedEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
@@ -80,7 +81,8 @@ public class ServerChannelCreateHandler implements Handleable {
     usersFound.add(creator.getUsername());
     channelUsers.add(creator);
     if (channelUsers.size() == 2) {
-      for (Channel channel : server.getChannels().values()) {
+      for (int channelId : creator.getChannels()) {
+        Channel channel = server.getChannels().get(channelId);
         User user1 = channel.getUsers().get(0);
         User user2 = channel.getUsers().get(1);
         if ((channelUsers.get(0).equals(user1) && creator.equals(user2))
@@ -108,41 +110,14 @@ public class ServerChannelCreateHandler implements Handleable {
     server.getChannels().put(id, newChannel);
 
     try {
-      // Add the new channel information and the appropriate filepath to the file write queue.
-      String[] msgArr = new String[channelUsers.size() + 7];
-      msgArr[0] = "data/channels/" + id + ".txt";
-      msgArr[1] = id + "\n";
-      msgArr[2] = channelName + "\n";
-      msgArr[3] = "1\n";
-      msgArr[4] = creator.getUsername() + "\n";
-      msgArr[5] = channelUsers.size() + "\n";
-      for (int i = 0; i < channelUsers.size(); i++) {
-        msgArr[6 + i] = channelUsers.get(i).getUsername() + "\n";
-      }
-      msgArr[channelUsers.size() + 6] = "0\n";
-      server.getFileAppendQueue().add(msgArr);
+      // Make a new file and write the channel object to it.
+      server.getFileWriteQueue().add(new FileWriteEvent(newChannel, "data/channels/" + id + ".txt"));
       
-      // update all the user files with new # of channels they're in and those channels
+      // update all the users (and their files) with the new channel
       for (User user : channelUsers) {
-        // first find and replace the current # of channels
+        user.getChannels().add(id);
         String filePath = "data/users/" + user.getUsername() + ".txt";
-        File userFile = new File(filePath);
-        BufferedReader fileReader = new BufferedReader(new FileReader(userFile));
-        // Skip reading the lines we don't care about
-        for (int i = 0; i < 3; i++) {
-          fileReader.readLine();
-        }
-        int numChannels = Integer.parseInt(fileReader.readLine().trim());
-        fileReader.close();
-        HashMap<String, HashMap<Integer, String>> rewriteMap = new HashMap<>();
-        HashMap<Integer, String> innerMap = new HashMap<>();
-        innerMap.put(4, (numChannels + 1) + "\n");
-        rewriteMap.put(filePath, innerMap);
-        server.getFileRewriteQueue().add(rewriteMap);
-
-        // then, append the new channel id to the end of the user file
-        String[] newMsg = {filePath, id + "\n"};
-        server.getFileAppendQueue().add(newMsg);
+        server.getFileWriteQueue().add(new FileWriteEvent(user, filePath));
       }
 
       // Output a corresponding event to the client who made the channel

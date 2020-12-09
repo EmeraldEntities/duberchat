@@ -1,11 +1,12 @@
 package duberchat.handlers.server;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Date;
-import java.util.HashMap;
 
 import duberchat.chatutil.*;
+import duberchat.events.FileWriteEvent;
 import duberchat.events.MessageSentEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
@@ -57,18 +58,9 @@ public class ServerMessageSentHandler implements Handleable {
         serverDestination.setTotalMessages(msgId + 1);
         destination.setTotalMessages(msgId + 1);   // added for clarity TODO
         try {
-            // Add the new message with the appropriate file path to the file write queue.
-            // Messages are formatted like this: id timestamp senderUsername msg
+            // Update the channel file.
             String filePath = "data/channels/" + destination.getChannelId() + ".txt";
-            HashMap<String, HashMap<Integer, String>> rewriteMap = new HashMap<>();
-            HashMap<Integer, String> rewriteInnerMap = new HashMap<>();
-            int lineNum = destination.getUsers().size() + destination.getAdminUsers().size() + 5;
-            rewriteInnerMap.put(lineNum, (msgId + 1) + "\n");
-            rewriteMap.put(filePath,  rewriteInnerMap);
-            server.getFileRewriteQueue().add(rewriteMap);
-            String[] msgArr = {filePath, msgId + " " + timeStamp + " " + senderUsername + " " + 
-                                msgString + "\n"};
-            server.getFileAppendQueue().add(msgArr);
+            server.getFileWriteQueue().add(new FileWriteEvent(serverDestination, filePath));
 
             // Send back a message sent event to every online user in the channel
             for (User member : serverDestination.getUsers()) {

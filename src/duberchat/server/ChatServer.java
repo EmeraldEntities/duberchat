@@ -2,11 +2,7 @@ package duberchat.server;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
@@ -37,8 +33,7 @@ public class ChatServer {
     private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
     private HashMap<String, User> allUsers; // map of all the usernames to their users
     private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
-    private ConcurrentLinkedQueue<String[]> fileAppendQueue;
-    private ConcurrentLinkedQueue<HashMap<String, HashMap<Integer, String>>> fileRewriteQueue;
+    private ConcurrentLinkedQueue<FileWriteEvent> fileWriteQueue;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
 
     public ChatServer() {
@@ -48,8 +43,7 @@ public class ChatServer {
         this.allUsers = new HashMap<>();
         this.eventHandlers = new HashMap<>();
         this.eventQueue = new ConcurrentLinkedQueue<>();
-        this.fileAppendQueue = new ConcurrentLinkedQueue<>();
-        this.fileRewriteQueue = new ConcurrentLinkedQueue<>();
+        this.fileWriteQueue = new ConcurrentLinkedQueue<>();
         eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
         eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
         eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
@@ -64,123 +58,61 @@ public class ChatServer {
         // load up all users and channels
         try {
             for (File userFile : new File("data/users").listFiles()) {
-                BufferedReader reader = new BufferedReader(new FileReader(userFile));
-                String username = reader.readLine().trim();
-                // skip over password line
-                reader.readLine();
-                String pfpPath = reader.readLine().trim();
-                this.allUsers.put(username, new User(username, pfpPath));
-                reader.close();
+                FileInputStream fileIn = new FileInputStream(userFile);
+                ObjectInputStream in = new ObjectInputStream(fileIn);
+                User user = (User) in.readObject();
+                this.allUsers.put(user.getUsername(), user);
+                in.close();
             }
 
             for (File channelFile : new File("data/channels").listFiles()) {
-                BufferedReader reader = new BufferedReader(new FileReader(channelFile));
-                int id = Integer.parseInt(reader.readLine().trim());
-                String name = reader.readLine().trim();
-                int numAdmins = Integer.parseInt(reader.readLine().trim());
-                HashSet<User> admins = new HashSet<>();
-                for (int i = 0; i < numAdmins; i++) {
-                    admins.add(allUsers.get(reader.readLine().trim()));
-                }
-                int numUsers = Integer.parseInt(reader.readLine().trim());
-                ArrayList<User> users = new ArrayList<>();
-                for (int i = 0; i < numUsers; i++) {
-                    users.add(allUsers.get(reader.readLine().trim()));
-                }
-                int numTotalMsgs = Integer.parseInt(reader.readLine().trim());
-                Channel newChannel = new Channel(name, id, users, admins, numTotalMsgs);
-                String curLine = reader.readLine();
-                while (curLine != null) {
-                    String[] messageInfo = curLine.trim().split(" ");
-                    newChannel.addMessage(new Message(messageInfo[3], messageInfo[2], Integer.parseInt(messageInfo[0]),
-                            new Date(Long.parseLong(messageInfo[1])), newChannel));
-                    curLine = reader.readLine();
-                }
-                channels.put(id, newChannel);
-                reader.close();
+                FileInputStream fileIn = new FileInputStream(channelFile);
+                ObjectInputStream in = new ObjectInputStream(fileIn);
+                Channel channel = (Channel) in.readObject();
+                this.channels.put(channel.getChannelId(), channel);
+                in.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e1) {
+            e1.printStackTrace();
         }
 
         System.out.println("Waiting for a client connection..");
 
         Socket client = null; // hold the client connection
 
+        Thread fileWriteThread = new Thread(new Runnable() {
+            public void run() {
+                while (true) {
+                    FileWriteEvent writeInfo = fileWriteQueue.poll();
+                    if (writeInfo == null) continue;
+                    try {
+                        FileOutputStream fileOut = new FileOutputStream(writeInfo.getFilePath());
+                        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                        out.writeObject(writeInfo.getObjectToWrite());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        fileWriteThread.start();
+
+        // start new thread to handle events
+        Thread eventsThread = new Thread(new Runnable() {
+            public void run() {
+                while (true) {
+                    SerializableEvent event = eventQueue.poll();
+                    if (event == null) continue;
+                    eventHandlers.get(event.getClass()).handleEvent(event);
+                }
+            }
+        });
+        eventsThread.start();
+
         try {
             serverSock = new ServerSocket(6969); // assigns an port to the server
-
-            // start new thread to handle events
-            Thread eventsThread = new Thread(new Runnable() {
-                public void run() {
-                    while (true) {
-                        SerializableEvent event = eventQueue.poll();
-                        if (event == null) continue;
-                        eventHandlers.get(event.getClass()).handleEvent(event);
-                    }
-                }
-            });
-            eventsThread.start();
-
-            // Start new thread to handle file appending.
-            // File appending is separated from file find&replace because find&replace involves
-            // reading through (possibly) the whole file and rewriting it all, which is costly.
-            Thread fileAppendThread = new Thread(new Runnable() {
-                public void run() {
-                    while (true) {
-                        String[] msgs = fileAppendQueue.poll();
-                        if (msgs == null) continue;
-                        File toWriteTo = new File(msgs[0]);
-                        try {
-                            toWriteTo.createNewFile();
-                            FileWriter writer = new FileWriter(toWriteTo, true);
-                            for (int i = 1; i < msgs.length; i++) {
-                                writer.write(msgs[i]);
-                            }
-                            writer.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                }
-            });
-            fileAppendThread.start();
-
-            Thread fileRewriteThread = new Thread(new Runnable() {
-                public void run() {
-                    while (true) {
-                        HashMap<String, HashMap<Integer, String>> toRewrite = fileRewriteQueue.poll();
-                        if (toRewrite == null) continue;
-                        for (Map.Entry<String, HashMap<Integer, String>> entry : 
-                             toRewrite.entrySet()) {
-                            File rewriteFile = new File(entry.getKey());
-                            HashMap<Integer, String> linesToRewrite = entry.getValue();
-                            try {
-                                BufferedReader reader = new BufferedReader(new FileReader(rewriteFile));
-                                FileWriter writer = new FileWriter(rewriteFile);
-                                int lineNum = 1;
-                                String curLine = reader.readLine();
-                                while (curLine != null) {
-                                    if (linesToRewrite.containsKey(lineNum)) {
-                                        writer.write(linesToRewrite.get(lineNum));
-                                    } else {
-                                        writer.write(curLine + "\n");
-                                    }
-                                    curLine = reader.readLine();
-                                    lineNum++;
-                                }
-                                reader.close();
-                                writer.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            });
-            fileRewriteThread.start();
-
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
                 System.out.println("Client connected");
@@ -220,12 +152,8 @@ public class ChatServer {
         return this.curUsers;
     }
 
-    public ConcurrentLinkedQueue<String[]> getFileAppendQueue() {
-        return this.fileAppendQueue;
-    }
-
-    public ConcurrentLinkedQueue<HashMap<String, HashMap<Integer, String>>> getFileRewriteQueue() {
-        return this.fileRewriteQueue;
+    public ConcurrentLinkedQueue<FileWriteEvent> getFileWriteQueue() {
+        return this.fileWriteQueue;
     }
 
     // ***** Inner class - thread for client connection
@@ -298,7 +226,6 @@ public class ChatServer {
 
         public void handleLogin(ClientLoginEvent event) {
             String username = event.getUsername();
-            int hashedPassword = event.getHashedPassword();
 
             // Case 1: new user
             if (event.getIsNewUser()) {
@@ -310,13 +237,15 @@ public class ChatServer {
                         return;
                     }
 
-                    // Add new user file to file write queue.
-                    String[] msgArr = {"data/users/" + username + ".txt", username + "\n",
-                                       hashedPassword + "\n", "default.png\n", "0\n"};
-                    ChatServer.this.fileAppendQueue.add(msgArr);
-
                     System.out.println("Made new user.");
                     user = new User(username);
+
+                    // make new user file
+                    FileOutputStream fileOut = new FileOutputStream("data/users/" + username + ".txt");
+                    ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                    out.writeObject(user);
+                    out.close();
+
                     // TODO: NOTE: NOT THREAD SAFE
                     ChatServer.this.allUsers.put(username, user);
                     ChatServer.this.curUsers.put(user, this);
@@ -333,39 +262,39 @@ public class ChatServer {
 
             // Case 2: already registered user
             try {
-                File userFile = new File("data/users/" + username + ".txt");
-                BufferedReader reader = new BufferedReader(new FileReader(userFile));
-                // skip over username, password, and pfp lines
-                // assumption is made that file was titled correctly (aka file title = username)
-                for (int i = 0; i < 3; i++) {
-                    reader.readLine();
+                // If user doesn't exist, give back an auth failed event to the client.
+                if (!allUsers.containsKey(username)) {
+                    output.writeObject(new AuthFailedEvent(event));
+                    return;
                 }
-                // user should never be null; if it's null, FileNotFoundException
-                // would've been caught
-                user = allUsers.get(username);
+
+                FileInputStream fileIn = new FileInputStream("data/users/" + username + ".txt");
+                ObjectInputStream in = new ObjectInputStream(fileIn);
+
+                user = (User) in.readObject();
                 curUsers.put(user, this);
-                int numChannels = Integer.parseInt(reader.readLine().trim());
                 HashMap<Integer, Channel> userChannels = new HashMap<>();
-                for (int i = 0; i < numChannels; i++) {
-                    int channelId = Integer.parseInt(reader.readLine().trim());
-                    userChannels.put(channelId, channels.get(channelId));
+                Iterator<Integer> itr = user.getChannels().iterator();
+                while (itr.hasNext()) {
+                    int id = itr.next();
+                    userChannels.put(id, channels.get(id));
                 }
+                in.close();
                 output.writeObject(new AuthSucceedEvent(event, user, userChannels));
                 output.flush();
-                reader.close();
-            } catch (FileNotFoundException e) {
-                try {
-                    output.writeObject(new AuthFailedEvent(event));
-                } catch (IOException e2) {
-                    e2.printStackTrace();
-                }
             } catch (IOException e1) {
                 e1.printStackTrace();
+            } catch (ClassNotFoundException e2) {
+                e2.printStackTrace();
             }
         }
 
         public ObjectOutputStream getOutputStream() {
             return this.output;
+        }
+
+        public void setRunning(boolean newState) {
+            this.running = newState;
         }
 
     } // end of inner class

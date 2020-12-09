@@ -2,6 +2,7 @@ package duberchat.chatutil;
 
 import java.awt.image.BufferedImage;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -23,7 +24,7 @@ import javax.imageio.ImageIO;
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {
-    static final long serialVersionUID = 1L;
+    static final long serialVersionUID = 2L;
 
     public static final int OFFLINE = 0;
     public static final int ONLINE = 1;
@@ -34,6 +35,7 @@ public class User implements Serializable {
     private String username;
     private int status;
     private transient BufferedImage pfp;
+    private HashSet<Integer> channels;
 
     /**
      * Constructor for a user when no profile picture exists, used when first making
@@ -50,16 +52,19 @@ public class User implements Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        this.channels = new HashSet<>();
     }
 
     /**
-     * Constructor for a user when the profile picture exists.
+     * Constructor for a user when additional information exists, used for existing users.
      * 
      * @param username The user's username.
      * @param pfpPath  The file name of the user's profile picture.
+     * @param channels The set of all channel ids representing the channels the user is in.
      */
-    public User(String username, String pfpPath) {
+    public User(String username, String pfpPath, HashSet<Integer> channels) {
         this.username = username;
+        this.channels = channels;
 
         this.status = ONLINE;
         try {
@@ -174,7 +179,7 @@ public class User implements Serializable {
     /**
      * Retrieves this user's profile picture.
      * 
-     * @return BufferedImag, the profile picture.
+     * @return BufferedImage, the profile picture.
      */
     public BufferedImage getPfp() {
         return this.pfp;
@@ -187,5 +192,14 @@ public class User implements Serializable {
      */
     public void setPfp(BufferedImage pfp) {
         this.pfp = pfp;
+    }
+
+    /**
+     * Retrieves the set of channels this user is in.
+     * 
+     * @return HashSet<Integer>, the set of channel ids representing the channels the user is in.
+     */
+    public HashSet<Integer> getChannels() {
+        return this.channels;
     }
 }

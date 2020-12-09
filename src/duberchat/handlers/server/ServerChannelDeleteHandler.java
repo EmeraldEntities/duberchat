@@ -1,9 +1,11 @@
 package duberchat.handlers.server;
 
-import java.io.*;
-import java.util.HashMap;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 
 import duberchat.events.ChannelDeleteEvent;
+import duberchat.events.FileWriteEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
@@ -23,31 +25,11 @@ public class ServerChannelDeleteHandler implements Handleable {
     Channel serverToDelete = server.getChannels().get(toDeleteId);
 
     try {
-      // Remove the channel from all its users' files
+      // Remove the channel from all its users and their files
       for (User user : serverToDelete.getUsers()) {
-        // First, update the number of channels.
+        user.getChannels().remove(toDeleteId);
         String filePath = "data/users/" + user.getUsername() + ".txt";
-        File userFile = new File(filePath);
-        BufferedReader fileReader = new BufferedReader(new FileReader(userFile));
-        // Skip the lines we don't care about
-        for (int i = 0; i < 3; i++) {
-          fileReader.readLine();
-        }
-        int numChannels = Integer.parseInt(fileReader.readLine().trim());
-        HashMap<String, HashMap<Integer, String>> rewriteMap = new HashMap<>();
-        HashMap<Integer, String> innerMap = new HashMap<>();
-        innerMap.put(4, (numChannels - 1) + "\n");
-        // Then, find where the channel id is listed and remove it.
-        int curId = Integer.parseInt(fileReader.readLine().trim());
-        int count = 1;
-        while (curId != toDeleteId) {
-          curId = Integer.parseInt(fileReader.readLine().trim());
-          count++;
-        }
-        fileReader.close();
-        innerMap.put(4 + count, "");
-        rewriteMap.put(filePath, innerMap);
-        server.getFileRewriteQueue().add(rewriteMap);
+        server.getFileWriteQueue().add(new FileWriteEvent(user, filePath));
 
         // Give back a channel deletion event to all currently online users in the channel
         if (!server.getCurUsers().containsKey(user)) continue;
