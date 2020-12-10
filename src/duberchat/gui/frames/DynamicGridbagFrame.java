@@ -31,7 +31,8 @@ public abstract class DynamicGridbagFrame extends DynamicFrame {
     }
 
     public static void addConstrainedComponent(Component comp, Container cont, GridBagLayout layout,
-            GridBagConstraints gbc, int rows, int cols, int width, int height, int fill, int anchor, Insets insets) {
+            GridBagConstraints gbc, int rows, int cols, int width, int height, double weightX, double weightY, int fill,
+            int anchor, Insets insets) {
 
         gbc.gridx = rows;
         gbc.gridy = cols;
@@ -43,8 +44,18 @@ public abstract class DynamicGridbagFrame extends DynamicFrame {
         gbc.insets = insets;
         gbc.anchor = anchor;
 
+        gbc.weightx = weightX;
+        gbc.weighty = weightY;
+
         layout.setConstraints(comp, gbc);
         cont.add(comp);
+    }
+
+    public static void addConstrainedComponent(Component comp, Container cont, GridBagLayout layout,
+            GridBagConstraints gbc, int rows, int cols, int width, int height, int fill, int anchor, Insets insets) {
+
+        addConstrainedComponent(comp, cont, layout, gbc, rows, cols, width, height, 0.0, 0.0, GridBagConstraints.NONE,
+                GridBagConstraints.CENTER, insets);
     }
 
     public static void addConstrainedComponent(Component comp, Container cont, GridBagLayout layout,

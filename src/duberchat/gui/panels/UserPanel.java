@@ -3,18 +3,9 @@ package duberchat.gui.panels;
 import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.EventObject;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.Date;
-
-import duberchat.events.*;
-import duberchat.client.ChatClient;
 
 import duberchat.gui.util.ComponentFactory;
 import duberchat.gui.frames.MainFrame;
-import duberchat.chatutil.Channel;
-import duberchat.chatutil.Message;
 import duberchat.chatutil.User;
 
 @SuppressWarnings("serial")
@@ -25,8 +16,10 @@ public class UserPanel extends JPanel {
     public UserPanel(User user, boolean isAdmin) {
         this.user = user;
 
-        Color mainColor = MainFrame.TEXT_COLOR;
-        if (isAdmin) {
+        Color mainColor = MainFrame.BRIGHT_TEXT_COLOR;
+        if (user.getStatus() == User.OFFLINE) {
+            mainColor = MainFrame.TEXT_COLOR;
+        } else if (isAdmin) {
             mainColor = Color.PINK;
         }
         String text = user.getUsername() + " - " + user.getStringStatus();

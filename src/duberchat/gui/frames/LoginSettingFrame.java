@@ -45,9 +45,11 @@ public class LoginSettingFrame extends DynamicGridbagFrame {
         savedText = ComponentFactory.createLabel("Saved!", Color.CYAN);
 
         ipField = ComponentFactory.createTextBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.DARK_TEXTBOX_COLOR,
-                new LimitingRegexFilter(15, "^[0-9.]+$"));
+                new LimitingRegexFilter(15, "^[0-9.]+$"), BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        ipField.setText(client.getIp());
         portField = ComponentFactory.createTextBox(10, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.DARK_TEXTBOX_COLOR,
-                new LimitingRegexFilter(6, "^\\d+$"));
+                new LimitingRegexFilter(6, "^\\d+$"), BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        portField.setText(Integer.toString(client.getPort()));
 
         submitButton = ComponentFactory.createButton("Save", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
                 new ActionListener() {
@@ -61,7 +63,7 @@ public class LoginSettingFrame extends DynamicGridbagFrame {
                 });
 
         addConstrainedComponent(ipLabel, mainPanel, layout, constraints, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL,
-                GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
+                GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
         addConstrainedComponent(ipField, mainPanel, layout, constraints, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL,
                 GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
         addConstrainedComponent(portLabel, mainPanel, layout, constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL,

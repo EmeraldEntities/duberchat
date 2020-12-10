@@ -2,10 +2,8 @@ package duberchat.gui.frames;
 
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.text.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.EventObject;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Date;
 
@@ -23,6 +21,10 @@ import duberchat.chatutil.User;
 
 @SuppressWarnings("serial")
 public class MainFrame extends DynamicFrame {
+    /**
+     *
+     */
+    private static final int CHANNEL_SIZE = 50;
     public static final Dimension DEFAULT_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
     public static final Color MAIN_COLOR = new Color(60, 60, 60);
     public static final Color SIDE_COLOR = new Color(40, 40, 40);
@@ -32,6 +34,9 @@ public class MainFrame extends DynamicFrame {
     public static final Color TEXT_COLOR = new Color(150, 150, 150);
     public static final Color SECONDARY_TEXT_COLOR = new Color(180, 180, 180);
     public static final Color BRIGHT_TEXT_COLOR = new Color(220, 220, 220);
+    
+    private int maxChannelWidth = DEFAULT_SIZE.width / 4;
+    private int maxGrids = DEFAULT_SIZE.height / CHANNEL_SIZE;
 
     private JPanel channelPanel;
     private JPanel userPanel;
@@ -46,6 +51,7 @@ public class MainFrame extends DynamicFrame {
     private JButton sendButton, quitButton, profileButton;
     private JButton addUserButton, deleteUserButton;
     private JButton addChannelButton, deleteChannelButton;
+    private JButton homeButton;
     private JTextField typeField;
     private JTextArea msgArea;
 
@@ -54,11 +60,8 @@ public class MainFrame extends DynamicFrame {
     private ConcurrentLinkedQueue<SerializableEvent> output;
     private ChatClient client;
 
-    private ArrayList<ChannelPanel> activeChannelPanels;
-    private ArrayList<UserPanel> activeUserPanels;
-
-    // private ArrayList<User> lastUpdatedUsers;
-    // private Message lastMessage;
+    // private ArrayList<ChannelPanel> activeChannelPanels;
+    // private ArrayList<UserPanel> activeUserPanels;
 
     public MainFrame(String title, ChatClient client, ConcurrentLinkedQueue<SerializableEvent> outgoingEvents) {
         super(title);
@@ -69,30 +72,21 @@ public class MainFrame extends DynamicFrame {
         this.setSize(MainFrame.DEFAULT_SIZE);
         this.setResizable(true);
         this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
+        this.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent evt) {
+                reinitializeLayouts();
+            }
 
-        typingPanel = new JPanel();
-        channelPanel = new JPanel();
-        userPanel = new JPanel();
-        configPanel = new JPanel();
-        profileConfigPanel = new JPanel();
-        channelConfigPanel = new JPanel();
+            public void componentShown(ComponentEvent evt) {
+                reinitializeLayouts();
+            }
+        });
+        this.addWindowStateListener(new WindowStateListener() {
+            public void windowStateChanged(WindowEvent evt) {
+                reinitializeLayouts();
+            }
+        });
 
-        channelPanel.setBackground(SIDE_COLOR);
-        userPanel.setBackground(SIDE_COLOR);
-        typingPanel.setBackground(SIDE_COLOR);
-        profileConfigPanel.setBackground(DARK_SIDE_COLOR);
-        channelConfigPanel.setBackground(DARK_SIDE_COLOR);
-
-        typingPanel.setLayout(new GridLayout(2, 0));
-        channelPanel.setLayout(new GridLayout(20, 1));
-        configPanel.setLayout(new GridLayout(1, 2));
-        userPanel.setLayout(new GridLayout(10, 1));
-        profileConfigPanel.setLayout(new FlowLayout(FlowLayout.LEADING, 25, 5));
-        channelConfigPanel.setLayout(new FlowLayout(FlowLayout.TRAILING, 25, 5));
-        configPanel.add(profileConfigPanel);
-        configPanel.add(channelConfigPanel);
-
-        // Initialize defaults
         UIManager.put("OptionPane.background", MAIN_COLOR);
         UIManager.getLookAndFeelDefaults().put("OptionPane.background", MAIN_COLOR);
         UIManager.put("Button.background", TEXT_COLOR);
@@ -105,6 +99,74 @@ public class MainFrame extends DynamicFrame {
         UIManager.getLookAndFeelDefaults().put("TextField.background", DARK_TEXTBOX_COLOR);
         UIManager.put("TextField.foreground", BRIGHT_TEXT_COLOR);
         UIManager.getLookAndFeelDefaults().put("TextField.foreground", BRIGHT_TEXT_COLOR);
+
+        initializeComponents(client);
+
+        // typingPanel.setLayout(new GridLayout(2, 0));
+        GridBagLayout typingPanelLayout = new GridBagLayout();
+        typingPanel.setLayout(typingPanelLayout);
+        configPanel.setLayout(new GridLayout(1, 2));
+        channelPanel.setLayout(new GridLayout(this.getHeight() / CHANNEL_SIZE, 1));
+        userPanel.setLayout(new GridLayout(this.getHeight() / CHANNEL_SIZE, 1));
+        profileConfigPanel.setLayout(new FlowLayout(FlowLayout.LEADING, 25, 5));
+        channelConfigPanel.setLayout(new FlowLayout(FlowLayout.TRAILING, 25, 5));
+        configPanel.add(profileConfigPanel);
+        configPanel.add(channelConfigPanel);
+
+        channelPanel.addMouseWheelListener(new MouseWheelListener() {
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                System.out.println(e.getWheelRotation());
+            }
+        });
+
+        // Initialize defaults
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        DynamicGridbagFrame.addConstrainedComponent(typeField, typingPanel, typingPanelLayout, gbc, 0, 0, 5, 1, 1.0,
+                1.0, GridBagConstraints.BOTH, GridBagConstraints.CENTER, new Insets(0, 20, 0, 20));
+        DynamicGridbagFrame.addConstrainedComponent(sendButton, typingPanel, typingPanelLayout, gbc, 5, 0, 1, 1, 0.5,
+                1.0, GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 20, 0, 20));
+        DynamicGridbagFrame.addConstrainedComponent(channelIndicator, typingPanel, typingPanelLayout, gbc, 0, 1, 5, 1,
+                1.0, 1.0, GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 20, 0, 20));
+        DynamicGridbagFrame.addConstrainedComponent(quitButton, typingPanel, typingPanelLayout, gbc, 5, 1, 1, 1, 0.5,
+                1.0, GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 20, 0, 20));
+
+        this.add(BorderLayout.WEST, channelPanel);
+        this.add(BorderLayout.EAST, userPanel);
+        this.add(BorderLayout.NORTH, configPanel);
+        this.add(BorderLayout.CENTER, msgArea);
+        this.add(BorderLayout.SOUTH, typingPanel);
+
+        this.reload();
+    }
+
+    private void reinitializeLayouts() {
+        channelPanel.removeAll();
+        userPanel.removeAll();
+
+        this.maxGrids = this.getHeight() / CHANNEL_SIZE;
+        this.maxChannelWidth = this.getWidth() / 4;
+
+        channelPanel.setLayout(new GridLayout(this.maxGrids, 1));
+        userPanel.setLayout(new GridLayout(this.maxGrids, 1));
+
+        this.reload();
+    }
+
+    private void initializeComponents(ChatClient client) {
+        // INITIALIZE PANELS ====================================================
+        typingPanel = new JPanel();
+        channelPanel = new JPanel();
+        userPanel = new JPanel();
+        configPanel = new JPanel();
+        profileConfigPanel = new JPanel();
+        channelConfigPanel = new JPanel();
+
+        channelPanel.setBackground(SIDE_COLOR);
+        userPanel.setBackground(SIDE_COLOR);
+        typingPanel.setBackground(SIDE_COLOR);
+        profileConfigPanel.setBackground(DARK_SIDE_COLOR);
+        channelConfigPanel.setBackground(DARK_SIDE_COLOR);
 
         // INITIALIZE BUTTONS ====================================================
         profileButton = ComponentFactory.createButton(client.getUser().getUsername(), MAIN_COLOR, TEXT_COLOR,
@@ -196,8 +258,6 @@ public class MainFrame extends DynamicFrame {
 
         quitButton = ComponentFactory.createButton("QUIT", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                System.out.println("SYSTEM: Exiting application!");
-
                 client.logout();
                 destroy();
             }
@@ -214,6 +274,14 @@ public class MainFrame extends DynamicFrame {
                         addChannelFrame.setVisible(true);
                     }
                 });
+
+        homeButton = ComponentFactory.createButton("HOME", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                client.setCurrentChannel(null);
+
+                reload();
+            }
+        });
 
         // INITIALIZE TYPING AREA =================================================
         typeField = ComponentFactory.createTextBox(20, BRIGHT_TEXT_COLOR, TEXTBOX_COLOR, new TextLengthFilter(100));
@@ -237,19 +305,6 @@ public class MainFrame extends DynamicFrame {
 
         channelIndicator = ComponentFactory.createLabel("No channel selected.", SECONDARY_TEXT_COLOR);
         channelIndicator.setFont(new Font("Courier", Font.BOLD, 16));
-
-        typingPanel.add(typeField);
-        typingPanel.add(sendButton);
-        typingPanel.add(channelIndicator);
-        typingPanel.add(quitButton);
-
-        this.add(BorderLayout.WEST, channelPanel);
-        this.add(BorderLayout.EAST, userPanel);
-        this.add(BorderLayout.NORTH, configPanel);
-        this.add(BorderLayout.CENTER, msgArea);
-        this.add(BorderLayout.SOUTH, typingPanel);
-
-        this.reload();
     }
 
     private void sendMessage(ChatClient client) {
@@ -333,10 +388,12 @@ public class MainFrame extends DynamicFrame {
 
     // TODO: make this a lot better
     private void reloadMessages() {
-        if (client.getCurrentChannel() == null)
-            return;
-
         msgArea.setText("");
+
+        if (client.getCurrentChannel() == null) {
+            return;
+        }
+
         ArrayList<Message> messages = client.getCurrentChannel().getMessages();
 
         for (int i = messages.size() - 1; i >= 0; i--) {
@@ -369,27 +426,37 @@ public class MainFrame extends DynamicFrame {
 
     // TODO: implement
     private void reloadUsers() {
+        userPanel.removeAll();
+
         if (client.getCurrentChannel() == null) {
             return;
         }
-
-        userPanel.removeAll();
 
         Channel curChannel = client.getCurrentChannel();
         for (User u : curChannel.getUsers()) {
             System.out.println(u.getUsername());
             userPanel.add(new UserPanel(u, curChannel.getAdminUsers().contains(u)));
+            userPanel.setMaximumSize(new Dimension(CHANNEL_SIZE, maxChannelWidth));
         }
     }
 
     private void reloadChannels() {
         channelPanel.removeAll();
+        channelPanel.add(homeButton);
         channelPanel.add(addChannelButton);
 
         if (this.client.getChannels().size() > 0) {
             for (Channel c : this.client.getChannels().values()) {
                 System.out.println(c.getChannelName());
-                channelPanel.add(new ChannelPanel(this.client, c));
+
+                Color defaultColor = SIDE_COLOR;
+                // written this way so that if the current channel is null, that's okay
+                if (c.equals(this.client.getCurrentChannel())) {
+                    defaultColor = MAIN_COLOR;
+                }
+
+                channelPanel.add(new ChannelPanel(this.client, c, defaultColor));
+                channelPanel.setMaximumSize(new Dimension(CHANNEL_SIZE, maxChannelWidth));
             }
         }
     }

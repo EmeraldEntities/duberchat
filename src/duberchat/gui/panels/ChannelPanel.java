@@ -16,7 +16,7 @@ public class ChannelPanel extends JPanel {
 
     JLabel channelName;
 
-    public ChannelPanel(ChatClient client, Channel channel) {
+    public ChannelPanel(ChatClient client, Channel channel, Color defaultColor) {
         super();
 
         this.channel = channel;
@@ -27,7 +27,7 @@ public class ChannelPanel extends JPanel {
 
         // Centering text
         this.setLayout(new GridBagLayout());
-        this.setBackground(MainFrame.SIDE_COLOR);
+        this.setBackground(defaultColor);
         this.add(this.channelName);
         this.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -42,7 +42,7 @@ public class ChannelPanel extends JPanel {
             }
 
             public void mouseExited(MouseEvent e) {
-                setBackground(MainFrame.SIDE_COLOR);
+                setBackground(defaultColor);
             }
         });
     }

@@ -1,11 +1,14 @@
 package duberchat.gui.frames;
 
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.text.*;
 import java.awt.*;
 
-import java.util.EventObject;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
@@ -79,7 +82,14 @@ public class LoginFrame extends DynamicGridbagFrame {
         submitButton = ComponentFactory.createButton("Start DuberChatting", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
                 new SubmitActionListener());
 
-        optionsButton = ComponentFactory.createButton("⚙️", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR);
+        ImageIcon settingsIcon = new ImageIcon();
+        try {
+            BufferedImage settings = ImageIO.read(new File("data/system/settings.png"));
+            settingsIcon = new ImageIcon(settings.getScaledInstance(16, 16, Image.SCALE_SMOOTH));
+        } catch (IOException e) {
+            System.out.println("SYSTEM: Could not load gear!");
+        }
+        optionsButton = ComponentFactory.createButton("", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR);
         optionsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 // JOptionPane pain = ComponentFactory.createRequestPane();
@@ -99,6 +109,16 @@ public class LoginFrame extends DynamicGridbagFrame {
                 settingsFrame.setVisible(true);
             }
         });
+        optionsButton.setIcon(settingsIcon);
+
+        JLabel picLabel = new JLabel("");
+        try {
+            BufferedImage logo = ImageIO.read(new File("data/system/duberchat.png"));
+            picLabel = new JLabel(new ImageIcon(logo.getScaledInstance(128, -1, Image.SCALE_SMOOTH)));
+        } catch (IOException e) {
+            System.out.println("SYSTEM: Could not load logo!");
+        }
+
         // JLabel image = new JLabel(new ImageIcon("/data/server/duberchat.png"));
         // constraints.gridx = 0;
         // constraints.gridy = 0;
@@ -107,19 +127,21 @@ public class LoginFrame extends DynamicGridbagFrame {
         // image.repaint();
         // mainPanel.repaint();
 
-        addConstrainedComponent(usernameLabel, mainPanel, loginLayout, constraints, 0, 0, 1, 1,
+        addConstrainedComponent(picLabel, mainPanel, loginLayout, constraints, 0, 0, 1, 1,
+                GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 20, 0));
+        addConstrainedComponent(usernameLabel, mainPanel, loginLayout, constraints, 0, 1, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
-        addConstrainedComponent(usernameField, mainPanel, loginLayout, constraints, 0, 1, 1, 1,
-                GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
-        addConstrainedComponent(passwordLabel, mainPanel, loginLayout, constraints, 0, 2, 1, 1,
+        addConstrainedComponent(usernameField, mainPanel, loginLayout, constraints, 0, 2, 1, 1,
+                GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(8, 0, 0, 0));
+        addConstrainedComponent(passwordLabel, mainPanel, loginLayout, constraints, 0, 3, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(30, 0, 0, 0));
-        addConstrainedComponent(passwordField, mainPanel, loginLayout, constraints, 0, 3, 1, 1,
+        addConstrainedComponent(passwordField, mainPanel, loginLayout, constraints, 0, 4, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(8, 0, 16, 0));
-        addConstrainedComponent(newUserCheckbox, mainPanel, loginLayout, constraints, 0, 4, 1, 1,
+        addConstrainedComponent(newUserCheckbox, mainPanel, loginLayout, constraints, 0, 5, 1, 1,
                 GridBagConstraints.NONE, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
-        addConstrainedComponent(submitButton, mainPanel, loginLayout, constraints, 0, 5, 1, 1,
+        addConstrainedComponent(submitButton, mainPanel, loginLayout, constraints, 0, 6, 1, 1,
                 GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
-        addConstrainedComponent(optionsButton, mainPanel, loginLayout, constraints, 0, 6, 1, 1, GridBagConstraints.NONE,
+        addConstrainedComponent(optionsButton, mainPanel, loginLayout, constraints, 0, 7, 1, 1, GridBagConstraints.NONE,
                 GridBagConstraints.CENTER, new Insets(16, 0, 0, 0));
 
         this.add(mainPanel);
@@ -153,7 +175,7 @@ public class LoginFrame extends DynamicGridbagFrame {
             mainPanel.remove(connectingText);
         }
 
-        addConstrainedComponent(failedText, mainPanel, loginLayout, constraints, 0, 7, 1, 1, GridBagConstraints.NONE,
+        addConstrainedComponent(failedText, mainPanel, loginLayout, constraints, 0, 8, 1, 1, GridBagConstraints.NONE,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
 
         this.revalidate();
@@ -180,7 +202,7 @@ public class LoginFrame extends DynamicGridbagFrame {
 
             // Add connecting... text to aid user
             mainPanel.remove(failedText); // attempt to remove failed text
-            addConstrainedComponent(connectingText, mainPanel, loginLayout, constraints, 0, 7, 1, 1,
+            addConstrainedComponent(connectingText, mainPanel, loginLayout, constraints, 0, 8, 1, 1,
                     GridBagConstraints.NONE, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
             mainPanel.revalidate();
             mainPanel.repaint();

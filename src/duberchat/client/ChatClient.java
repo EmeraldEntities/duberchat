@@ -123,6 +123,7 @@ public class ChatClient {
 
                         this.user = authSuccess.getUser();
                         this.channels = authSuccess.getChannels();
+                        this.user.setStatus(User.ONLINE);
 
                         System.out.println("SYSTEM: current channels: " + channels.size());
 
