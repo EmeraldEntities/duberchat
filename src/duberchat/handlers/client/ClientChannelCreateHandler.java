@@ -29,7 +29,7 @@ public class ClientChannelCreateHandler implements Handleable {
         // channel.
         if (!this.client.getChannels().containsKey(newChannel.getChannelId())) {
             this.client.getChannels().put(newChannelId, newChannel);
-        }
+        } 
 
         // Make sure other users don't get forcefully pulled into the new
         // channel if they weren't the creator.

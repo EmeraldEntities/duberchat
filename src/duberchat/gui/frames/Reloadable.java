@@ -1,4 +1,4 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
 import duberchat.events.SerializableEvent;
 
@@ -31,7 +31,8 @@ public interface Reloadable {
     /**
      * Requests a reload for a frame.
      * <p>
-     * An optional source is provided so that the frame can have information about the reason of reload.
+     * An optional source is provided so that the frame can have information about
+     * the reason of reload.
      * 
      * @param source the source/reason of the reload.
      */

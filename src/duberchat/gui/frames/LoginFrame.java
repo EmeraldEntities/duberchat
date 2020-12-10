@@ -1,4 +1,4 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
 import java.awt.event.*;
 import javax.swing.*;
@@ -10,9 +10,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
 import duberchat.client.ChatClient;
-import duberchat.frames.filters.TextLengthFilter;
-import duberchat.frames.util.ComponentFactory;
-import duberchat.frames.util.FrameFactory;
+import duberchat.gui.filters.TextLengthFilter;
+import duberchat.gui.util.ComponentFactory;
+import duberchat.gui.util.FrameFactory;
 
 @SuppressWarnings("serial")
 public class LoginFrame extends DynamicGridbagFrame {
@@ -48,6 +48,7 @@ public class LoginFrame extends DynamicGridbagFrame {
         this.setSize(LoginFrame.DEFAULT_SIZE);
         this.setResizable(false);
         this.setUndecorated(true);
+        this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
 
         loginLayout = new GridBagLayout();
         constraints = new GridBagConstraints();
@@ -91,7 +92,7 @@ public class LoginFrame extends DynamicGridbagFrame {
                         return;
                     }
 
-                settingsFrame.destroy();
+                    settingsFrame.destroy();
                 }
 
                 settingsFrame = new LoginSettingFrame(client);
@@ -167,7 +168,7 @@ public class LoginFrame extends DynamicGridbagFrame {
             // Ensure that multiple login events aren't performed
             if (alreadySentRequest)
                 return;
-                       
+
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
 

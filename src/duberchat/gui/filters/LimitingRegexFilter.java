@@ -1,4 +1,4 @@
-package duberchat.frames.filters;
+package duberchat.gui.filters;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;

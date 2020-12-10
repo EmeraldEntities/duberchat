@@ -1,8 +1,6 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
-import java.awt.event.*;
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
 import duberchat.events.SerializableEvent;
 
 /**

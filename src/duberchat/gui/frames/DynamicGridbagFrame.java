@@ -1,4 +1,4 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
 import java.awt.*;
 
@@ -32,7 +32,7 @@ public abstract class DynamicGridbagFrame extends DynamicFrame {
 
     public static void addConstrainedComponent(Component comp, Container cont, GridBagLayout layout,
             GridBagConstraints gbc, int rows, int cols, int width, int height, int fill, int anchor, Insets insets) {
-                
+
         gbc.gridx = rows;
         gbc.gridy = cols;
 

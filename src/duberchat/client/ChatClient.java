@@ -1,8 +1,5 @@
 package duberchat.client;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
 import java.io.*;
 import java.net.*;
 
@@ -11,7 +8,8 @@ import java.util.HashMap;
 
 import duberchat.chatutil.*;
 import duberchat.events.*;
-import duberchat.frames.*;
+import duberchat.gui.*;
+import duberchat.gui.frames.*;
 import duberchat.handlers.*;
 import duberchat.handlers.client.*;
 
@@ -98,7 +96,13 @@ public class ChatClient {
     private void initializeHandlers() {
         this.eventHandlers = new HashMap<>();
 
+        ClientChannelAdjustMemberHandler memberHandler = new ClientChannelAdjustMemberHandler(this);
+        this.eventHandlers.put(ChannelAddMemberEvent.class, memberHandler);
+        this.eventHandlers.put(ChannelRemoveMemberEvent.class, memberHandler);
+
+        this.eventHandlers.put(ClientStatusUpdateEvent.class, new ClientStatusUpdateHandler(this));
         this.eventHandlers.put(ChannelCreateEvent.class, new ClientChannelCreateHandler(this));
+        this.eventHandlers.put(ChannelDeleteEvent.class, new ClientChannelDeleteHandler(this));
         this.eventHandlers.put(RequestFailedEvent.class, new ClientRequestFailedHandler(this));
         this.eventHandlers.put(MessageSentEvent.class, new ClientMessageSentHandler(this));
     }
@@ -232,6 +236,10 @@ public class ChatClient {
         return this.channels;
     }
 
+    public boolean hasCurrentChannel() {
+        return this.currentChannel != null;
+    }
+
     /**
      * Retrieves this client's current channel.
      * 
@@ -275,6 +283,28 @@ public class ChatClient {
      */
     public LoginFrame getLoginFrame() {
         return this.loginWindow;
+    }
+
+    /**
+     * Ensures that this client has an initialized, visible login window.
+     * <p>
+     * Only important if the login window's existance cannot be guaranteed.
+     * 
+     * @return true if this client has an initialized, visible login window.
+     */
+    public boolean hasLoginFrame() {
+        return (this.loginWindow != null && this.loginWindow.isVisible());
+    }
+
+    /**
+     * Ensures that this client has an initialized, visible main window.
+     * <p>
+     * Only important if the main menu's existance cannot be guaranteed.
+     * 
+     * @return true if this client has an initialized, visible main window.
+     */
+    public boolean hasMainMenuFrame() {
+        return (this.mainMenu != null && this.mainMenu.isVisible());
     }
 
     /**

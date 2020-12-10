@@ -1,4 +1,4 @@
-package duberchat.frames.util;
+package duberchat.gui.util;
 
 import java.awt.event.*;
 import javax.swing.*;
@@ -9,11 +9,11 @@ import java.util.EventObject;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
-import duberchat.frames.DynamicGridbagFrame;
+import duberchat.gui.frames.MainFrame;
+import duberchat.gui.frames.DynamicGridbagFrame;
+import duberchat.gui.filters.TextLengthFilter;
+import duberchat.gui.util.ComponentFactory;
 import duberchat.client.ChatClient;
-import duberchat.frames.filters.TextLengthFilter;
-import duberchat.frames.util.ComponentFactory;
-import duberchat.frames.MainFrame;
 
 public class FrameFactory {
     private FrameFactory() {
@@ -25,7 +25,8 @@ public class FrameFactory {
         return new RequestFrame(title, bgColor, msg, input, submit);
     }
 
-    public static DynamicGridbagFrame createConfirmFrame(String title, Color bgColor, JLabel text, ActionListener action) {
+    public static DynamicGridbagFrame createConfirmFrame(String title, Color bgColor, JLabel text,
+            ActionListener action) {
         return new ConfirmFrame(title, bgColor, text, action);
     }
 
@@ -39,6 +40,7 @@ public class FrameFactory {
             this.setResizable(false);
             this.setSize(RequestFrame.DEFAULT_SIZE);
             this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
 
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
@@ -86,6 +88,7 @@ public class FrameFactory {
             this.setResizable(false);
             this.setSize(ConfirmFrame.DEFAULT_SIZE);
             this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
 
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
@@ -111,10 +114,12 @@ public class FrameFactory {
 
             addConstrainedComponent(text, mainPanel, layout, constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL,
                     GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
-            addConstrainedComponent(text, mainPanel, layout, constraints, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL,
+            addConstrainedComponent(confirmButton, mainPanel, layout, constraints, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL,
                     GridBagConstraints.CENTER, new Insets(8, 8, 8, 8));
-            addConstrainedComponent(text, mainPanel, layout, constraints, 1, 1, 1, 1, GridBagConstraints.HORIZONTAL,
+            addConstrainedComponent(denyButton, mainPanel, layout, constraints, 1, 1, 1, 1, GridBagConstraints.HORIZONTAL,
                     GridBagConstraints.CENTER, new Insets(8, 8, 8, 8));
+
+            this.add(mainPanel);
         }
 
         /**

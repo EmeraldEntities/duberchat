@@ -1,4 +1,4 @@
-package duberchat.frames;
+package duberchat.gui.panels;
 
 import java.awt.event.*;
 import javax.swing.*;
@@ -11,7 +11,8 @@ import java.util.Date;
 import duberchat.events.*;
 import duberchat.client.ChatClient;
 
-import duberchat.frames.util.ComponentFactory;
+import duberchat.gui.util.ComponentFactory;
+import duberchat.gui.frames.MainFrame;
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.Message;
 import duberchat.chatutil.User;

@@ -2,4 +2,4 @@
  * Contains all the classes and interfaces for custom JFrames that this
  * application requires.
  */
-package duberchat.frames;
+package duberchat.gui.frames;

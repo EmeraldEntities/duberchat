@@ -1,4 +1,4 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
 /**
  * The {@code Destroyable} interface is for JFrames that are able to be

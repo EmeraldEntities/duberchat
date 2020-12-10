@@ -1,12 +1,12 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 
-import duberchat.frames.filters.LimitingRegexFilter;
-import duberchat.frames.util.ComponentFactory;
+import duberchat.gui.filters.LimitingRegexFilter;
+import duberchat.gui.util.ComponentFactory;
 import duberchat.client.ChatClient;
 
 @SuppressWarnings("serial")
@@ -31,6 +31,7 @@ public class LoginSettingFrame extends DynamicGridbagFrame {
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(DEFAULT_SIZE);
         this.setResizable(false);
+        this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
 
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();

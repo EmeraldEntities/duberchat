@@ -143,6 +143,15 @@ public class Channel implements Serializable {
     }
 
     /**
+     * Sets this channel's list of users to a specified list of users.
+     * 
+     * @param users the new list of users.
+     */
+    public void setUsers(ArrayList<User> users) {
+        this.users = users;
+    }
+
+    /**
      * Removes a user from this channel's list of users.
      * <p>
      * This method assumes that the user provided is a reference to a user already
@@ -162,6 +171,15 @@ public class Channel implements Serializable {
      */
     public HashSet<User> getAdminUsers() {
         return this.adminUsers;
+    }
+
+    /**
+     * Sets this channel's list of users to a specified list of users.
+     * 
+     * @param users the new list of users.
+     */
+    public void setAdminUsers(HashSet<User> adminUsers) {
+        this.adminUsers = adminUsers;
     }
 
     /**

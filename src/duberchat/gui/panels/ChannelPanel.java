@@ -1,10 +1,11 @@
-package duberchat.frames;
+package duberchat.gui.panels;
 
 import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
 
-import duberchat.frames.util.ComponentFactory;
+import duberchat.gui.util.ComponentFactory;
+import duberchat.gui.frames.MainFrame;
 import duberchat.client.ChatClient;
 
 import duberchat.chatutil.Channel;
@@ -31,6 +32,9 @@ public class ChannelPanel extends JPanel {
         this.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 client.setCurrentChannel(channel.getChannelId());
+                System.out.println("SYSTEM: switching to " + channel.getChannelName());
+
+                client.getMainMenuFrame().reload();
             }
 
             public void mouseEntered(MouseEvent e) {

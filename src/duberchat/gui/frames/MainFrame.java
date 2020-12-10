@@ -1,4 +1,4 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
 import java.awt.event.*;
 import javax.swing.*;
@@ -10,9 +10,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Date;
 
 import duberchat.events.*;
-import duberchat.frames.filters.TextLengthFilter;
-import duberchat.frames.util.ComponentFactory;
-import duberchat.frames.util.FrameFactory;
+import duberchat.gui.filters.TextLengthFilter;
+import duberchat.gui.util.ComponentFactory;
+import duberchat.gui.util.FrameFactory;
+import duberchat.gui.panels.ChannelPanel;
+import duberchat.gui.panels.UserPanel;
 import duberchat.client.ChatClient;
 
 import duberchat.chatutil.Channel;
@@ -66,6 +68,7 @@ public class MainFrame extends DynamicFrame {
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.setSize(MainFrame.DEFAULT_SIZE);
         this.setResizable(true);
+        this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
 
         typingPanel = new JPanel();
         channelPanel = new JPanel();
@@ -280,6 +283,8 @@ public class MainFrame extends DynamicFrame {
             this.reloadMessages();
         } else if (source instanceof ClientEvent) {
             this.reloadUsers();
+        } else if (source instanceof ChannelAddMemberEvent || source instanceof ChannelRemoveMemberEvent) {
+            this.reloadUsers();
         } else if (source instanceof ChannelEvent) {
             this.reload();
             return;
@@ -295,7 +300,7 @@ public class MainFrame extends DynamicFrame {
      * As a direct result of not receiving a source, this method will force all
      * elements to reload. This is useful if the client requires all components to
      * reload, but is more costly than specific reloads and should not be used for
-     * often events.
+     * common events.
      */
     public void reload() {
         if (client.getCurrentChannel() != null) {
@@ -373,7 +378,7 @@ public class MainFrame extends DynamicFrame {
         Channel curChannel = client.getCurrentChannel();
         for (User u : curChannel.getUsers()) {
             System.out.println(u.getUsername());
-            userPanel.add(new UserPanel(u, curChannel.getAdminUsers().contains(client.getUser())));
+            userPanel.add(new UserPanel(u, curChannel.getAdminUsers().contains(u)));
         }
     }
 

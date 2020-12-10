@@ -22,7 +22,7 @@ public class ClientMessageSentHandler implements Handleable {
 
         localChannel.addMessage(message);
 
-        if (client.getCurrentChannel().equals(localChannel)) {
+        if (client.hasCurrentChannel() && client.getCurrentChannel().equals(localChannel)) {
             client.getMainMenuFrame().reload(event);
         }
     }

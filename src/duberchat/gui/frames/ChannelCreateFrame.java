@@ -1,4 +1,4 @@
-package duberchat.frames;
+package duberchat.gui.frames;
 
 import java.awt.event.*;
 
@@ -10,13 +10,14 @@ import java.util.Arrays;
 
 import duberchat.events.ChannelCreateEvent;
 import duberchat.events.SerializableEvent;
-import duberchat.frames.filters.TextLengthFilter;
-import duberchat.frames.util.ComponentFactory;
+import duberchat.gui.filters.TextLengthFilter;
+import duberchat.gui.util.ComponentFactory;
 import duberchat.client.ChatClient;
 import duberchat.chatutil.Channel;
 
 @SuppressWarnings("serial")
-//TODO: this should be a controlled frame so maybe work it so that it doesnt need output
+// TODO: this should be a controlled frame so maybe work it so that it doesnt
+// need output
 public class ChannelCreateFrame extends DynamicGridbagFrame {
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
 
@@ -38,10 +39,11 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
 
         this.client = client;
         this.output = output;
-
+        
         this.setResizable(false);
         this.setSize(ChannelCreateFrame.DEFAULT_SIZE);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
 
         mainPanel = new JPanel();
         mainPanel.setBackground(MainFrame.MAIN_COLOR);
