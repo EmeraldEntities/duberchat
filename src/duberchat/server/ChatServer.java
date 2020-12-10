@@ -46,6 +46,7 @@ public class ChatServer {
         this.fileWriteQueue = new ConcurrentLinkedQueue<>();
         eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
         eventHandlers.put(MessageDeleteEvent.class, new ServerMessageDeleteHandler(this));
+        eventHandlers.put(MessageEditEvent.class, new ServerMessageEditHandler(this));
         eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
         eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
         eventHandlers.put(ChannelRemoveMemberEvent.class, new ServerChannelRemoveMemberHandler(this));
@@ -95,6 +96,8 @@ public class ChatServer {
                         FileOutputStream fileOut = new FileOutputStream(writeInfo.getFilePath());
                         ObjectOutputStream out = new ObjectOutputStream(fileOut);
                         out.writeObject(writeInfo.getObjectToWrite());
+                        out.flush();
+                        out.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -213,14 +216,19 @@ public class ChatServer {
                     } else if (event instanceof ClientStatusUpdateEvent &&
                                ((ClientStatusUpdateEvent) event).getStatus() == 0) {
                         eventHandlers.get(ClientStatusUpdateEvent.class).handleEvent(event);
+                        continue;
                     }
                     eventQueue.add(event);
-                } catch (IOException e) {
+                } catch (EOFException e) {
+                    System.out.println("Unexpected closure");
+                    curUsers.remove(user);
+                    running = false;
+                } catch (IOException e1) {
                     System.out.println("Failed to receive msg from the client");
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e1) {
-                    System.out.println("Class not found :(");
                     e1.printStackTrace();
+                } catch (ClassNotFoundException e2) {
+                    System.out.println("Class not found :(");
+                    e2.printStackTrace();
                 }
             }
 
@@ -236,6 +244,7 @@ public class ChatServer {
 
         public void handleLogin(ClientLoginEvent event) {
             String username = event.getUsername();
+            long password = event.getHashedPassword();
 
             // Case 1: new user
             if (event.getIsNewUser()) {
@@ -248,7 +257,7 @@ public class ChatServer {
                     }
 
                     System.out.println("Made new user.");
-                    user = new User(username);
+                    user = new User(username, password);
 
                     // make new user file
                     FileOutputStream fileOut = new FileOutputStream("data/users/" + username + ".txt");
@@ -272,30 +281,41 @@ public class ChatServer {
 
             // Case 2: already registered user
             try {
-                // If user doesn't exist, give back an auth failed event to the client.
-                if (!allUsers.containsKey(username)) {
+                // If user doesn't exist or password is wrong give back an auth failed event to the client.
+                User user = allUsers.get(username);
+                if (user == null || password != user.getHashedPassword()) {
                     output.writeObject(new AuthFailedEvent(event));
                     return;
                 }
 
-                FileInputStream fileIn = new FileInputStream("data/users/" + username + ".txt");
-                ObjectInputStream in = new ObjectInputStream(fileIn);
-
-                user = (User) in.readObject();
+                user.setStatus(1);
+                fileWriteQueue.add(new FileWriteEvent(user, "data/users/" + username + ".txt"));
                 curUsers.put(user, this);
                 HashMap<Integer, Channel> userChannels = new HashMap<>();
                 Iterator<Integer> itr = user.getChannels().iterator();
+                HashSet<User> notifiedAlready = new HashSet<>();
                 while (itr.hasNext()) {
                     int id = itr.next();
-                    userChannels.put(id, channels.get(id));
+                    Channel curChannel = channels.get(id);
+                    for (User member : curChannel.getUsers()) {
+                        if (!curUsers.containsKey(member) || notifiedAlready.contains(member)) {
+                            continue;
+                        } else if (user.equals(member)) {
+                            member.setStatus(1);
+                        }
+                        ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
+                        userOut.writeObject(new ClientStatusUpdateEvent(user, 1));
+                        userOut.flush();
+                        userOut.close();
+                        notifiedAlready.add(member);
+                    }
+                    fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id + ".txt"));
+                    userChannels.put(id, curChannel);
                 }
-                in.close();
                 output.writeObject(new AuthSucceedEvent(event, user, userChannels));
                 output.flush();
             } catch (IOException e1) {
                 e1.printStackTrace();
-            } catch (ClassNotFoundException e2) {
-                e2.printStackTrace();
             }
         }
 

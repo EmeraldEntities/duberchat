@@ -26,26 +26,25 @@ public class ServerStatusChangeHandler implements Handleable {
     int newStatus = event.getStatus();
     user.setStatus(newStatus);
     serverUser.setStatus(newStatus);
+    System.out.println(server.getCurUsers().get(user));
 
     // Update the user file
     String userFilePath = "data/users/" + user.getUsername() + ".txt";
     server.getFileWriteQueue().add(new FileWriteEvent(serverUser, userFilePath));
 
-    // Send a status update event to every other user in every channel this user is
-    // in
-    // Also, update every channel's file because the user information has changed.
-    // :/
+    // Send a status update event to every other user in every channel this user is in
+    // Also, update every channel's file because the user information has changed. :/
     for (int channelId : user.getChannels()) {
       Channel channel = server.getChannels().get(channelId);
       String channelFilePath = "data/channels/" + channelId + ".txt";
       server.getFileWriteQueue().add(new FileWriteEvent(channel, channelFilePath));
       for (User member : channel.getUsers()) {
-        if (member.equals(user) || !server.getCurUsers().containsKey(user)) {
+        if (member.equals(user) || !server.getCurUsers().containsKey(member)) {
           continue;
         }
-        ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
+        ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
-          output.writeObject(new ClientStatusUpdateEvent(user, newStatus));
+          output.writeObject(new ClientStatusUpdateEvent(member, newStatus));
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -54,7 +53,9 @@ public class ServerStatusChangeHandler implements Handleable {
 
     // close down the appropriate client thread if the user logs off
     if (newStatus == 0) {
+      System.out.println(server.getCurUsers().get(user));
       server.getCurUsers().get(user).setRunning(false);
+      server.getCurUsers().remove(user);
     }
   }
 }

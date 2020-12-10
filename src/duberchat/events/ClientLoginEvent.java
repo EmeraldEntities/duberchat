@@ -30,7 +30,7 @@ public class ClientLoginEvent extends ClientEvent {
 
     protected boolean isNewUser;
     protected String username;
-    protected int hashedPassword;
+    protected long hashedPassword;
 
     /**
      * Constructs a new {@code ClientLoginEvent}.
@@ -74,7 +74,7 @@ public class ClientLoginEvent extends ClientEvent {
      * 
      * @return an int with the hashed password.
      */
-    public int getHashedPassword() {
+    public long getHashedPassword() {
         return this.hashedPassword;
     }
 }

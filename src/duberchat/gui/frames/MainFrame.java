@@ -230,7 +230,7 @@ public class MainFrame extends DynamicFrame {
                         if (input.getText() != "") {
                             String username = input.getText().replaceFirst("@", "");
                             // Create a temp new user to check if they exist
-                            User tempUser = new User(username);
+                            User tempUser = new User(username, 0);
                             if (!client.getCurrentChannel().getUsers().contains(tempUser))
                                 return;
 

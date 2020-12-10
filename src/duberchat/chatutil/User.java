@@ -33,6 +33,7 @@ public class User implements Serializable {
     public static final int TOTAL_STATUSES = 4;
 
     private String username;
+    private long hashedPassword;
     private int status;
     private transient BufferedImage pfp;
     private HashSet<Integer> channels;
@@ -42,9 +43,11 @@ public class User implements Serializable {
      * an account.
      * 
      * @param username The user's username.
+     * @param hashedPassword The user's password, hashed.
      */
-    public User(String username) {
+    public User(String username, long hashedPassword) {
         this.username = username;
+        this.hashedPassword = hashedPassword;
 
         this.status = ONLINE;
         try {
@@ -59,11 +62,13 @@ public class User implements Serializable {
      * Constructor for a user when additional information exists, used for existing users.
      * 
      * @param username The user's username.
+     * @param hashedPassword The user's password, hashed.
      * @param pfpPath  The file name of the user's profile picture.
      * @param channels The set of all channel ids representing the channels the user is in.
      */
-    public User(String username, String pfpPath, HashSet<Integer> channels) {
+    public User(String username, long hashedPassword, String pfpPath, HashSet<Integer> channels) {
         this.username = username;
+        this.hashedPassword = hashedPassword;
         this.channels = channels;
 
         this.status = ONLINE;
@@ -136,6 +141,15 @@ public class User implements Serializable {
      */
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    /**
+     * Retrieves the user's hashed password.
+     * 
+     * @return long, the hashed password.
+     */
+    public long getHashedPassword() {
+        return this.hashedPassword;
     }
 
     /**
