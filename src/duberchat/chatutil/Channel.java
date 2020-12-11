@@ -3,6 +3,7 @@ package duberchat.chatutil;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 public class Channel implements Serializable {
     static final long serialVersionUID = 3L;
@@ -16,7 +17,7 @@ public class Channel implements Serializable {
     /** A collection of messages with newest messages being at the top. */
     private ArrayList<Message> messages;
     /** A list of users in this channel. */
-    private ArrayList<User> users;
+    private LinkedHashMap<String, User> users;
     /** A list of users that have admin permissions in this channel. */
     private HashSet<User> adminUsers;
     /** The name of this channel. */
@@ -29,14 +30,15 @@ public class Channel implements Serializable {
     /**
      * Constructs a new Channel object.
      * 
-     * @param channelName The name of this channel.
-     * @param channelId   The permanent, unique id of this channel.
-     * @param users       A starting list of users.
-     * @param adminUsers  A starting list of admin users. All users in here should
-     *                    be in the users list as well.
-     * @param totalMessages The total number of messages that have been sent to this channel
+     * @param channelName   The name of this channel.
+     * @param channelId     The permanent, unique id of this channel.
+     * @param users         A starting hashmap of users.
+     * @param adminUsers    A starting list of admin users. All users in here should
+     *                      be in the users list as well.
+     * @param totalMessages The total number of messages that have been sent to this
+     *                      channel
      */
-    public Channel(String channelName, int channelId, ArrayList<User> users, 
+    public Channel(String channelName, int channelId, LinkedHashMap<String, User> users,
                    HashSet<User> adminUsers, int totalMessages) {
         this.messages = new ArrayList<>(LOCAL_SAVE_AMT);
         this.users = users;
@@ -127,9 +129,9 @@ public class Channel implements Serializable {
     /**
      * Gets this channel's list of users.
      * 
-     * @return an {@code ArrayList} of this channel's list of users.
+     * @return a {@code LinkedHashMap} with this channel's list of users.
      */
-    public ArrayList<User> getUsers() {
+    public LinkedHashMap<String, User> getUsers() {
         return this.users;
     }
 
@@ -139,15 +141,15 @@ public class Channel implements Serializable {
      * @param user the user to be added.
      */
     public void addUser(User user) {
-        this.users.add(user);
+        this.users.put(user.getUsername(), user);
     }
 
     /**
      * Sets this channel's list of users to a specified list of users.
      * 
-     * @param users the new list of users.
+     * @param users the new hashmap of users.
      */
-    public void setUsers(ArrayList<User> users) {
+    public void setUsers(LinkedHashMap<String, User> users) {
         this.users = users;
     }
 

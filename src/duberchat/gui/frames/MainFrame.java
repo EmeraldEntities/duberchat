@@ -274,9 +274,8 @@ public class MainFrame extends DynamicFrame {
 
                         if (input.getText() != "") {
                             String username = input.getText().replaceFirst("@", "");
-                            // Create a temp new user to check if they exist
-                            User tempUser = new User(username, 0);
-                            if (!client.getCurrentChannel().getUsers().contains(tempUser))
+
+                            if (client.getCurrentChannel().getUsers().get(username) == null)
                                 return;
 
                             output.offer(new ChannelRemoveMemberEvent(client.getUser(), client.getCurrentChannel(),
@@ -470,7 +469,7 @@ public class MainFrame extends DynamicFrame {
         int userIndex = 0;
         System.out.println("offset: " + userOffset + "   " + (maxSidePanelGrids + userOffset));
 
-        for (User u : curChannel.getUsers()) {
+        for (User u : curChannel.getUsers().values()) {
             if (userIndex < userOffset || userIndex >= maxSidePanelGrids + userOffset) {
                 continue;
             }

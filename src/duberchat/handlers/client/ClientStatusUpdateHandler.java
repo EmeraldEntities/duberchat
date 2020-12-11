@@ -51,17 +51,16 @@ public class ClientStatusUpdateHandler implements Handleable {
             this.client.getUser().setStatus(statusEvent.getStatus());
         } else {
             for (Channel c : this.client.getChannels().values()) {
-                int index = c.getUsers().indexOf(user);
-                // Note: this will not change adminUsers user, but we should not be using
-                // adminUsers for anything other than checking if someone is admin.
+                User userToFix = c.getUsers().get(user.getUsername());
 
-                if (index != -1) {
-                    c.getUsers().get(index).setStatus(user.getStatus());
+                if (userToFix != null) {
+                    userToFix.setStatus(user.getStatus());
                 }
             }
         }
 
-        if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().getUsers().contains(user)) {
+        if (this.client.hasCurrentChannel()
+                && this.client.getCurrentChannel().getUsers().containsKey(user.getUsername())) {
             this.client.getMainMenuFrame().reload(event);
         }
     }
