@@ -51,7 +51,7 @@ public class ChatClient {
 
         this.login();
 
-        mainMenu = new MainFrame("duberchat", this, this.outgoingEvents);
+        mainMenu = new MainFrame(this);
         mainMenu.setVisible(true);
 
         while (this.running) {
@@ -105,11 +105,14 @@ public class ChatClient {
         this.eventHandlers.put(ChannelCreateEvent.class, new ClientChannelCreateHandler(this));
         this.eventHandlers.put(ChannelDeleteEvent.class, new ClientChannelDeleteHandler(this));
         this.eventHandlers.put(RequestFailedEvent.class, new ClientRequestFailedHandler(this));
+
         this.eventHandlers.put(MessageSentEvent.class, new ClientMessageSentHandler(this));
+        this.eventHandlers.put(MessageEditEvent.class, new ClientMessageEditHandler(this));
+        this.eventHandlers.put(MessageDeleteEvent.class, new ClientMessageDeleteHandler(this));
     }
 
     private void login() {
-        loginWindow = new LoginFrame(this, outgoingEvents);
+        loginWindow = new LoginFrame(this);
         loginWindow.setVisible(true);
 
         SerializableEvent authEvent;
@@ -343,6 +346,13 @@ public class ChatClient {
      */
     public void setPort(int port) {
         this.port = port;
+    }
+
+    /**
+     * Offers an event to this client's output queue.
+     */
+    public void offerEvent(SerializableEvent event) {
+        this.outgoingEvents.offer(event);
     }
 
     /**

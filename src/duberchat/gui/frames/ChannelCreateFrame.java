@@ -5,11 +5,9 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashSet;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Arrays;
 
 import duberchat.events.ChannelCreateEvent;
-import duberchat.events.SerializableEvent;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
 import duberchat.client.ChatClient;
@@ -22,7 +20,6 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
 
     private ChatClient client;
-    private ConcurrentLinkedQueue<SerializableEvent> output;
 
     JPanel mainPanel;
     JTextField nameField;
@@ -34,11 +31,10 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
 
     private boolean alreadySentRequest = false;
 
-    public ChannelCreateFrame(ChatClient client, ConcurrentLinkedQueue<SerializableEvent> output) {
+    public ChannelCreateFrame(ChatClient client) {
         super("Add a new channel");
 
         this.client = client;
-        this.output = output;
         
         this.setResizable(false);
         this.setSize(ChannelCreateFrame.DEFAULT_SIZE);
@@ -116,8 +112,9 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
 
     private class CreateChannelActionListener implements ActionListener {
         public void actionPerformed(ActionEvent evt) {
-            if (alreadySentRequest)
+            if (alreadySentRequest) {
                 return;
+            }
 
             String channelName = nameField.getText();
             String[] users = usersField.getText().replace("@", "").split(", *");
@@ -130,7 +127,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
             }
 
             Channel newChannel = new Channel(channelName);
-            ChannelCreateFrame.this.output.offer(new ChannelCreateEvent(client.getUser(), newChannel, usernames));
+            client.offerEvent(new ChannelCreateEvent(client.getUser(), newChannel, usernames));
 
             alreadySentRequest = true;
             System.out.println("SYSTEM: Created new channel event.");

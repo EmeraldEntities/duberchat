@@ -11,9 +11,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import duberchat.events.*;
 import duberchat.gui.frames.MainFrame;
 import duberchat.gui.frames.DynamicGridbagFrame;
-import duberchat.gui.filters.TextLengthFilter;
-import duberchat.gui.util.ComponentFactory;
-import duberchat.client.ChatClient;
 
 public class FrameFactory {
     private FrameFactory() {

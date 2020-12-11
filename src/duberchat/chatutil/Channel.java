@@ -16,7 +16,7 @@ public class Channel implements Serializable {
 
     /** A collection of messages with newest messages being at the top. */
     private ArrayList<Message> messages;
-    /** A list of users in this channel. */
+    /** A username-user object map of users in this channel. */
     private LinkedHashMap<String, User> users;
     /** A list of users that have admin permissions in this channel. */
     private HashSet<User> adminUsers;
@@ -57,6 +57,7 @@ public class Channel implements Serializable {
         this.channelName = channelName;
         this.channelId = -1;
 
+        this.totalMessages = 0;
         this.messageClusters = 0;
     }
 
@@ -163,7 +164,7 @@ public class Channel implements Serializable {
      * @param user the user to be removed.
      */
     public void removeUser(User user) {
-        this.users.remove(user);
+        this.users.remove(user.getUsername());
     }
 
     /**

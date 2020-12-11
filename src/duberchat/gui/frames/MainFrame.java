@@ -6,9 +6,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.List;
 
 import duberchat.events.*;
 import duberchat.gui.filters.TextLengthFilter;
@@ -31,6 +28,7 @@ public class MainFrame extends DynamicFrame {
     public static final int SIDE_PANEL_HEIGHT = 50;
     public static final Dimension DEFAULT_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
     public static final Color MAIN_COLOR = new Color(60, 60, 60);
+    public static final Color PANEL_COLOR = new Color(50, 50, 50);
     public static final Color SIDE_COLOR = new Color(40, 40, 40);
     public static final Color DARK_SIDE_COLOR = new Color(20, 20, 20);
     public static final Color DARK_TEXTBOX_COLOR = new Color(40, 40, 40);
@@ -46,6 +44,8 @@ public class MainFrame extends DynamicFrame {
     private int channelOffset = 0;
     /** The index to load users from, inclusive. */
     private int userOffset = 0;
+    /** The index to load messages from, inclusive, to work with gridlayout. */
+    private int messageOffset = 0;
 
     private JPanel channelPanel;
     private JPanel userPanel;
@@ -56,6 +56,7 @@ public class MainFrame extends DynamicFrame {
     private JPanel textPanel;
 
     private ChannelCreateFrame addChannelFrame;
+    private ProfileFrame profileFrame;
 
     private JButton sendButton, quitButton, profileButton;
     private JButton addUserButton, deleteUserButton;
@@ -66,16 +67,14 @@ public class MainFrame extends DynamicFrame {
 
     private JLabel channelIndicator;
 
-    private ConcurrentLinkedQueue<SerializableEvent> output;
     private ChatClient client;
 
     // private ArrayList<ChannelPanel> activeChannelPanels;
     // private ArrayList<UserPanel> activeUserPanels;
 
-    public MainFrame(String title, ChatClient client, ConcurrentLinkedQueue<SerializableEvent> outgoingEvents) {
-        super(title);
+    public MainFrame(ChatClient client) {
+        super("duberchat");
         this.client = client;
-        this.output = outgoingEvents;
 
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.setSize(MainFrame.DEFAULT_SIZE);
@@ -131,10 +130,12 @@ public class MainFrame extends DynamicFrame {
                 if (e.getWheelRotation() < 0) {
                     if (channelOffset > 0) {
                         channelOffset--;
+                        reloadChannels();
                     }
                 } else {
-                    if (channelOffset <= client.getChannels().size()) {
+                    if (channelOffset < client.getChannels().size()) {
                         channelOffset++;
+                        reloadChannels();
                     }
                 }
                 System.out.println(channelOffset);
@@ -145,17 +146,43 @@ public class MainFrame extends DynamicFrame {
                 if (e.getWheelRotation() < 0) {
                     if (userOffset > 0) {
                         userOffset--;
+                        reloadUsers();
                     }
                 } else {
                     if (!client.hasCurrentChannel()) {
                         return;
                     }
 
-                    if (userOffset <= client.getCurrentChannel().getUsers().size()) {
+                    if (client.getCurrentChannel().getUsers().size() > maxSidePanelGrids
+                            && client.getCurrentChannel().getUsers().size() - userOffset > maxSidePanelGrids) {
                         userOffset++;
+                        reloadUsers();
                     }
                 }
                 System.out.println(userOffset);
+            }
+        });
+
+        // TODO: make sure this is right, incorporate this into message loading
+        textPanel.addMouseWheelListener(new MouseWheelListener() {
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                if (e.getWheelRotation() < 0) {
+                    if (messageOffset > 0) {
+                        messageOffset--;
+                        reloadMessages();
+                    }
+                } else {
+                    if (!client.hasCurrentChannel()) {
+                        return;
+                    }
+
+                    if (client.getCurrentChannel().getMessages().size() > maxMessageGrids
+                            && client.getCurrentChannel().getMessages().size() - messageOffset > maxMessageGrids) {
+                        messageOffset++;
+                        reloadMessages();
+                    }
+                }
+                System.out.println(messageOffset);
             }
         });
 
@@ -215,7 +242,12 @@ public class MainFrame extends DynamicFrame {
         profileButton = ComponentFactory.createButton("", MAIN_COLOR, TEXT_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        System.out.println("You pressed the profile button!");
+                        if (!hasActiveProfileFrame()) {
+                            profileFrame = new ProfileFrame(client);
+                            profileFrame.setVisible(true);
+
+                            System.out.println("SYSTEM: Opened profile frame");
+                        }
                     }
                 });
         profileButton.setBorder(null);
@@ -229,7 +261,7 @@ public class MainFrame extends DynamicFrame {
                                 BRIGHT_TEXT_COLOR);
                         ActionListener action = new ActionListener() {
                             public void actionPerformed(ActionEvent evt2) {
-                                output.offer(new ChannelDeleteEvent(client.getUser(), client.getCurrentChannel()));
+                                client.offerEvent(new ChannelDeleteEvent(client.getUser(), client.getCurrentChannel()));
 
                                 System.out.println(
                                         "SYSTEM: Deleting channel " + client.getCurrentChannel().getChannelName());
@@ -251,7 +283,7 @@ public class MainFrame extends DynamicFrame {
                     public void actionPerformed(ActionEvent evt2) {
 
                         if (input.getText() != "") {
-                            output.offer(new ChannelAddMemberEvent(client.getUser(), client.getCurrentChannel(),
+                            client.offerEvent(new ChannelAddMemberEvent(client.getUser(), client.getCurrentChannel(),
                                     input.getText().replaceFirst("@", "")));
 
                             System.out.println("SYSTEM: Adding user " + input.getText().replaceFirst("@", ""));
@@ -274,11 +306,13 @@ public class MainFrame extends DynamicFrame {
 
                         if (input.getText() != "") {
                             String username = input.getText().replaceFirst("@", "");
+                            User removedUser = client.getCurrentChannel().getUsers().get(username);
 
-                            if (client.getCurrentChannel().getUsers().get(username) == null)
+                            if (removedUser == null || client.getUser().equals(removedUser)) {
                                 return;
+                            }
 
-                            output.offer(new ChannelRemoveMemberEvent(client.getUser(), client.getCurrentChannel(),
+                            client.offerEvent(new ChannelRemoveMemberEvent(client.getUser(), client.getCurrentChannel(),
                                     username));
 
                             System.out.println("SYSTEM: Removing user " + username);
@@ -314,7 +348,7 @@ public class MainFrame extends DynamicFrame {
                             return;
                         }
 
-                        addChannelFrame = new ChannelCreateFrame(client, output);
+                        addChannelFrame = new ChannelCreateFrame(client);
                         addChannelFrame.setVisible(true);
                     }
                 });
@@ -328,7 +362,8 @@ public class MainFrame extends DynamicFrame {
         });
 
         // INITIALIZE TYPING AREA =================================================
-        typeField = ComponentFactory.createTextBox(20, BRIGHT_TEXT_COLOR, TEXTBOX_COLOR, new TextLengthFilter(100));
+        typeField = ComponentFactory.createTextBox(20, BRIGHT_TEXT_COLOR, TEXTBOX_COLOR,
+                new TextLengthFilter(Message.MAX_LENGTH));
         typeField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -341,12 +376,6 @@ public class MainFrame extends DynamicFrame {
             }
         });
 
-        msgArea = new JTextArea();
-        msgArea.setEditable(false);
-        msgArea.setBackground(MAIN_COLOR);
-        msgArea.setForeground(BRIGHT_TEXT_COLOR);
-        msgArea.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
         channelIndicator = ComponentFactory.createLabel("No channel selected.", SECONDARY_TEXT_COLOR);
         channelIndicator.setFont(new Font("Courier", Font.BOLD, 16));
     }
@@ -358,7 +387,7 @@ public class MainFrame extends DynamicFrame {
 
         Message msg = new Message(typeField.getText(), client.getUser().getUsername(), -1, new Date(),
                 client.getCurrentChannel());
-        output.offer(new MessageSentEvent(client.getUser(), msg));
+        client.offerEvent(new MessageSentEvent(client.getUser(), msg));
         typeField.setText("");
 
         System.out.println("SYSTEM: Sent message " + typeField.getText());
@@ -377,7 +406,7 @@ public class MainFrame extends DynamicFrame {
      * 
      * @param source {@inheritDoc}
      */
-    public void reload(SerializableEvent source) {
+    public synchronized void reload(SerializableEvent source) {
         if (source instanceof MessageEvent) {
             this.reloadMessages();
         } else if (source instanceof ClientEvent) {
@@ -401,7 +430,7 @@ public class MainFrame extends DynamicFrame {
      * reload, but is more costly than specific reloads and should not be used for
      * common events.
      */
-    public void reload() {
+    public synchronized void reload() {
         if (client.getCurrentChannel() != null) {
             typeField.setEditable(true);
             typeField.setText("");
@@ -431,7 +460,7 @@ public class MainFrame extends DynamicFrame {
     }
 
     // TODO: make this a lot better
-    private void reloadMessages() {
+    private synchronized void reloadMessages() {
         textPanel.removeAll();
 
         if (client.getCurrentChannel() == null) {
@@ -442,22 +471,26 @@ public class MainFrame extends DynamicFrame {
 
         for (int i = messages.size() - 1; i >= 0; i--) {
             Message msg = messages.get(i);
+            Channel sourceChannel = client.getCurrentChannel();
+            User sender = sourceChannel.getUsers().get(msg.getSenderUsername());
+
+            boolean showAdmin = sourceChannel.getAdminUsers().contains(client.getUser());
+            boolean showHeader = false;
 
             if (i != messages.size() - 1) {
                 if (!(msg.getSenderUsername().equals(messages.get(i + 1).getSenderUsername()))) {
-                    textPanel.add(new MessagePanel(client, msg, true, textPanel.getWidth()));
-                } else {
-                    textPanel.add(new MessagePanel(client, msg, false, textPanel.getWidth()));
+                    showHeader = true;
                 }
-
             } else {
-                textPanel.add(new MessagePanel(client, msg, true, textPanel.getWidth()));
+                showHeader = true;
             }
+
+            textPanel.add(new MessagePanel(client, sender, msg, showHeader, showAdmin, textPanel.getWidth()));
         }
     }
 
     // TODO: implement
-    private void reloadUsers() {
+    private synchronized void reloadUsers() {
         userPanel.removeAll();
 
         if (client.getCurrentChannel() == null) {
@@ -475,12 +508,12 @@ public class MainFrame extends DynamicFrame {
             }
 
             System.out.println(u.getUsername());
-            userPanel.add(new UserPanel(u, curChannel.getAdminUsers().contains(u)));
+            userPanel.add(new UserPanel(client, u, curChannel.getAdminUsers().contains(u)));
             userPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
         }
     }
 
-    private void reloadChannels() {
+    private synchronized void reloadChannels() {
         channelPanel.removeAll();
         channelPanel.add(homeButton);
         channelPanel.add(addChannelButton);
@@ -511,6 +544,10 @@ public class MainFrame extends DynamicFrame {
         return (this.addChannelFrame != null && this.addChannelFrame.isVisible());
     }
 
+    public boolean hasActiveProfileFrame() {
+        return (this.profileFrame != null && this.profileFrame.isVisible());
+    }
+
     public ChannelCreateFrame getChannelCreateFrame() {
         return this.addChannelFrame;
     }
@@ -522,5 +559,13 @@ public class MainFrame extends DynamicFrame {
 
         this.addChannelFrame.destroy();
         return true;
+    }
+
+    public void destroy() {
+        if (this.hasActiveChannelCreateFrame()) {
+            this.addChannelFrame.destroy();
+        }
+
+        super.destroy();
     }
 }

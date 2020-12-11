@@ -5,6 +5,7 @@ import java.util.Date;
 
 public class Message implements Serializable {
     static final long serialVersionUID = 1L;
+    public static final int MAX_LENGTH = 100;
 
     private String senderUsername;
     private String message;

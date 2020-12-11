@@ -47,7 +47,7 @@ public abstract class DynamicFrame extends JFrame implements Reloadable, Destroy
      * 
      * @param source {@inheritDoc}
      */
-    public void reload(SerializableEvent source) {
+    public synchronized void reload(SerializableEvent source) {
         this.reload();
     }
 }

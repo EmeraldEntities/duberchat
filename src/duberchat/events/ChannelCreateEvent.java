@@ -38,6 +38,22 @@ public class ChannelCreateEvent extends ChannelEvent {
     }
 
     /**
+     * Constructs a new {@code ChannelCreateEvent}.
+     * <p>
+     * This will create a DM with the specified user.
+     * 
+     * @param source   The source of this event.
+     * @param channel  The channel associated with this event.
+     * @param username The username of the user to add.
+     */
+    public ChannelCreateEvent(Object source, Channel channel, String username) {
+        super(source, channel);
+
+        this.usernames = new HashSet<String>();
+        this.usernames.add(username);
+    }
+
+    /**
      * Retrieves the usernames to add to the channel.
      * 
      * @return a {@code HashSet} with the usernames of the users to add.

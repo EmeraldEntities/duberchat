@@ -3,51 +3,53 @@ package duberchat.handlers.client;
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.Message;
 import duberchat.client.ChatClient;
-import duberchat.events.MessageSentEvent;
+import duberchat.events.MessageDeleteEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 
 /**
- * the {@code ClientMessageSentHandler} class provides the client-side
- * implementation for handling the {@code MessageSentEvent} sent back from the
+ * the {@code ClientMessageDeleteHandler} class provides the client-side
+ * implementation for handling the {@code MessageDeleteEvent} sent back from the
  * server.
  * <p>
- * Created <b>2020-12-05</b>
+ * Created <b>2020-12-11</b>
  * 
  * @since 1.0.0
  * @version 1.0.0
  * @author Joseph Wang
- * @see duberchat.events.MessageSentEvent
+ * @see duberchat.events.MessageDeleteEvent
  */
-public class ClientMessageSentHandler implements Handleable {
+public class ClientMessageDeleteHandler implements Handleable {
     /** The associated client this handler is attached to. */
     protected ChatClient client;
 
     /**
-     * Constructs a new {@code ClientMessageSentHandler}.
+     * Constructs a new {@code ClientMessageDeleteHandler}.
      * 
      * @param client the client that this handler is attached to.
      */
-    public ClientMessageSentHandler(ChatClient client) {
+    public ClientMessageDeleteHandler(ChatClient client) {
         this.client = client;
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Ensures that the client creates and displays the new message sent by a user.
-     * This method will be one of the most commonly called ones.
+     * Ensures that the client properly removes the message that was deleted, and
+     * refreshes the text display to make sure all instances of said message are
+     * deleted.
      * 
      * @param event {@inheritDoc}
      */
     public void handleEvent(SerializableEvent event) {
-        MessageSentEvent msgEvent = (MessageSentEvent) event;
+        MessageDeleteEvent msgEvent = (MessageDeleteEvent) event;
         Message message = msgEvent.getMessage();
-
         Channel localChannel = client.getChannels().get(message.getChannel().getChannelId());
 
-        // If we got the MessageSentEvent, the client should have a copy of the channel
-        localChannel.addMessage(message);
+        // Remove the message regardless of sender to ensure a proper synchronized
+        // message list
+        // We can assume that since we got this event, we have this channel
+        localChannel.getMessages().remove(message);
 
         if (client.hasCurrentChannel() && client.getCurrentChannel().equals(localChannel)) {
             client.getMainMenuFrame().reload(event);

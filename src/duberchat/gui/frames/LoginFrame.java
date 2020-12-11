@@ -9,13 +9,10 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import duberchat.events.*;
 import duberchat.client.ChatClient;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
-import duberchat.gui.util.FrameFactory;
 
 @SuppressWarnings("serial")
 public class LoginFrame extends DynamicGridbagFrame {
@@ -37,15 +34,13 @@ public class LoginFrame extends DynamicGridbagFrame {
 
     ChatClient client;
     LoginSettingFrame settingsFrame;
-    ConcurrentLinkedQueue<SerializableEvent> output;
 
     boolean alreadySentRequest = false;
 
-    public LoginFrame(ChatClient client, ConcurrentLinkedQueue<SerializableEvent> outgoingEvents) {
+    public LoginFrame(ChatClient client) {
         super("DuberChat");
 
         this.client = client;
-        this.output = outgoingEvents;
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(LoginFrame.DEFAULT_SIZE);
@@ -209,7 +204,7 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         boolean isNewUser = newUserCheckbox.isSelected();
 
-        LoginFrame.this.output.offer(new ClientLoginEvent(client.getUser(), isNewUser, username, password));
+        client.offerEvent(new ClientLoginEvent(client.getUser(), isNewUser, username, password));
 
         // Add connecting... text to aid user
         mainPanel.remove(failedText); // attempt to remove failed text

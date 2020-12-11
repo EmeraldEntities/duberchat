@@ -6,14 +6,18 @@ import java.awt.*;
 
 import duberchat.gui.util.ComponentFactory;
 import duberchat.gui.frames.MainFrame;
+import duberchat.gui.frames.OtherUserProfileFrame;
 import duberchat.chatutil.User;
+import duberchat.client.ChatClient;
 
 @SuppressWarnings("serial")
 public class UserPanel extends JPanel {
+    ChatClient client;
     User user;
     JLabel username;
 
-    public UserPanel(User user, boolean isAdmin) {
+    public UserPanel(ChatClient client, User user, boolean isAdmin) {
+        this.client = client;
         this.user = user;
 
         Color mainColor = MainFrame.BRIGHT_TEXT_COLOR;
@@ -33,6 +37,10 @@ public class UserPanel extends JPanel {
 
         this.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
+                OtherUserProfileFrame profileFrame = new OtherUserProfileFrame(client, user, e.getLocationOnScreen());
+                profileFrame.setVisible(true);
+                profileFrame.requestFocus();
+
                 System.out.println("User pressed " + user.getUsername());
             }
 
