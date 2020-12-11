@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 public class Channel implements Serializable {
-    static final long serialVersionUID = 3L;
+    static final long serialVersionUID = 4L;
 
     public static final int MESSAGE_CLUSTER_AMT = 30;
     public static final int LOCAL_SAVE_AMT = MESSAGE_CLUSTER_AMT;

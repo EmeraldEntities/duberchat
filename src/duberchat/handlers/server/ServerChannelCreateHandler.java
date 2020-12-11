@@ -1,5 +1,6 @@
 package duberchat.handlers.server;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -52,38 +53,28 @@ public class ServerChannelCreateHandler implements Handleable {
     LinkedHashMap<String, User> channelUsers = new LinkedHashMap<>();
     String channelName = event.getChannel().getChannelName();
     User creator = ((User) event.getSource());
+    String creatorName = creator.getUsername();
+    User serverCreator = server.getAllUsers().get(creatorName);
 
-    boolean foundAUser = false;
-    channelUsers.put(creator.getUsername(), creator);
-    usersFound.add(creator.getUsername());
+    channelUsers.put(creatorName, serverCreator);
+    usersFound.add(creatorName);
     HashSet<User> admins = new HashSet<>();
-    admins.add(creator);
+    admins.add(serverCreator);
     Iterator<String> itr = event.getUsernames().iterator();
     while (itr.hasNext()) {
       String username = itr.next();
       // The channel creator is always automatically added, prevent them from being added twice
-      if (username.equals(creator.getUsername())) continue;
       User user = server.getAllUsers().get(username);
-      if (user != null) {
-        foundAUser = true;
+      if (user != null && user != serverCreator) {
         usersFound.add(username);
         channelUsers.put(username, user);
       }
     }
-    if (!foundAUser) {
-      try {
-        Channel newChannel = new Channel(channelName, server.getNumChannelsCreated() + 1, 
-                                         channelUsers, admins, 0);
-        output.writeObject(new ChannelCreateEvent(creator, newChannel, usersFound));
-        output.flush();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      return;
-    }
 
     // If this channel is a dm, check if the dm already exists.
     // If this channel is an already existing dm, return that dm instead.
+    // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
+    // TODO: this is kinda scufffed lmao
     if (channelUsers.size() == 2) {
       for (int channelId : creator.getChannels()) {
         Channel channel = server.getChannels().get(channelId);
@@ -108,16 +99,12 @@ public class ServerChannelCreateHandler implements Handleable {
           return;
         }
       }
+      Iterator<User> iterator = channelUsers.values().iterator();
+      while (iterator.hasNext()) {
+        admins.add(iterator.next());
+      }
     }
 
-    // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
-    // TODO: this is kinda scufffed lmao
-    if (channelUsers.size() == 2) {
-        Iterator<User> iterator = channelUsers.values().iterator();
-        while (iterator.hasNext()) {
-          admins.add(iterator.next());
-        }
-    }
     int id = server.getNumChannelsCreated() + 1;
     server.setNumChannelsCreated(id);
     Channel newChannel = new Channel(channelName, id, channelUsers, admins, 0);
@@ -125,6 +112,7 @@ public class ServerChannelCreateHandler implements Handleable {
 
     try {
       // Make a new file and write the channel object to it.
+      System.out.println(newChannel);
       server.getFileWriteQueue().add(new FileWriteEvent(newChannel, "data/channels/" + id + ".txt"));
       
       // update all the users (and their files) with the new channel

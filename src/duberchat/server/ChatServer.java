@@ -283,6 +283,7 @@ public class ChatServer {
             try {
                 // If user doesn't exist or password is wrong give back an auth failed event to the client.
                 User user = allUsers.get(username);
+                System.out.println(user);
                 if (user == null || password != user.getHashedPassword()) {
                     output.writeObject(new AuthFailedEvent(event));
                     return;
@@ -308,7 +309,6 @@ public class ChatServer {
                         ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
                         userOut.writeObject(new ClientStatusUpdateEvent(user, 1));
                         userOut.flush();
-                        userOut.close();
                         notifiedAlready.add(member);
                     }
                     fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id + ".txt"));
