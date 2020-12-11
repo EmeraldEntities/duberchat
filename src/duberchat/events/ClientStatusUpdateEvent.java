@@ -25,7 +25,7 @@ public class ClientStatusUpdateEvent extends ClientEvent {
      * 
      * @param source The source of this event.
      * @param status The new status of this client, represented by a user constant.
-     * @see duberchat.chatutils.User
+     * @see duberchat.chatutil.User
      */
     public ClientStatusUpdateEvent(Object source, int status) {
         super(source);

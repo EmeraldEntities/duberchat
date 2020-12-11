@@ -8,7 +8,6 @@ import java.util.HashMap;
 
 import duberchat.chatutil.*;
 import duberchat.events.*;
-import duberchat.gui.*;
 import duberchat.gui.frames.*;
 import duberchat.handlers.*;
 import duberchat.handlers.client.*;
@@ -35,6 +34,7 @@ public class ChatClient {
 
     private boolean running = true; // thread status via boolean
     private boolean currentlyLoggingIn = true;
+    private boolean hasClosed = false;
 
     private ConcurrentLinkedQueue<SerializableEvent> outgoingEvents;
 
@@ -54,13 +54,15 @@ public class ChatClient {
         mainMenu = new MainFrame("duberchat", this, this.outgoingEvents);
         mainMenu.setVisible(true);
 
-        while (running) {
+        while (this.running) {
             // a blocking call
             try {
                 SerializableEvent newEvent = (SerializableEvent) input.readObject();
                 System.out.println("SYSTEM: Handling event " + newEvent);
 
                 this.eventHandlers.get(newEvent.getClass()).handleEvent(newEvent);
+            } catch (EOFException e) {
+                System.out.println("SYSTEM: End of stream.");
             } catch (IOException e) {
                 System.out.println("SYSTEM: Failed to obtain an event from the server.");
             } catch (ClassNotFoundException e) {
@@ -68,8 +70,7 @@ public class ChatClient {
             }
         }
 
-        // testMessages(console);
-        this.closeSafely();
+        this.logout();
     }
 
     private void initializeConnectionInformation() {
@@ -379,7 +380,6 @@ public class ChatClient {
      * ensure that any to-be-outgoing events will be served before closing.
      */
     private void closeSafely() {
-        boolean hasClosed = false;
         while (!hasClosed) {
             // Make sure all outgoing events are served
             synchronized (outgoingEvents) {
@@ -389,10 +389,9 @@ public class ChatClient {
                         input.close();
                         output.close();
                         servSocket.close();
-
-                        System.out.println("Closed socket.");
-                    } catch (Exception e) {
-                        System.out.println("Failed to close socket.");
+                        System.out.println("SYSTEM: closed socket.");
+                    } catch (IOException e) {
+                        System.out.println("SYSTEM: Failed to close socket.");
                     }
 
                     hasClosed = true;
@@ -402,17 +401,45 @@ public class ChatClient {
     }
 
     /**
+     * Starts the client shutdown process.
+     * <p>
+     * This method should be used to signal that this client should begin shutting
+     * down. If a forced shutdown is required because the client cannot guarantee a
+     * safe shutdown, (eg. the client {@link #start() start loop} to detect events
+     * has not begun), use {@link #forceLogout()}
+     */
+    public void initiateShutdown() {
+        this.logout();
+    }
+
+    /**
      * Safely closes this client.
      * <p>
      * This method will ensure that all queued outgoing events are properly served
      * and that all connections are closed before closing.
      */
-    public void logout() {
+    private void logout() {
         if (!currentlyLoggingIn) {
             outgoingEvents.offer(new ClientStatusUpdateEvent(this.user, User.OFFLINE));
         }
-
+    
         this.closeSafely();
+    }
+
+    /**
+     * Closes this client.
+     * <p>
+     * This method ensures that all outgoing queued events are properly served and
+     * that all connections are closed, and closes the system from within this
+     * method. Use this method if the {@link #start()} loop has failed, and a safe
+     * shutdown from that method is not guaranteed.
+     * <p>
+     * If the program has executed correctly and the {@link #start()} loop has not
+     * failed, use {@link #initiateShutdown()} for a safer shutdown method.
+     */
+    public void forceLogout() {
+        this.logout();
+
         System.exit(0);
     }
 }

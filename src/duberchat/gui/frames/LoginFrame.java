@@ -70,6 +70,13 @@ public class LoginFrame extends DynamicGridbagFrame {
                 new TextLengthFilter(16), BorderFactory.createEmptyBorder(5, 5, 5, 5));
         passwordField = ComponentFactory.createPasswordBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.SIDE_COLOR,
                 new TextLengthFilter(40), BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        passwordField.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    sendLoginRequest();
+                }
+            }
+        });
 
         JLabel usernameLabel = ComponentFactory.createLabel("Username", MainFrame.TEXT_COLOR);
         JLabel passwordLabel = ComponentFactory.createLabel("Password", MainFrame.TEXT_COLOR);
@@ -80,7 +87,11 @@ public class LoginFrame extends DynamicGridbagFrame {
                 MainFrame.SIDE_COLOR);
 
         submitButton = ComponentFactory.createButton("Start DuberChatting", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
-                new SubmitActionListener());
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        sendLoginRequest();
+                    }
+                });
 
         ImageIcon settingsIcon = new ImageIcon();
         try {
@@ -89,6 +100,7 @@ public class LoginFrame extends DynamicGridbagFrame {
         } catch (IOException e) {
             System.out.println("SYSTEM: Could not load gear!");
         }
+
         optionsButton = ComponentFactory.createButton("", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR);
         optionsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -185,32 +197,31 @@ public class LoginFrame extends DynamicGridbagFrame {
         alreadySentRequest = false;
     }
 
-    class SubmitActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent evt) {
-            // Ensure that multiple login events aren't performed
-            if (alreadySentRequest)
-                return;
+    private void sendLoginRequest() {
+        // Ensure that multiple login events aren't performed
+        if (alreadySentRequest)
+            return;
 
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
 
-            passwordField.setText("");
+        passwordField.setText("");
 
-            boolean isNewUser = newUserCheckbox.isSelected();
+        boolean isNewUser = newUserCheckbox.isSelected();
 
-            LoginFrame.this.output.offer(new ClientLoginEvent(client.getUser(), isNewUser, username, password));
+        LoginFrame.this.output.offer(new ClientLoginEvent(client.getUser(), isNewUser, username, password));
 
-            // Add connecting... text to aid user
-            mainPanel.remove(failedText); // attempt to remove failed text
-            addConstrainedComponent(connectingText, mainPanel, loginLayout, constraints, 0, 8, 1, 1,
-                    GridBagConstraints.NONE, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
-            mainPanel.revalidate();
-            mainPanel.repaint();
+        // Add connecting... text to aid user
+        mainPanel.remove(failedText); // attempt to remove failed text
+        addConstrainedComponent(connectingText, mainPanel, loginLayout, constraints, 0, 8, 1, 1,
+                GridBagConstraints.NONE, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
+        mainPanel.revalidate();
+        mainPanel.repaint();
 
-            // Make sure user cannot bomb server with connection requests
-            alreadySentRequest = true;
+        // Make sure user cannot bomb server with connection requests
+        alreadySentRequest = true;
 
-            System.out.println("SYSTEM: offered login request.");
-        }
+        System.out.println("SYSTEM: offered login request.");
+
     }
 }
