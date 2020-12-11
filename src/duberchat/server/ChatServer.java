@@ -283,9 +283,9 @@ public class ChatServer {
             try {
                 // If user doesn't exist or password is wrong give back an auth failed event to the client.
                 User user = allUsers.get(username);
-                System.out.println(user);
                 if (user == null || password != user.getHashedPassword()) {
                     output.writeObject(new AuthFailedEvent(event));
+                    output.flush();
                     return;
                 }
 
@@ -295,6 +295,7 @@ public class ChatServer {
                 HashMap<Integer, Channel> userChannels = new HashMap<>();
                 Iterator<Integer> itr = user.getChannels().iterator();
                 HashSet<User> notifiedAlready = new HashSet<>();
+                notifiedAlready.add(user);
                 while (itr.hasNext()) {
                     int id = itr.next();
                     Channel curChannel = channels.get(id);
@@ -303,8 +304,6 @@ public class ChatServer {
                         User member = iterator.next();
                         if (!curUsers.containsKey(member) || notifiedAlready.contains(member)) {
                             continue;
-                        } else if (user.equals(member)) {
-                            member.setStatus(1);
                         }
                         ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
                         userOut.writeObject(new ClientStatusUpdateEvent(user, 1));

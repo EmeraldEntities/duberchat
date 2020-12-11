@@ -27,7 +27,6 @@ public class ServerStatusChangeHandler implements Handleable {
     int newStatus = event.getStatus();
     user.setStatus(newStatus);
     serverUser.setStatus(newStatus);
-    System.out.println(server.getCurUsers().get(user));
 
     // Update the user file
     String userFilePath = "data/users/" + user.getUsername() + ".txt";
@@ -56,7 +55,6 @@ public class ServerStatusChangeHandler implements Handleable {
 
     // close down the appropriate client thread if the user logs off
     if (newStatus == 0) {
-      System.out.println(server.getCurUsers().get(user));
       server.getCurUsers().get(user).setRunning(false);
       server.getCurUsers().remove(user);
     }
