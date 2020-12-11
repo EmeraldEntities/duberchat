@@ -297,7 +297,9 @@ public class ChatServer {
                 while (itr.hasNext()) {
                     int id = itr.next();
                     Channel curChannel = channels.get(id);
-                    for (User member : curChannel.getUsers()) {
+                    Iterator<User> iterator = curChannel.getUsers().values().iterator();
+                    while (iterator.hasNext()) {
+                        User member = iterator.next();
                         if (!curUsers.containsKey(member) || notifiedAlready.contains(member)) {
                             continue;
                         } else if (user.equals(member)) {

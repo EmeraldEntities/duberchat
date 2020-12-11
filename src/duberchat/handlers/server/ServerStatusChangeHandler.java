@@ -4,6 +4,7 @@ import duberchat.chatutil.User;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
 import duberchat.events.ClientStatusUpdateEvent;
@@ -38,7 +39,9 @@ public class ServerStatusChangeHandler implements Handleable {
       Channel channel = server.getChannels().get(channelId);
       String channelFilePath = "data/channels/" + channelId + ".txt";
       server.getFileWriteQueue().add(new FileWriteEvent(channel, channelFilePath));
-      for (User member : channel.getUsers()) {
+      Iterator<User> itr = channel.getUsers().values().iterator();
+      while (itr.hasNext()) {
+        User member = itr.next();
         if (member.equals(user) || !server.getCurUsers().containsKey(member)) {
           continue;
         }

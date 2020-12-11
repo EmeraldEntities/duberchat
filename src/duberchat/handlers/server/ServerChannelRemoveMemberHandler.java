@@ -8,6 +8,7 @@ import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
 import java.io.*;
+import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
@@ -47,7 +48,9 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
       server.getFileWriteQueue().add(new FileWriteEvent(toDelete, userFilePath));
 
       // Send back a message sent event to every online user in the channel
-      for (User member : serverToDeleteFrom.getUsers()) {
+      Iterator<User> itr = serverToDeleteFrom.getUsers().values().iterator();
+      while (itr.hasNext()) {
+        User member = itr.next();
         // skip offline users
         if (!server.getCurUsers().containsKey(member)) continue;
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();

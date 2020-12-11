@@ -3,6 +3,7 @@ package duberchat.handlers.server;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Date;
+import java.util.Iterator;
 
 import duberchat.chatutil.*;
 import duberchat.events.FileWriteEvent;
@@ -62,7 +63,9 @@ public class ServerMessageSentHandler implements Handleable {
             server.getFileWriteQueue().add(new FileWriteEvent(serverDestination, filePath));
 
             // Send back a message sent event to every online user in the channel
-            for (User member : serverDestination.getUsers()) {
+            Iterator<User> itr = serverDestination.getUsers().values().iterator();
+            while (itr.hasNext()) {
+                User member = itr.next(); 
                 // skip offline users
                 if (!server.getCurUsers().containsKey(member)) continue;
                 ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();

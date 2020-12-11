@@ -5,6 +5,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 import duberchat.chatutil.*;
 import duberchat.events.ChannelCreateEvent;
@@ -48,12 +49,12 @@ public class ServerChannelCreateHandler implements Handleable {
     ChannelCreateEvent event = (ChannelCreateEvent) newEvent;
     ObjectOutputStream output = server.getCurUsers().get((User) event.getSource()).getOutputStream();
     HashSet<String> usersFound = new HashSet<>();
-    ArrayList<User> channelUsers = new ArrayList<>();
+    LinkedHashMap<String, User> channelUsers = new LinkedHashMap<>();
     String channelName = event.getChannel().getChannelName();
     User creator = ((User) event.getSource());
 
     boolean foundAUser = false;
-    channelUsers.add(creator);
+    channelUsers.put(creator.getUsername(), creator);
     usersFound.add(creator.getUsername());
     HashSet<User> admins = new HashSet<>();
     admins.add(creator);
@@ -66,7 +67,7 @@ public class ServerChannelCreateHandler implements Handleable {
       if (user != null) {
         foundAUser = true;
         usersFound.add(username);
-        channelUsers.add(user);
+        channelUsers.put(username, user);
       }
     }
     if (!foundAUser) {
@@ -86,15 +87,17 @@ public class ServerChannelCreateHandler implements Handleable {
     if (channelUsers.size() == 2) {
       for (int channelId : creator.getChannels()) {
         Channel channel = server.getChannels().get(channelId);
-        ArrayList<Message> messageBlock = new ArrayList<>();
-        ArrayList<Message> fullMessages = channel.getMessages();
-        for (int i = 0; i < 30; i++) {
-          messageBlock.add(fullMessages.get(fullMessages.size() - i));
-        }
-        User user1 = channel.getUsers().get(0);
-        User user2 = channel.getUsers().get(1);
-        if ((channelUsers.get(0).equals(user1) && creator.equals(user2))
-            || (channelUsers.get(0).equals(user2) && creator.equals(user1))) {
+        // skip non-dms
+        if (channel.getUsers().size() != 2) continue;
+        Iterator<User> iterator = channel.getUsers().values().iterator();
+        User user1 = iterator.next();
+        User user2 = iterator.next();
+        if (channelUsers.containsValue(user1) && channelUsers.containsValue(user2)) {
+          ArrayList<Message> messageBlock = new ArrayList<>();
+          ArrayList<Message> fullMessages = channel.getMessages();
+          for (int i = 0; i < 30; i++) {
+            messageBlock.add(fullMessages.get(fullMessages.size() - i));
+          }
           try {
             output.writeObject(new ChannelCreateEvent(creator, new Channel(channel, messageBlock), 
                                                       usersFound));
@@ -108,8 +111,12 @@ public class ServerChannelCreateHandler implements Handleable {
     }
 
     // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
+    // TODO: this is kinda scufffed lmao
     if (channelUsers.size() == 2) {
-      admins.add(channelUsers.get(1));
+        Iterator<User> iterator = channelUsers.values().iterator();
+        while (iterator.hasNext()) {
+          admins.add(iterator.next());
+        }
     }
     int id = server.getNumChannelsCreated() + 1;
     server.setNumChannelsCreated(id);
@@ -122,7 +129,9 @@ public class ServerChannelCreateHandler implements Handleable {
       
       // update all the users (and their files) with the new channel
       // Output a corresponding event to the user clients in the channel
-      for (User user : channelUsers) {
+      Iterator<User> iterator = channelUsers.values().iterator();
+      while (iterator.hasNext()) {
+        User user = iterator.next();
         user.getChannels().add(id);
         String filePath = "data/users/" + user.getUsername() + ".txt";
         server.getFileWriteQueue().add(new FileWriteEvent(user, filePath));

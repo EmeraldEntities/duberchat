@@ -2,6 +2,7 @@ package duberchat.handlers.server;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Iterator;
 
 import duberchat.chatutil.*;
 import duberchat.events.FileWriteEvent;
@@ -29,7 +30,9 @@ public class ServerMessageEditHandler implements Handleable {
     }
     int id = serverChannel.getChannelId();
     server.getFileWriteQueue().add(new FileWriteEvent(serverChannel, "data/channels/" + id + ".txt"));
-    for (User user : serverChannel.getUsers()) {
+    Iterator<User> itr = serverChannel.getUsers().values().iterator();
+    while (itr.hasNext()) {
+      User user = itr.next();
       if (!server.getCurUsers().containsKey(user)) {
         continue;
       }

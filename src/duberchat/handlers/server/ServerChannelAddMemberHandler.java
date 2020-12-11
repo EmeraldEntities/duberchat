@@ -2,6 +2,7 @@ package duberchat.handlers.server;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import duberchat.chatutil.*;
 import duberchat.events.ChannelAddMemberEvent;
@@ -47,7 +48,9 @@ public class ServerChannelAddMemberHandler implements Handleable {
       server.getFileWriteQueue().add(new FileWriteEvent(toAdd, userFilePath));
 
       // Send back a add member event to every online user in the channel
-      for (User member : serverToAddTo.getUsers()) {
+      Iterator<User> itr = serverToAddTo.getUsers().values().iterator();
+      while (itr.hasNext()) {
+        User member = itr.next();
         // skip offline users
         if (!server.getCurUsers().containsKey(member)) continue;
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();

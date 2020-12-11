@@ -3,6 +3,7 @@ package duberchat.handlers.server;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Iterator;
 
 import duberchat.events.ChannelDeleteEvent;
 import duberchat.events.FileWriteEvent;
@@ -26,7 +27,9 @@ public class ServerChannelDeleteHandler implements Handleable {
 
     try {
       // Remove the channel from all its users and their files
-      for (User user : serverToDelete.getUsers()) {
+      Iterator<User> itr = serverToDelete.getUsers().values().iterator();
+      while (itr.hasNext()) {
+        User user = itr.next();
         user.getChannels().remove(toDeleteId);
         String filePath = "data/users/" + user.getUsername() + ".txt";
         server.getFileWriteQueue().add(new FileWriteEvent(user, filePath));

@@ -8,6 +8,7 @@ import duberchat.server.ChatServer;
 import duberchat.chatutil.*;
 
 import java.io.*;
+import java.util.Iterator;
 
 public class ServerMessageDeleteHandler implements Handleable {
   private ChatServer server;
@@ -29,7 +30,9 @@ public class ServerMessageDeleteHandler implements Handleable {
       server.getFileWriteQueue().add(new FileWriteEvent(toDeleteFrom, filePath));
 
       // give a message deletion event to all online users in the channel
-      for (User user : toDeleteFrom.getUsers()) {
+      Iterator<User> itr = toDeleteFrom.getUsers().values().iterator();
+      while (itr.hasNext()) {
+        User user = itr.next();
         if (!server.getCurUsers().containsKey(user)) continue;
         ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
         output.writeObject(new MessageDeleteEvent((User) event.getSource(), serverToDelete));
