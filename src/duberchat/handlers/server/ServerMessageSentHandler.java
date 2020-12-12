@@ -54,7 +54,7 @@ public class ServerMessageSentHandler implements Handleable {
         long timeStamp = toSend.getTimestamp().getTime();
         Message newMessage = new Message(msgString, senderUsername, msgId, new Date(timeStamp), 
                                          serverDestination);
-        serverDestination.addMessage(newMessage);
+        serverDestination.getMessages().add(newMessage);
         serverDestination.setTotalMessages(msgId + 1);
         destination.setTotalMessages(msgId + 1);   // added for clarity TODO
         try {

@@ -28,7 +28,7 @@ public class ServerRequestMessageHandler implements Handleable {
     ArrayList<Message> messages = serverChannel.getMessages();
     ArrayList<Message> messageBlock = new ArrayList<>();
 
-    // loop through messages to find the starting section. Ignore the earliest 30 messages
+    // loop through messages to find the starting section. Ignore the earliest 29 messages
     // because there are no more message blocks beyond that point
     for (int i = messages.size() - 1; i >= 28; i--) {
       Message curMessage = messages.get(i);

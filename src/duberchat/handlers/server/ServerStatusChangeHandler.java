@@ -34,14 +34,18 @@ public class ServerStatusChangeHandler implements Handleable {
 
     // Send a status update event to every other user in every channel this user is in
     // Also, update every channel's file because the user information has changed. :/
-    for (int channelId : user.getChannels()) {
+    Iterator<Integer> setItr = serverUser.getChannels().iterator();
+    System.out.println(serverUser.getChannels().size() + "i want to cri");
+    while (setItr.hasNext()) {
+      int channelId = setItr.next();
       Channel channel = server.getChannels().get(channelId);
       String channelFilePath = "data/channels/" + channelId + ".txt";
       server.getFileWriteQueue().add(new FileWriteEvent(channel, channelFilePath));
       Iterator<User> itr = channel.getUsers().values().iterator();
       while (itr.hasNext()) {
         User member = itr.next();
-        if (member.equals(user) || !server.getCurUsers().containsKey(member)) {
+        if (member.equals(serverUser) || !server.getCurUsers().containsKey(member)) {
+          System.out.println(serverUser.getUsername());
           continue;
         }
         System.out.println(channel.getChannelName() + " " + member.getUsername());

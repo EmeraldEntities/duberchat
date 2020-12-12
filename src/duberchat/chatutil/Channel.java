@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 public class Channel implements Serializable {
-    static final long serialVersionUID = 4L;
+    static final long serialVersionUID = 5L;
 
     public static final int MESSAGE_CLUSTER_AMT = 30;
     public static final int LOCAL_SAVE_AMT = MESSAGE_CLUSTER_AMT;
@@ -113,7 +113,7 @@ public class Channel implements Serializable {
      * any additional message clusters that have been loaded), the most recent
      * message will be deleted.
      * <p>
-     * The most recent message will be added to the head of the arraylist.
+     * The most recent message will be added to the tail of the arraylist.
      * 
      * @param message a {@code Message} object to add.
      */
@@ -121,10 +121,10 @@ public class Channel implements Serializable {
         // no matter what end we adjust, we'll still have to adjust indexes
         // adding to the top allows us to use addAll
         if (this.messages.size() > LOCAL_SAVE_AMT + (messageClusters * MESSAGE_CLUSTER_AMT)) {
-            this.messages.remove(this.messages.size() - 1);
+            this.messages.remove(0);
         }
 
-        this.messages.add(0, message);
+        this.messages.add(message);
     }
 
     /**

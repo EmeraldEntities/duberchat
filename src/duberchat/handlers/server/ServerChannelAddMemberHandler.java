@@ -35,9 +35,9 @@ public class ServerChannelAddMemberHandler implements Handleable {
         return;
       }
       
+      toAdd.getChannels().add(id);
       serverToAddTo.addUser(toAdd);
       toAddTo.addUser(toAdd);   
-      toAdd.getChannels().add(id);
 
       // Update this channel's file to include the new user.
       String channelFilePath = "data/channels/" + id + ".txt";

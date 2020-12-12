@@ -208,7 +208,7 @@ public class ChatServer {
             while (running) { // loop until a message is received
                 try {
                     event = (SerializableEvent) input.readObject(); // get a message from the client
-                    System.out.println("Received a message");
+                    ChatServer.this.serverFrame.getTextArea().append("Received a message");
                     System.out.println(event);
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
