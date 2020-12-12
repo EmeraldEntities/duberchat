@@ -3,7 +3,7 @@ package duberchat.handlers.client;
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
-import duberchat.events.ClientStatusUpdateEvent;
+import duberchat.events.ClientProfileUpdateEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 
@@ -17,9 +17,9 @@ import duberchat.handlers.Handleable;
  * @since 1.0.0
  * @version 1.0.0
  * @author Joseph Wang
- * @see duberchat.events.ClientStatusUpdateEvent
+ * @see duberchat.events.ClientProfileUpdateEvent
  */
-public class ClientStatusUpdateHandler implements Handleable {
+public class ClientProfileUpdateHandler implements Handleable {
     /** The associated client this handler is attached to. */
     protected ChatClient client;
 
@@ -28,7 +28,7 @@ public class ClientStatusUpdateHandler implements Handleable {
      * 
      * @param client the client that this handler is attached to.
      */
-    public ClientStatusUpdateHandler(ChatClient client) {
+    public ClientProfileUpdateHandler(ChatClient client) {
         this.client = client;
     }
 
@@ -43,24 +43,24 @@ public class ClientStatusUpdateHandler implements Handleable {
      * @param event {@inheritDoc}
      */
     public void handleEvent(SerializableEvent event) {
-        ClientStatusUpdateEvent statusEvent = (ClientStatusUpdateEvent) event;
+        ClientProfileUpdateEvent statusEvent = (ClientProfileUpdateEvent) event;
         User user = (User) statusEvent.getSource();
 
         // If i initialized it, the source would be from me
         if (this.client.getUser().equals(user)) {
-            this.client.getUser().setStatus(statusEvent.getStatus());
+            System.out.println("nani " + user.getUsername() + this.client.getUser().getUsername());
         } else {
             for (Channel c : this.client.getChannels().values()) {
                 User userToFix = c.getUsers().get(user.getUsername());
 
-                if (userToFix != null) {
+                if (userToFix != null && userToFix.getStatus() != user.getStatus()) {
                     userToFix.setStatus(user.getStatus());
                 }
             }
         }
 
         if (this.client.hasCurrentChannel()
-                && this.client.getCurrentChannel().getUsers().containsKey(user.getUsername())) {
+                && this.client.getCurrentChannel().getUsers().containsKey(this.client.getUser().getUsername())) {
             this.client.getMainMenuFrame().reload(event);
         }
     }

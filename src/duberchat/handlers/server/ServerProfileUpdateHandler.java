@@ -7,26 +7,29 @@ import java.io.ObjectOutputStream;
 import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
-import duberchat.events.ClientStatusUpdateEvent;
+import duberchat.events.ClientProfileUpdateEvent;
 import duberchat.events.FileWriteEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
-public class ServerStatusChangeHandler implements Handleable {
+public class ServerProfileUpdateHandler implements Handleable {
   private ChatServer server;
 
-  public ServerStatusChangeHandler(ChatServer server) {
+  public ServerProfileUpdateHandler(ChatServer server) {
     this.server = server;
   }
 
   public void handleEvent(SerializableEvent newEvent) {
-    ClientStatusUpdateEvent event = (ClientStatusUpdateEvent) newEvent;
+    ClientProfileUpdateEvent event = (ClientProfileUpdateEvent) newEvent;
     User user = (User) event.getSource();
     User serverUser = server.getAllUsers().get(user.getUsername());
-    int newStatus = event.getStatus();
-    user.setStatus(newStatus);
-    serverUser.setStatus(newStatus);
+    
+    System.out.println("client name: " + user.getUsername() + " server side name: " + serverUser.getUsername());
+    System.out.println("client side status: " + user.getStatus() + " server side status: " + serverUser.getStatus());
+    if (serverUser.getStatus() != user.getStatus()) {
+      serverUser.setStatus(user.getStatus());
+    }
 
     // Update the user file
     String userFilePath = "data/users/" + user.getUsername() + ".txt";
@@ -44,12 +47,11 @@ public class ServerStatusChangeHandler implements Handleable {
       while (itr.hasNext()) {
         User member = itr.next();
         if (member.equals(serverUser) || !server.getCurUsers().containsKey(member)) {
-          System.out.println(serverUser.getUsername());
           continue;
         }
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
-          output.writeObject(new ClientStatusUpdateEvent(member, newStatus));
+          output.writeObject(new ClientProfileUpdateEvent(serverUser));
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -57,7 +59,7 @@ public class ServerStatusChangeHandler implements Handleable {
     }
 
     // close down the appropriate client thread if the user logs off
-    if (newStatus == 0) {
+    if (serverUser.getStatus() == 0) {
       server.getCurUsers().get(user).setRunning(false);
       server.getCurUsers().remove(user);
     }

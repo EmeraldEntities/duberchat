@@ -13,9 +13,9 @@ package duberchat.events;
  * 
  * @since 1.0.0
  * @version 1.0.0
- * @author Joseph Wang
+ * @author Joseph Wang, Paula Yuan
  */
-public class ClientStatusUpdateEvent extends ClientEvent {
+public class ClientProfileUpdateEvent extends ClientEvent {
     static final long serialVersionUID = 1L;
 
     protected int status;
@@ -24,24 +24,9 @@ public class ClientStatusUpdateEvent extends ClientEvent {
      * Constructs a new {@code ClientStatusUpdateEvent}.
      * 
      * @param source The source of this event.
-     * @param status The new status of this client, represented by a user constant.
      * @see duberchat.chatutil.User
      */
-    public ClientStatusUpdateEvent(Object source, int status) {
+    public ClientProfileUpdateEvent(Object source) {
         super(source);
-
-        this.status = status;
-    }
-
-    /**
-     * Retrieves the new status of the sending client.
-     * <p>
-     * The status should be a user constant, as defined in
-     * {@link duberchat.chatutils.User the User class}.
-     * 
-     * @return the new status of the associated client's user.
-     */
-    public int getStatus() {
-        return this.status;
     }
 }

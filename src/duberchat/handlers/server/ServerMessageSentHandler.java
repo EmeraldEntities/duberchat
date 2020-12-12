@@ -52,7 +52,19 @@ public class ServerMessageSentHandler implements Handleable {
         Channel serverDestination = server.getChannels().get(destination.getChannelId());
         int msgId = serverDestination.getTotalMessages();
         long timeStamp = toSend.getTimestamp().getTime();
-        Message newMessage = new Message(msgString, senderUsername, msgId, new Date(timeStamp), 
+
+        // Process text conversions and emoticon conversions
+        String[] words = msgString.split(" ");
+        String processedMsg = "";
+        for (String word : words) {
+            if (server.getTextConversions().containsKey(word)) {
+                word = server.getTextConversions().get(word);
+            }
+            processedMsg += word + " ";
+        }
+        processedMsg.trim();
+
+        Message newMessage = new Message(processedMsg, senderUsername, msgId, new Date(timeStamp), 
                                          serverDestination);
         serverDestination.getMessages().add(newMessage);
         serverDestination.setTotalMessages(msgId + 1);

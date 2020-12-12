@@ -28,7 +28,6 @@ import duberchat.chatutil.*;
 public class ChatServer {
     ServerSocket serverSock;// server socket for connection
     static boolean running = true; // controls if the server is accepting clients
-    private HashMap<String, String> textConversions; // For text commands
     private HashMap<Integer, Channel> channels; // channel id to all channels
     private int numChannelsCreated;
     private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
@@ -36,26 +35,41 @@ public class ChatServer {
     private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
     private ConcurrentLinkedQueue<FileWriteEvent> fileWriteQueue;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
+    private HashMap<String, String> textConversions; // For text commands or emojis
     private ServerFrame serverFrame;
 
     public ChatServer() {
         this.curUsers = new HashMap<>();
         this.channels = new HashMap<>();
-        this.textConversions = new HashMap<>();
         this.allUsers = new HashMap<>();
         this.eventQueue = new ConcurrentLinkedQueue<>();
         this.fileWriteQueue = new ConcurrentLinkedQueue<>();
 
         this.eventHandlers = new HashMap<>();
-        eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
-        eventHandlers.put(MessageDeleteEvent.class, new ServerMessageDeleteHandler(this));
-        eventHandlers.put(MessageEditEvent.class, new ServerMessageEditHandler(this));
-        eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
-        eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
-        eventHandlers.put(ChannelRemoveMemberEvent.class, new ServerChannelRemoveMemberHandler(this));
-        eventHandlers.put(ChannelDeleteEvent.class, new ServerChannelDeleteHandler(this));
-        eventHandlers.put(ClientStatusUpdateEvent.class, new ServerStatusChangeHandler(this));
-        eventHandlers.put(ClientRequestMessageEvent.class, new ServerRequestMessageHandler(this));
+        this.eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
+        this.eventHandlers.put(MessageDeleteEvent.class, new ServerMessageDeleteHandler(this));
+        this.eventHandlers.put(MessageEditEvent.class, new ServerMessageEditHandler(this));
+        this.eventHandlers.put(ChannelCreateEvent.class, new ServerChannelCreateHandler(this));
+        this.eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
+        this.eventHandlers.put(ChannelRemoveMemberEvent.class, new ServerChannelRemoveMemberHandler(this));
+        this.eventHandlers.put(ChannelDeleteEvent.class, new ServerChannelDeleteHandler(this));
+        this.eventHandlers.put(ClientProfileUpdateEvent.class, new ServerProfileUpdateHandler(this));
+        this.eventHandlers.put(ClientRequestMessageEvent.class, new ServerRequestMessageHandler(this));
+
+        this.textConversions = new HashMap<>();
+        this.textConversions.put("/shrug", "¯\\_(ツ)_/¯");
+        this.textConversions.put("/tableflip", "(╯°□°）╯︵ ┻━┻");
+        this.textConversions.put("/unflip", "┬─┬ ノ( ゜-゜ノ)");
+        this.textConversions.put(":)", "🙂");
+        this.textConversions.put(":D", "😄");
+        this.textConversions.put(":P", "😛");
+        this.textConversions.put(":(", "😦");
+        this.textConversions.put(";)", "😉");
+        this.textConversions.put(":O", "😮");
+        this.textConversions.put(":'(", "😢");
+        this.textConversions.put(">:(", "😠");
+        this.textConversions.put(":|", "😐");
+        this.textConversions.put("<3", "❤");
 
         this.serverFrame = new ServerFrame();
     }
@@ -88,7 +102,6 @@ public class ChatServer {
             e1.printStackTrace();
         }
 
-        System.out.println("hi");
         this.serverFrame.getTextArea().append("Waiting for a client connection..\n");
 
         Socket client = null; // hold the client connection
@@ -169,6 +182,10 @@ public class ChatServer {
         return this.fileWriteQueue;
     }
 
+    public HashMap<String, String> getTextConversions() {
+        return this.textConversions;
+    }
+
     // ***** Inner class - thread for client connection
     public class ConnectionHandler implements Runnable, Serializable {
         private static final long serialVersionUID = 1L;
@@ -219,10 +236,13 @@ public class ChatServer {
                     if (event instanceof ClientLoginEvent) {
                         handleLogin((ClientLoginEvent) event);
                         continue;
-                    } else if (event instanceof ClientStatusUpdateEvent &&
-                               ((ClientStatusUpdateEvent) event).getStatus() == 0) {
-                        eventHandlers.get(ClientStatusUpdateEvent.class).handleEvent(event);
-                        continue;
+                    } else if (event instanceof ClientProfileUpdateEvent) {
+                        System.out.println("profile update event");
+                        if (((User) event.getSource()).getStatus() == 0) {
+                            System.out.println("hello?");
+                            eventHandlers.get(ClientProfileUpdateEvent.class).handleEvent(event);
+                            continue;
+                        }
                     }
                     eventQueue.add(event);
                 } catch (IOException e) {
@@ -314,7 +334,7 @@ public class ChatServer {
                             member.setStatus(1);
                         }
                         ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
-                        userOut.writeObject(new ClientStatusUpdateEvent(user, 1));
+                        userOut.writeObject(new ClientProfileUpdateEvent(user));
                         userOut.flush();
                         notifiedAlready.add(member);
                     }

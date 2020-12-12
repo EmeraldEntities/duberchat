@@ -10,7 +10,7 @@ package duberchat.events;
  * This event specifically exists to contain the additional metadata required
  * for a log-in (ie. username and password). However, log-outs have no such
  * constraints and thus can be represented via a
- * {@link duberchat.events.ClientStatusUpdateEvent ClientStatusUpdateEvent} by
+ * {@link duberchat.events.ClientProfileUpdateEvent ClientStatusUpdateEvent} by
  * simply setting the user to offline.
  * <p>
  * This event is intended to work alongside the

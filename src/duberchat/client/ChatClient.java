@@ -100,7 +100,7 @@ public class ChatClient {
         this.eventHandlers.put(ChannelAddMemberEvent.class, new ClientChannelAddMemberHandler(this));
         this.eventHandlers.put(ChannelRemoveMemberEvent.class, new ClientChannelRemoveMemberHandler(this));
 
-        this.eventHandlers.put(ClientStatusUpdateEvent.class, new ClientStatusUpdateHandler(this));
+        this.eventHandlers.put(ClientProfileUpdateEvent.class, new ClientProfileUpdateHandler(this));
         this.eventHandlers.put(ClientRequestMessageEvent.class, new ClientRequestMessageHandler(this));
         this.eventHandlers.put(ChannelCreateEvent.class, new ClientChannelCreateHandler(this));
         this.eventHandlers.put(ChannelDeleteEvent.class, new ClientChannelDeleteHandler(this));
@@ -191,6 +191,9 @@ public class ChatClient {
                             System.out.println("SYSTEM: logged event in queue.");
                             SerializableEvent event = outgoingEvents.remove();
                             System.out.println(event);
+                            if (event instanceof ClientProfileUpdateEvent) {
+                                System.out.println("event's user's status before sending: " + ((User)event.getSource()).getStatus());
+                            }
                             try {
                                 output.writeObject(event);
                                 output.flush();
@@ -430,7 +433,8 @@ public class ChatClient {
      */
     private void logout() {
         if (!currentlyLoggingIn) {
-            outgoingEvents.offer(new ClientStatusUpdateEvent(this.user, User.OFFLINE));
+            this.user.setStatus(0);
+            outgoingEvents.offer(new ClientProfileUpdateEvent(this.user));
         }
     
         this.closeSafely();
