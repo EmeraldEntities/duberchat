@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import duberchat.events.*;
+import duberchat.gui.frames.ServerFrame;
 import duberchat.handlers.Handleable;
 import duberchat.handlers.server.*;
 import duberchat.chatutil.*;
@@ -35,15 +36,17 @@ public class ChatServer {
     private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
     private ConcurrentLinkedQueue<FileWriteEvent> fileWriteQueue;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
+    private ServerFrame serverFrame;
 
     public ChatServer() {
         this.curUsers = new HashMap<>();
         this.channels = new HashMap<>();
         this.textConversions = new HashMap<>();
         this.allUsers = new HashMap<>();
-        this.eventHandlers = new HashMap<>();
         this.eventQueue = new ConcurrentLinkedQueue<>();
         this.fileWriteQueue = new ConcurrentLinkedQueue<>();
+
+        this.eventHandlers = new HashMap<>();
         eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
         eventHandlers.put(MessageDeleteEvent.class, new ServerMessageDeleteHandler(this));
         eventHandlers.put(MessageEditEvent.class, new ServerMessageEditHandler(this));
@@ -53,6 +56,8 @@ public class ChatServer {
         eventHandlers.put(ChannelDeleteEvent.class, new ServerChannelDeleteHandler(this));
         eventHandlers.put(ClientStatusUpdateEvent.class, new ServerStatusChangeHandler(this));
         eventHandlers.put(ClientRequestMessageEvent.class, new ServerRequestMessageHandler(this));
+
+        this.serverFrame = new ServerFrame();
     }
 
     /**
@@ -83,7 +88,8 @@ public class ChatServer {
             e1.printStackTrace();
         }
 
-        System.out.println("Waiting for a client connection..");
+        System.out.println("hi");
+        this.serverFrame.getTextArea().append("Waiting for a client connection..");
 
         Socket client = null; // hold the client connection
 
@@ -119,21 +125,21 @@ public class ChatServer {
         eventsThread.start();
 
         try {
-            serverSock = new ServerSocket(6969); // assigns an port to the server
+            serverSock = new ServerSocket(5000); // assigns an port to the server
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
-                System.out.println("Client connected");
+                this.serverFrame.getTextArea().append("Client connected");
                 Thread t = new Thread(new ConnectionHandler(client));
                 t.start(); // start the new thread
             }
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Error accepting connection");
+            this.serverFrame.getTextArea().append("Error accepting connection");
             // close all and quit
             try {
                 client.close();
             } catch (Exception e1) {
-                System.out.println("Failed to close socket");
+                this.serverFrame.getTextArea().append("Failed to close socket");
             }
             System.exit(-1);
         }
@@ -251,6 +257,7 @@ public class ChatServer {
                 try {
                     // If the username is already taken, send auth failed event
                     if (ChatServer.this.allUsers.containsKey(username)) {
+                        System.out.println("auth failed");
                         output.writeObject(new AuthFailedEvent(event));
                         output.flush();
                         return;
@@ -268,6 +275,7 @@ public class ChatServer {
                     // TODO: NOTE: NOT THREAD SAFE
                     ChatServer.this.allUsers.put(username, user);
                     ChatServer.this.curUsers.put(user, this);
+                    System.out.println("auth succeed");
                     output.writeObject(new AuthSucceedEvent(event, user, new HashMap<Integer, Channel>()));
                     output.flush();
 

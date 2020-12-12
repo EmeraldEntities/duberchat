@@ -30,7 +30,7 @@ public class ServerRequestMessageHandler implements Handleable {
 
     // loop through messages to find the starting section. Ignore the earliest 30 messages
     // because there are no more message blocks beyond that point
-    for (int i = messages.size(); i >= 30; i--) {
+    for (int i = messages.size() - 1; i >= 28; i--) {
       Message curMessage = messages.get(i);
 
       // remember, new messages go at the end, so old messages go to the top
@@ -38,7 +38,7 @@ public class ServerRequestMessageHandler implements Handleable {
       if (curMessage.equals(lastMessage)) {
         Message startMsg = curMessage;
         // Add the next thirty messages to the message block
-        for (int j = i - 1; j >= i - 30; j--) {
+        for (int j = i - 1; j >= Math.min(i - 30, 0); j--) {
           messageBlock.add(0, messages.get(j));
         }
         try {

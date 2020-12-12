@@ -44,6 +44,7 @@ public class ServerStatusChangeHandler implements Handleable {
         if (member.equals(user) || !server.getCurUsers().containsKey(member)) {
           continue;
         }
+        System.out.println(channel.getChannelName() + " " + member.getUsername());
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
           output.writeObject(new ClientStatusUpdateEvent(member, newStatus));
