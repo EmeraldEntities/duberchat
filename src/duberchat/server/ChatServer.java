@@ -225,16 +225,13 @@ public class ChatServer {
                         continue;
                     }
                     eventQueue.add(event);
-                } catch (EOFException e) {
-                    ChatServer.this.serverFrame.getTextArea().append("Unexpected closure\n");
+                } catch (IOException e) {
+                    ChatServer.this.serverFrame.getTextArea().append("Failed to receive msg from the client\n");
                     curUsers.remove(user);
                     running = false;
-                } catch (IOException e1) {
-                    ChatServer.this.serverFrame.getTextArea().append("Failed to receive msg from the client\n");
-                    e1.printStackTrace();
-                } catch (ClassNotFoundException e2) {
+                } catch (ClassNotFoundException e1) {
                     ChatServer.this.serverFrame.getTextArea().append("Class not found :(\n");
-                    e2.printStackTrace();
+                    e1.printStackTrace();
                 }
             }
 
