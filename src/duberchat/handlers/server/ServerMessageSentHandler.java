@@ -71,7 +71,7 @@ public class ServerMessageSentHandler implements Handleable {
         destination.setTotalMessages(msgId + 1);   // added for clarity TODO
         try {
             // Update the channel file.
-            String filePath = "data/channels/" + destination.getChannelId() + ".txt";
+            String filePath = "data/channels/" + destination.getChannelId();
             server.getFileWriteQueue().add(new FileWriteEvent(serverDestination, filePath));
 
             // Send back a message sent event to every online user in the channel

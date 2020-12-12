@@ -24,7 +24,7 @@ public class ServerMessageDeleteHandler implements Handleable {
     int index = toDeleteFrom.getMessages().indexOf(toDelete);
     Message serverToDelete = toDeleteFrom.getMessages().remove(index);
 
-    String filePath = "data/channels/" + toDeleteFrom.getChannelId() + ".txt";
+    String filePath = "data/channels/" + toDeleteFrom.getChannelId();
     try {
       // delete the message from its channel file
       server.getFileWriteQueue().add(new FileWriteEvent(toDeleteFrom, filePath));

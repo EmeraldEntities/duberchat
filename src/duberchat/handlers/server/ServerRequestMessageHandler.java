@@ -42,7 +42,8 @@ public class ServerRequestMessageHandler implements Handleable {
         }
 
         try {
-          Channel clientVer = new Channel(serverChannel, messageBlock);
+          Channel clientVer = new Channel(serverChannel);
+          clientVer.setMessages(messageBlock);
           clientVer.setMessageClusters(clientVer.getMessageClusters() + 1);
           output.writeObject(new ClientRequestMessageEvent(source, startMsg, clientVer));
         } catch (IOException e) {

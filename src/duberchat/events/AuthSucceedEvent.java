@@ -20,13 +20,14 @@ import java.util.ArrayList;
  * 
  * @since 1.0.0
  * @version 1.0.0
- * @author Joseph Wang
+ * @author Joseph Wang, Paula Yuan
  */
 public class AuthSucceedEvent extends AuthEvent {
     static final long serialVersionUID = 1L;
 
     protected User user;
     protected HashMap<Integer, Channel> channels;
+    protected HashMap<String, User> friends;
     protected ArrayList<Message> recentChannelMessages;
 
     /**
@@ -35,14 +36,16 @@ public class AuthSucceedEvent extends AuthEvent {
      * @param source   The source of this event.
      * @param user     The returned {@code User} object for the requested client.
      * @param channels The channels that the specified User is in.
+     * @param friends The friends that this User has.
      * @see duberchat.chatutil.User
      * @see duberchat.chatutil.Channel
      */
-    public AuthSucceedEvent(Object source, User user, HashMap<Integer, Channel> channels) {
+    public AuthSucceedEvent(Object source, User user, HashMap<Integer, Channel> channels, HashMap<String, User> friends) {
         super(source);
 
         this.user = user;
         this.channels = channels;
+        this.friends = friends;
     }
 
     /**
@@ -62,5 +65,15 @@ public class AuthSucceedEvent extends AuthEvent {
      */
     public HashMap<Integer, Channel> getChannels() {
         return this.channels;
+    }
+
+    /**
+     * Retrieves the friends the client has.
+     * 
+     * @return a {@code HashMap} of username to {@code User} objects
+     *         representing the friends the client has.
+     */
+    public HashMap<String, User> getFriends() {
+        return this.friends;
     }
 }

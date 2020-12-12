@@ -40,11 +40,11 @@ public class ServerChannelAddMemberHandler implements Handleable {
       toAddTo.addUser(toAdd);   
 
       // Update this channel's file to include the new user.
-      String channelFilePath = "data/channels/" + id + ".txt";
+      String channelFilePath = "data/channels/" + id;
       server.getFileWriteQueue().add(new FileWriteEvent(serverToAddTo, channelFilePath));
 
       // Update the new member's user file to reflect their addition to the channel
-      String userFilePath = "data/users/" + toAdd.getUsername() + ".txt";
+      String userFilePath = "data/users/" + toAdd.getUsername();
       server.getFileWriteQueue().add(new FileWriteEvent(toAdd, userFilePath));
 
       // Send back a add member event to every online user in the channel
