@@ -48,7 +48,7 @@ public class ClientProfileUpdateHandler implements Handleable {
 
         // If i initialized it, the source would be from me
         if (this.client.getUser().equals(user)) {
-            System.out.println("nani " + user.getUsername() + this.client.getUser().getUsername());
+            this.client.getUser().setStatus(user.getStatus());
         } else {
             for (Channel c : this.client.getChannels().values()) {
                 User userToFix = c.getUsers().get(user.getUsername());

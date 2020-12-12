@@ -24,7 +24,7 @@ import javax.imageio.ImageIO;
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {
-    static final long serialVersionUID = 2L;
+    static final long serialVersionUID = 3L;
 
     public static final int OFFLINE = 0;
     public static final int ONLINE = 1;
@@ -77,6 +77,21 @@ public class User implements Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Constructor for a user given an user and a status.
+     * 
+     * @param user The user to copy from
+     * @param status The new status
+     */
+    public User(User user, int status) {
+        this.username = user.getUsername();
+        this.hashedPassword = user.getHashedPassword();
+        this.channels = user.getChannels();
+        this.pfp = user.getPfp();
+
+        this.status = status;
     }
 
     /**

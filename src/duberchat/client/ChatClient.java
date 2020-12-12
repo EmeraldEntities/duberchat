@@ -191,9 +191,6 @@ public class ChatClient {
                             System.out.println("SYSTEM: logged event in queue.");
                             SerializableEvent event = outgoingEvents.remove();
                             System.out.println(event);
-                            if (event instanceof ClientProfileUpdateEvent) {
-                                System.out.println("event's user's status before sending: " + ((User)event.getSource()).getStatus());
-                            }
                             try {
                                 output.writeObject(event);
                                 output.flush();
@@ -433,8 +430,8 @@ public class ChatClient {
      */
     private void logout() {
         if (!currentlyLoggingIn) {
-            this.user.setStatus(0);
-            outgoingEvents.offer(new ClientProfileUpdateEvent(this.user));
+            User newUser = new User(this.user, 0);
+            outgoingEvents.offer(new ClientProfileUpdateEvent(newUser));
         }
     
         this.closeSafely();

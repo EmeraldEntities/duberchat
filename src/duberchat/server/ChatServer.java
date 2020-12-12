@@ -225,8 +225,7 @@ public class ChatServer {
             while (running) { // loop until a message is received
                 try {
                     event = (SerializableEvent) input.readObject(); // get a message from the client
-                    ChatServer.this.serverFrame.getTextArea().append("Received a message\n");
-                    System.out.println(event);
+                    ChatServer.this.serverFrame.getTextArea().append("Received a " + event.getClass() + " event\n");
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
                     // mapping that can inform the handler of what client to output to.
@@ -236,13 +235,10 @@ public class ChatServer {
                     if (event instanceof ClientLoginEvent) {
                         handleLogin((ClientLoginEvent) event);
                         continue;
-                    } else if (event instanceof ClientProfileUpdateEvent) {
-                        System.out.println("profile update event");
-                        if (((User) event.getSource()).getStatus() == 0) {
-                            System.out.println("hello?");
+                    } else if (event instanceof ClientProfileUpdateEvent && 
+                               ((User) event.getSource()).getStatus() == 0) {
                             eventHandlers.get(ClientProfileUpdateEvent.class).handleEvent(event);
                             continue;
-                        }
                     }
                     eventQueue.add(event);
                 } catch (IOException e) {

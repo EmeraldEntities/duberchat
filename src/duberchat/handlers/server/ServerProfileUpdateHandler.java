@@ -25,8 +25,6 @@ public class ServerProfileUpdateHandler implements Handleable {
     User user = (User) event.getSource();
     User serverUser = server.getAllUsers().get(user.getUsername());
     
-    System.out.println("client name: " + user.getUsername() + " server side name: " + serverUser.getUsername());
-    System.out.println("client side status: " + user.getStatus() + " server side status: " + serverUser.getStatus());
     if (serverUser.getStatus() != user.getStatus()) {
       serverUser.setStatus(user.getStatus());
     }
@@ -51,7 +49,7 @@ public class ServerProfileUpdateHandler implements Handleable {
         }
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
-          output.writeObject(new ClientProfileUpdateEvent(serverUser));
+          output.writeObject(new ClientProfileUpdateEvent(new User(serverUser, user.getStatus())));
         } catch (IOException e) {
           e.printStackTrace();
         }
