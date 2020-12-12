@@ -89,7 +89,7 @@ public class ChatServer {
         }
 
         System.out.println("hi");
-        this.serverFrame.getTextArea().append("Waiting for a client connection..");
+        this.serverFrame.getTextArea().append("Waiting for a client connection..\n");
 
         Socket client = null; // hold the client connection
 
@@ -128,18 +128,18 @@ public class ChatServer {
             serverSock = new ServerSocket(5000); // assigns an port to the server
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
-                this.serverFrame.getTextArea().append("Client connected");
+                this.serverFrame.getTextArea().append("Client connected\n");
                 Thread t = new Thread(new ConnectionHandler(client));
                 t.start(); // start the new thread
             }
         } catch (IOException e) {
             e.printStackTrace();
-            this.serverFrame.getTextArea().append("Error accepting connection");
+            this.serverFrame.getTextArea().append("Error accepting connection\n");
             // close all and quit
             try {
                 client.close();
             } catch (Exception e1) {
-                this.serverFrame.getTextArea().append("Failed to close socket");
+                this.serverFrame.getTextArea().append("Failed to close socket\n");
             }
             System.exit(-1);
         }
@@ -208,7 +208,7 @@ public class ChatServer {
             while (running) { // loop until a message is received
                 try {
                     event = (SerializableEvent) input.readObject(); // get a message from the client
-                    ChatServer.this.serverFrame.getTextArea().append("Received a message");
+                    ChatServer.this.serverFrame.getTextArea().append("Received a message\n");
                     System.out.println(event);
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
@@ -226,14 +226,14 @@ public class ChatServer {
                     }
                     eventQueue.add(event);
                 } catch (EOFException e) {
-                    System.out.println("Unexpected closure");
+                    ChatServer.this.serverFrame.getTextArea().append("Unexpected closure\n");
                     curUsers.remove(user);
                     running = false;
                 } catch (IOException e1) {
-                    System.out.println("Failed to receive msg from the client");
+                    ChatServer.this.serverFrame.getTextArea().append("Failed to receive msg from the client\n");
                     e1.printStackTrace();
                 } catch (ClassNotFoundException e2) {
-                    System.out.println("Class not found :(");
+                    ChatServer.this.serverFrame.getTextArea().append("Class not found :(\n");
                     e2.printStackTrace();
                 }
             }
@@ -244,7 +244,7 @@ public class ChatServer {
                 input.close();
                 client.close();
             } catch (Exception e) {
-                System.out.println("Failed to close socket");
+                ChatServer.this.serverFrame.getTextArea().append("Failed to close the socket\n");
             }
         } // end of run()
 
@@ -257,13 +257,13 @@ public class ChatServer {
                 try {
                     // If the username is already taken, send auth failed event
                     if (ChatServer.this.allUsers.containsKey(username)) {
-                        System.out.println("auth failed");
+                        ChatServer.this.serverFrame.getTextArea().append("Authentication failed\n");
                         output.writeObject(new AuthFailedEvent(event));
                         output.flush();
                         return;
                     }
 
-                    System.out.println("Made new user.");
+                    ChatServer.this.serverFrame.getTextArea().append("New user created: " + username + "\n");
                     user = new User(username, password);
 
                     // make new user file
@@ -275,11 +275,11 @@ public class ChatServer {
                     // TODO: NOTE: NOT THREAD SAFE
                     ChatServer.this.allUsers.put(username, user);
                     ChatServer.this.curUsers.put(user, this);
-                    System.out.println("auth succeed");
+                    ChatServer.this.serverFrame.getTextArea().append("Authentication succeded\n");
                     output.writeObject(new AuthSucceedEvent(event, user, new HashMap<Integer, Channel>()));
                     output.flush();
 
-                    System.out.println("SYSTEM: Sent auth event.");
+                    ChatServer.this.serverFrame.getTextArea().append("Sent authentication event\n");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

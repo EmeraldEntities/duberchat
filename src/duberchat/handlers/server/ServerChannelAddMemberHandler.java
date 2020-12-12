@@ -54,7 +54,6 @@ public class ServerChannelAddMemberHandler implements Handleable {
         System.out.println(member.getUsername());
         // skip offline users
         if (!server.getCurUsers().containsKey(member)) {
-          System.out.println("a true bruh moment indeed");
           continue;
         }
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
