@@ -24,7 +24,7 @@ import javax.imageio.ImageIO;
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {
-    static final long serialVersionUID = 3L;
+    static final long serialVersionUID = 4L;
 
     public static final int OFFLINE = 0;
     public static final int ONLINE = 1;
@@ -80,18 +80,44 @@ public class User implements Serializable {
     }
 
     /**
-     * Constructor for a user given an user and a status.
+     * Constructor for a user given another user. In effect, makes a copy of the given user.
      * 
      * @param user The user to copy from
-     * @param status The new status
      */
-    public User(User user, int status) {
+    public User(User user) {
         this.username = user.getUsername();
         this.hashedPassword = user.getHashedPassword();
         this.channels = user.getChannels();
         this.pfp = user.getPfp();
+        this.status = user.getStatus();
+    }
 
-        this.status = status;
+    /**
+     * Checks if this user's profile picture is the same as some other image.
+     * 
+     * @param image The image we're checking against
+     * @return boolean, whether the two images are the same 
+     */
+    public boolean pfpEquals(BufferedImage image) {
+        // The images must be the same size.
+        if (this.pfp.getWidth() != image.getWidth() || this.pfp.getHeight() != image.getHeight()) {
+            return false;
+        }
+
+        int width = this.pfp.getWidth();
+        int height = this.pfp.getHeight();
+
+        // Loop over every pixel.
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Compare the pixels for equality.
+                if (this.pfp.getRGB(x, y) != image.getRGB(x, y)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

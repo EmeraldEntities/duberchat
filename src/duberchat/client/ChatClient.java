@@ -430,7 +430,8 @@ public class ChatClient {
      */
     private void logout() {
         if (!currentlyLoggingIn) {
-            User newUser = new User(this.user, 0);
+            User newUser = new User(this.user);
+            newUser.setStatus(0);
             outgoingEvents.offer(new ClientProfileUpdateEvent(newUser));
         }
     

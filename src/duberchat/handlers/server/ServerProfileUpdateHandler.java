@@ -29,6 +29,10 @@ public class ServerProfileUpdateHandler implements Handleable {
       serverUser.setStatus(user.getStatus());
     }
 
+    if (!serverUser.pfpEquals(user.getPfp())) {
+      serverUser.setPfp(user.getPfp());
+    }
+
     // Update the user file
     String userFilePath = "data/users/" + user.getUsername() + ".txt";
     server.getFileWriteQueue().add(new FileWriteEvent(serverUser, userFilePath));
@@ -49,7 +53,7 @@ public class ServerProfileUpdateHandler implements Handleable {
         }
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
-          output.writeObject(new ClientProfileUpdateEvent(new User(serverUser, user.getStatus())));
+          output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
         } catch (IOException e) {
           e.printStackTrace();
         }
