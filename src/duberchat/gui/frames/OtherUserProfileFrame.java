@@ -72,11 +72,17 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
         addConstrainedComponent(dmButton, mainPanel, layout, constraints, 0, 2, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
 
-        this.addFocusListener(new FocusAdapter() {
-            public void focusLost(FocusEvent e) {
+        // this.addFocusListener(new FocusAdapter() {
+        // public void focusLost(FocusEvent e) {
+        // reload();
+        // }
+        // });
+        this.addWindowListener(new WindowAdapter() {
+            public void windowDeactivated(WindowEvent e) {
                 reload();
             }
         });
+
         this.add(mainPanel);
     }
 

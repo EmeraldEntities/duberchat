@@ -53,6 +53,7 @@ public class ClientChannelCreateHandler implements Handleable {
         Channel newChannel = channelEvent.getChannel();
         int newChannelId = newChannel.getChannelId();
 
+        this.client.getUser().getChannels().add(newChannelId);
         // Make sure if we already have this channel that we don't add a secondary
         // channel
         if (!this.client.getChannels().containsKey(newChannel.getChannelId())) {

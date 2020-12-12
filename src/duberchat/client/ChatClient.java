@@ -97,11 +97,11 @@ public class ChatClient {
     private void initializeHandlers() {
         this.eventHandlers = new HashMap<>();
 
-        ClientChannelAdjustMemberHandler memberHandler = new ClientChannelAdjustMemberHandler(this);
-        this.eventHandlers.put(ChannelAddMemberEvent.class, memberHandler);
-        this.eventHandlers.put(ChannelRemoveMemberEvent.class, memberHandler);
+        this.eventHandlers.put(ChannelAddMemberEvent.class, new ClientChannelAddMemberHandler(this));
+        this.eventHandlers.put(ChannelRemoveMemberEvent.class, new ClientChannelRemoveMemberHandler(this));
 
         this.eventHandlers.put(ClientStatusUpdateEvent.class, new ClientStatusUpdateHandler(this));
+        this.eventHandlers.put(ClientRequestMessageEvent.class, new ClientRequestMessageHandler(this));
         this.eventHandlers.put(ChannelCreateEvent.class, new ClientChannelCreateHandler(this));
         this.eventHandlers.put(ChannelDeleteEvent.class, new ClientChannelDeleteHandler(this));
         this.eventHandlers.put(RequestFailedEvent.class, new ClientRequestFailedHandler(this));
@@ -351,7 +351,7 @@ public class ChatClient {
     /**
      * Offers an event to this client's output queue.
      */
-    public void offerEvent(SerializableEvent event) {
+    public synchronized void offerEvent(SerializableEvent event) {
         this.outgoingEvents.offer(event);
     }
 

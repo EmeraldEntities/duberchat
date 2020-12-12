@@ -54,7 +54,9 @@ public class ClientMessageEditHandler implements Handleable {
 
         for (int i = 0; i < localMessages.size(); i++) {
             if (localMessages.get(i).equals(message)) {
+                // replace method because pointers are annoying
                 localMessages.set(i, message);
+                break;
             }
         }
 

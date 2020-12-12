@@ -37,9 +37,10 @@ public class ServerRequestMessageHandler implements Handleable {
       if (curMessage.equals(lastMessage)) {
         Message startMsg = curMessage;
         // Add the next thirty messages to the message block
-        for (int j = i - 1; j >= Math.min(i - 30, 0); j--) {
+        for (int j = i - 1; j >= Math.max(i - 30, 0); j--) {
           messageBlock.add(0, messages.get(j));
         }
+
         try {
           Channel clientVer = new Channel(serverChannel, messageBlock);
           clientVer.setMessageClusters(clientVer.getMessageClusters() + 1);
@@ -47,6 +48,7 @@ public class ServerRequestMessageHandler implements Handleable {
         } catch (IOException e) {
           e.printStackTrace();
         }
+
         return;
       }
     }

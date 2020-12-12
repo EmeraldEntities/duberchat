@@ -6,6 +6,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Date;
+import java.util.Iterator;
 
 import duberchat.events.*;
 import duberchat.gui.filters.TextLengthFilter;
@@ -63,11 +64,12 @@ public class MainFrame extends DynamicFrame {
     private JButton addChannelButton, deleteChannelButton;
     private JButton homeButton;
     private JTextField typeField;
-    private JTextArea msgArea;
 
     private JLabel channelIndicator;
 
     private ChatClient client;
+
+    private boolean requestedMessages = false;
 
     // private ArrayList<ChannelPanel> activeChannelPanels;
     // private ArrayList<UserPanel> activeUserPanels;
@@ -130,15 +132,14 @@ public class MainFrame extends DynamicFrame {
                 if (e.getWheelRotation() < 0) {
                     if (channelOffset > 0) {
                         channelOffset--;
-                        reloadChannels();
+                        onlyReloadChannels();
                     }
                 } else {
-                    if (channelOffset < client.getChannels().size()) {
+                    if (channelOffset - 1 < client.getChannels().size() - 2) {
                         channelOffset++;
-                        reloadChannels();
+                        onlyReloadChannels();
                     }
                 }
-                System.out.println(channelOffset);
             }
         });
         userPanel.addMouseWheelListener(new MouseWheelListener() {
@@ -146,7 +147,7 @@ public class MainFrame extends DynamicFrame {
                 if (e.getWheelRotation() < 0) {
                     if (userOffset > 0) {
                         userOffset--;
-                        reloadUsers();
+                        onlyReloadUsers();
                     }
                 } else {
                     if (!client.hasCurrentChannel()) {
@@ -156,33 +157,45 @@ public class MainFrame extends DynamicFrame {
                     if (client.getCurrentChannel().getUsers().size() > maxSidePanelGrids
                             && client.getCurrentChannel().getUsers().size() - userOffset > maxSidePanelGrids) {
                         userOffset++;
-                        reloadUsers();
+                        onlyReloadUsers();
                     }
                 }
-                System.out.println(userOffset);
             }
         });
 
         // TODO: make sure this is right, incorporate this into message loading
         textPanel.addMouseWheelListener(new MouseWheelListener() {
             public void mouseWheelMoved(MouseWheelEvent e) {
-                if (e.getWheelRotation() < 0) {
+                if (e.getWheelRotation() > 0) {
                     if (messageOffset > 0) {
                         messageOffset--;
-                        reloadMessages();
+                        onlyReloadMessages();
                     }
                 } else {
                     if (!client.hasCurrentChannel()) {
                         return;
                     }
 
-                    if (client.getCurrentChannel().getMessages().size() > maxMessageGrids
-                            && client.getCurrentChannel().getMessages().size() - messageOffset > maxMessageGrids) {
+                    Channel curChannel = client.getCurrentChannel();
+                    // System.out.println(curChannel.getMessages().size() > maxMessageGrids
+                    // && curChannel.getMessages().size() - messageOffset > maxMessageGrids);
+                    // System.out.println(curChannel.getMessages().size() >=
+                    // Channel.LOCAL_SAVE_AMT);
+                    // System.out.println((curChannel.getMessages().size() - messageOffset) <=
+                    // maxMessageGrids);
+
+                    if (curChannel.getMessages().size() > maxMessageGrids
+                            && curChannel.getMessages().size() - messageOffset > maxMessageGrids) {
                         messageOffset++;
-                        reloadMessages();
+                        onlyReloadMessages();
+                    } else if (curChannel.getMessages().size() >= Channel.LOCAL_SAVE_AMT
+                            && (curChannel.getMessages().size() - messageOffset) <= maxMessageGrids
+                            && !requestedMessages) {
+                        client.offerEvent(new ClientRequestMessageEvent(client.getUser(),
+                                curChannel.getMessages().get(0), client.getCurrentChannel()));
+                        requestedMessages = true;
                     }
                 }
-                System.out.println(messageOffset);
             }
         });
 
@@ -210,9 +223,9 @@ public class MainFrame extends DynamicFrame {
         userPanel.removeAll();
         textPanel.removeAll();
 
-        this.maxSidePanelGrids = this.getHeight() / SIDE_PANEL_HEIGHT;
+        this.maxSidePanelGrids = channelPanel.getHeight() / SIDE_PANEL_HEIGHT;
         this.maxChannelWidth = this.getWidth() / 4;
-        this.maxMessageGrids = this.getHeight() / MESSAGE_PANEL_HEIGHT;
+        this.maxMessageGrids = textPanel.getHeight() / MESSAGE_PANEL_HEIGHT;
 
         channelPanel.setLayout(new GridLayout(this.maxSidePanelGrids, 1));
         userPanel.setLayout(new GridLayout(this.maxSidePanelGrids, 1));
@@ -239,9 +252,10 @@ public class MainFrame extends DynamicFrame {
         textPanel.setBackground(MAIN_COLOR);
 
         // INITIALIZE BUTTONS ====================================================
-        profileButton = ComponentFactory.createButton("", MAIN_COLOR, TEXT_COLOR,
+        profileButton = ComponentFactory.createButton("", SIDE_COLOR, MAIN_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
+                        System.out.println("max grids: " + maxSidePanelGrids); // TODO: yeet
                         if (!hasActiveProfileFrame()) {
                             profileFrame = new ProfileFrame(client);
                             profileFrame.setVisible(true);
@@ -254,7 +268,7 @@ public class MainFrame extends DynamicFrame {
         profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
         profileConfigPanel.add(profileButton);
 
-        deleteChannelButton = ComponentFactory.createButton("DELETE CHANNEL", MAIN_COLOR, TEXT_COLOR,
+        deleteChannelButton = ComponentFactory.createButton("DELETE CHANNEL", SIDE_COLOR, TEXT_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
                         JLabel label = ComponentFactory.createLabel("Are you sure you want to delete this channel?",
@@ -274,7 +288,7 @@ public class MainFrame extends DynamicFrame {
                     }
                 });
 
-        addUserButton = ComponentFactory.createButton("ADD USER", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+        addUserButton = ComponentFactory.createButton("ADD USER", SIDE_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
                         BRIGHT_TEXT_COLOR);
@@ -296,7 +310,7 @@ public class MainFrame extends DynamicFrame {
             }
         });
 
-        deleteUserButton = ComponentFactory.createButton("REMOVE USER", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+        deleteUserButton = ComponentFactory.createButton("REMOVE USER", SIDE_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
                         BRIGHT_TEXT_COLOR);
@@ -357,7 +371,7 @@ public class MainFrame extends DynamicFrame {
             public void actionPerformed(ActionEvent e) {
                 client.setCurrentChannel(null);
 
-                reload();
+                switchChannelsToCurrent();
             }
         });
 
@@ -409,9 +423,12 @@ public class MainFrame extends DynamicFrame {
     public synchronized void reload(SerializableEvent source) {
         if (source instanceof MessageEvent) {
             this.reloadMessages();
-        } else if (source instanceof ClientEvent) {
-            this.reloadUsers();
         } else if (source instanceof ChannelAddMemberEvent || source instanceof ChannelRemoveMemberEvent) {
+            this.reloadUsers();
+        } else if (source instanceof ClientRequestMessageEvent) {
+            this.resetRequestedMessages();
+            this.reloadMessages();
+        } else if (source instanceof ClientEvent) {
             this.reloadUsers();
         } else if (source instanceof ChannelEvent) {
             this.reload();
@@ -469,16 +486,21 @@ public class MainFrame extends DynamicFrame {
 
         ArrayList<Message> messages = client.getCurrentChannel().getMessages();
 
-        for (int i = messages.size() - 1; i >= 0; i--) {
-            Message msg = messages.get(i);
+        for (int messageIndex = 0; messageIndex < messages.size(); messageIndex++) {
+            if (messageIndex >= messages.size() - messageOffset
+                    || messageIndex < (messages.size() - maxMessageGrids) - messageOffset) {
+                continue;
+            }
+
+            Message msg = messages.get(messageIndex);
             Channel sourceChannel = client.getCurrentChannel();
             User sender = sourceChannel.getUsers().get(msg.getSenderUsername());
 
             boolean showAdmin = sourceChannel.getAdminUsers().contains(client.getUser());
             boolean showHeader = false;
 
-            if (i != messages.size() - 1) {
-                if (!(msg.getSenderUsername().equals(messages.get(i + 1).getSenderUsername()))) {
+            if (messageIndex != 0) {
+                if (!(msg.getSenderUsername().equals(messages.get(messageIndex - 1).getSenderUsername()))) {
                     showHeader = true;
                 }
             } else {
@@ -489,7 +511,6 @@ public class MainFrame extends DynamicFrame {
         }
     }
 
-    // TODO: implement
     private synchronized void reloadUsers() {
         userPanel.removeAll();
 
@@ -499,35 +520,52 @@ public class MainFrame extends DynamicFrame {
 
         Channel curChannel = client.getCurrentChannel();
 
-        int userIndex = 0;
-        System.out.println("offset: " + userOffset + "   " + (maxSidePanelGrids + userOffset));
+        // int userIndex = 0;
+        // System.out.println("offset: " + userOffset + " " + (maxSidePanelGrids +
+        // userOffset));
 
-        for (User u : curChannel.getUsers().values()) {
+        Iterator<User> userIterator = client.getCurrentChannel().getUsers().values().iterator();
+        for (int userIndex = 0; userIterator.hasNext(); userIndex++) {
+            User u = userIterator.next();
+
             if (userIndex < userOffset || userIndex >= maxSidePanelGrids + userOffset) {
                 continue;
             }
 
-            System.out.println(u.getUsername());
+            // System.out.println(u.getUsername());
             userPanel.add(new UserPanel(client, u, curChannel.getAdminUsers().contains(u)));
             userPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
         }
+
+        // for (User u : curChannel.getUsers().values()) {
+        // if (userIndex < userOffset || userIndex >= maxSidePanelGrids + userOffset) {
+        // continue;
+        // }
+
+        // System.out.println(u.getUsername());
+        // userPanel.add(new UserPanel(client, u,
+        // curChannel.getAdminUsers().contains(u)));
+        // userPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
     }
 
     private synchronized void reloadChannels() {
         channelPanel.removeAll();
-        channelPanel.add(homeButton);
-        channelPanel.add(addChannelButton);
+        if (maxSidePanelGrids >= 2) {
+            channelPanel.add(homeButton);
+            channelPanel.add(addChannelButton);
+        } else if (maxSidePanelGrids >= 1) {
+            channelPanel.add(homeButton);
+        }
 
         if (this.client.getChannels().size() > 0) {
-            // TODO: convert to for-i loop
-            int channelIndex = 0;
-            for (Channel c : this.client.getChannels().values()) {
-                channelIndex++;
-                if (channelIndex < channelOffset || channelIndex >= maxSidePanelGrids + channelOffset) {
+            Iterator<Channel> channelIterator = this.client.getChannels().values().iterator();
+            for (int channelIndex = 0; channelIterator.hasNext(); channelIndex++) {
+                Channel c = channelIterator.next();
+
+                if (channelIndex < channelOffset || channelIndex >= (maxSidePanelGrids - 2) + channelOffset) {
                     continue;
                 }
 
-                System.out.println(c.getChannelName());
                 Color defaultColor = SIDE_COLOR;
                 // written this way so that if the current channel is null, that's okay
                 if (c.equals(this.client.getCurrentChannel())) {
@@ -538,6 +576,27 @@ public class MainFrame extends DynamicFrame {
                 channelPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
             }
         }
+    }
+
+    private void onlyReloadChannels() {
+        this.reloadChannels();
+
+        this.repaint();
+        this.revalidate();
+    }
+
+    private void onlyReloadUsers() {
+        this.reloadUsers();
+
+        this.repaint();
+        this.revalidate();
+    }
+
+    private void onlyReloadMessages() {
+        this.reloadMessages();
+
+        this.repaint();
+        this.revalidate();
     }
 
     public boolean hasActiveChannelCreateFrame() {
@@ -567,5 +626,15 @@ public class MainFrame extends DynamicFrame {
         }
 
         super.destroy();
+    }
+
+    public void resetRequestedMessages() {
+        this.requestedMessages = false;
+    }
+
+    public void switchChannelsToCurrent() {
+        this.messageOffset = 0;
+        this.reload();
+        this.resetRequestedMessages();
     }
 }

@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 public class Channel implements Serializable {
-    static final long serialVersionUID = 5L;
+    static final long serialVersionUID = 6L;
 
     public static final int MESSAGE_CLUSTER_AMT = 30;
     public static final int LOCAL_SAVE_AMT = MESSAGE_CLUSTER_AMT;
@@ -120,7 +120,7 @@ public class Channel implements Serializable {
     public void addMessage(Message message) {
         // no matter what end we adjust, we'll still have to adjust indexes
         // adding to the top allows us to use addAll
-        if (this.messages.size() > LOCAL_SAVE_AMT + (messageClusters * MESSAGE_CLUSTER_AMT)) {
+        if (this.messages.size() >= LOCAL_SAVE_AMT + (messageClusters * MESSAGE_CLUSTER_AMT)) {
             this.messages.remove(0);
         }
 

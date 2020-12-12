@@ -28,6 +28,7 @@ public class ServerMessageEditHandler implements Handleable {
         break;
       }
     }
+
     int id = serverChannel.getChannelId();
     server.getFileWriteQueue().add(new FileWriteEvent(serverChannel, "data/channels/" + id + ".txt"));
     Iterator<User> itr = serverChannel.getUsers().values().iterator();

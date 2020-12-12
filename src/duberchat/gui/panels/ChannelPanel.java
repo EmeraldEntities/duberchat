@@ -34,7 +34,7 @@ public class ChannelPanel extends JPanel {
                 client.setCurrentChannel(channel.getChannelId());
                 System.out.println("SYSTEM: switching to " + channel.getChannelName());
 
-                client.getMainMenuFrame().reload();
+                client.getMainMenuFrame().switchChannelsToCurrent();
             }
 
             public void mouseEntered(MouseEvent e) {

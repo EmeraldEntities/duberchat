@@ -7,6 +7,7 @@ import duberchat.handlers.Handleable;
 import duberchat.events.SerializableEvent;
 import duberchat.events.RequestFailedEvent;
 import duberchat.events.ChannelCreateEvent;
+import duberchat.events.ClientRequestMessageEvent;
 
 /**
  * the {@code ClientRequestFailedHandler} class provides the client-side
@@ -52,6 +53,8 @@ public class ClientRequestFailedHandler implements Handleable {
             if (this.client.getMainMenuFrame().hasActiveChannelCreateFrame()) {
                 this.client.getMainMenuFrame().getChannelCreateFrame().reload();
             }
+        } else if (failedEvent.getSource() instanceof ClientRequestMessageEvent) {
+            System.out.println("SYSTEM: No more messages can be requested.");
         }
     }
 }

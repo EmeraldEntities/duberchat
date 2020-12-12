@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 public class Message implements Serializable {
-    static final long serialVersionUID = 1L;
+    static final long serialVersionUID = 2L;
     public static final int MAX_LENGTH = 100;
 
     private String senderUsername;
@@ -20,6 +20,14 @@ public class Message implements Serializable {
         this.messageId = messageId;
         this.timestamp = timestamp;
         this.associatedChannel = channel;
+    }
+
+    public Message(Message oldMsg, String newMsg) {
+        this.senderUsername = oldMsg.getSenderUsername();
+        this.message = newMsg;
+        this.messageId = oldMsg.getMessageId();
+        this.timestamp = oldMsg.getTimestamp();
+        this.associatedChannel = oldMsg.getChannel();
     }
 
     /**

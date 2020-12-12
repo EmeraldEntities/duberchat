@@ -44,7 +44,7 @@ public class ProfileFrame extends DynamicGridbagFrame {
 
         mainPanel = new JPanel();
         mainPanel.setSize(this.getSize());
-        mainPanel.setBackground(MainFrame.MAIN_COLOR);
+        mainPanel.setBackground(MainFrame.PANEL_COLOR);
         mainPanel.setLayout(layout);
 
         profilePicture = new JLabel(new ImageIcon(user.getPfp().getScaledInstance(128, 128, Image.SCALE_SMOOTH)));
