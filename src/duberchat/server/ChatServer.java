@@ -321,8 +321,8 @@ public class ChatServer {
                     fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id + ".txt"));
                     ArrayList<Message> messages = curChannel.getMessages();
                     ArrayList<Message> messageBlock = new ArrayList<>();
-                    for (int i = 1; i <= Math.min(30, messages.size()); i++) {
-                        messageBlock.add(messages.get(messages.size() - i));
+                    for (int i = Math.max(messages.size() - 30, 0); i < messages.size(); i++) {
+                        messageBlock.add(messages.get(i));
                     }
                     userChannels.put(id, new Channel(curChannel, messageBlock));
                 }
