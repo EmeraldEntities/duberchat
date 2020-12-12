@@ -31,7 +31,7 @@ public class ServerChannelDeleteHandler implements Handleable {
       while (itr.hasNext()) {
         User user = itr.next();
         user.getChannels().remove(toDeleteId);
-        String filePath = "data/users/" + user.getUsername() + ".txt";
+        String filePath = "data/users/" + user.getUsername();
         server.getFileWriteQueue().add(new FileWriteEvent(user, filePath));
 
         // Give back a channel deletion event to all currently online users in the channel
@@ -42,7 +42,7 @@ public class ServerChannelDeleteHandler implements Handleable {
       }
 
       //Remove the channel file
-      File channelFile = new File("data/channels/" + toDeleteId + ".txt");
+      File channelFile = new File("data/channels/" + toDeleteId);
       channelFile.delete();
     } catch (IOException e) {
       e.printStackTrace();

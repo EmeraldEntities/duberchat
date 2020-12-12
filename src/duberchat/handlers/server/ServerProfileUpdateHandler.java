@@ -2,6 +2,8 @@ package duberchat.handlers.server;
 
 import duberchat.chatutil.User;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Iterator;
@@ -31,10 +33,12 @@ public class ServerProfileUpdateHandler implements Handleable {
 
     if (!serverUser.pfpEquals(user.getPfp())) {
       serverUser.setPfp(user.getPfp());
+      String filePath = "data/images/" + serverUser.getUsername();
+      server.getFileWriteQueue().add(new FileWriteEvent(user.getPfp(), filePath));
     }
 
     // Update the user file
-    String userFilePath = "data/users/" + user.getUsername() + ".txt";
+    String userFilePath = "data/users/" + user.getUsername();
     server.getFileWriteQueue().add(new FileWriteEvent(serverUser, userFilePath));
 
     // Send a status update event to every other user in every channel this user is in
@@ -43,7 +47,7 @@ public class ServerProfileUpdateHandler implements Handleable {
     while (setItr.hasNext()) {
       int channelId = setItr.next();
       Channel channel = server.getChannels().get(channelId);
-      String channelFilePath = "data/channels/" + channelId + ".txt";
+      String channelFilePath = "data/channels/" + channelId;
       server.getFileWriteQueue().add(new FileWriteEvent(channel, channelFilePath));
       Iterator<User> itr = channel.getUsers().values().iterator();
       while (itr.hasNext()) {
@@ -54,6 +58,7 @@ public class ServerProfileUpdateHandler implements Handleable {
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
           output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
+          output.flush();
         } catch (IOException e) {
           e.printStackTrace();
         }

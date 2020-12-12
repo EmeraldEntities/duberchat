@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import duberchat.events.*;
 import duberchat.gui.frames.ServerFrame;
@@ -55,6 +57,9 @@ public class ChatServer {
         this.eventHandlers.put(ChannelDeleteEvent.class, new ServerChannelDeleteHandler(this));
         this.eventHandlers.put(ClientProfileUpdateEvent.class, new ServerProfileUpdateHandler(this));
         this.eventHandlers.put(ClientRequestMessageEvent.class, new ServerRequestMessageHandler(this));
+        ServerFriendHandler friendHandler = new ServerFriendHandler(this);
+        this.eventHandlers.put(FriendAddEvent.class, friendHandler);
+        this.eventHandlers.put(FriendRemoveEvent.class, friendHandler);
 
         this.textConversions = new HashMap<>();
         this.textConversions.put("/shrug", "¯\\_(ツ)_/¯");
@@ -106,6 +111,7 @@ public class ChatServer {
 
         Socket client = null; // hold the client connection
 
+        ExecutorService fileWriteExecutor = Executors.newCachedThreadPool();
         Thread fileWriteThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
@@ -280,7 +286,7 @@ public class ChatServer {
                     user = new User(username, password);
 
                     // make new user file
-                    FileOutputStream fileOut = new FileOutputStream("data/users/" + username + ".txt");
+                    FileOutputStream fileOut = new FileOutputStream("data/users/" + username);
                     ObjectOutputStream out = new ObjectOutputStream(fileOut);
                     out.writeObject(user);
                     out.close();
@@ -289,7 +295,9 @@ public class ChatServer {
                     ChatServer.this.allUsers.put(username, user);
                     ChatServer.this.curUsers.put(user, this);
                     ChatServer.this.serverFrame.getTextArea().append("Authentication succeded\n");
-                    output.writeObject(new AuthSucceedEvent(event, user, new HashMap<Integer, Channel>()));
+                    output.writeObject(new AuthSucceedEvent(event, user, 
+                                                            new HashMap<Integer, Channel>(), 
+                                                            new HashMap<String, User>()));
                     output.flush();
 
                     ChatServer.this.serverFrame.getTextArea().append("Sent authentication event\n");
@@ -311,8 +319,10 @@ public class ChatServer {
                 }
 
                 user.setStatus(1);
-                fileWriteQueue.add(new FileWriteEvent(user, "data/users/" + username + ".txt"));
+                fileWriteQueue.add(new FileWriteEvent(user, "data/users/" + username));
                 curUsers.put(user, this);
+
+                // update channel files and all the users in those channels regarding this user's login
                 HashMap<Integer, Channel> userChannels = new HashMap<>();
                 Iterator<Integer> itr = user.getChannels().iterator();
                 HashSet<User> notifiedAlready = new HashSet<>();
@@ -334,15 +344,29 @@ public class ChatServer {
                         userOut.flush();
                         notifiedAlready.add(member);
                     }
-                    fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id + ".txt"));
+                    fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id));
                     ArrayList<Message> messages = curChannel.getMessages();
                     ArrayList<Message> messageBlock = new ArrayList<>();
                     for (int i = Math.max(messages.size() - 30, 0); i < messages.size(); i++) {
                         messageBlock.add(messages.get(i));
                     }
-                    userChannels.put(id, new Channel(curChannel, messageBlock));
+                    Channel correctedChannel = new Channel(curChannel);
+                    correctedChannel.setMessages(messageBlock);
+                    userChannels.put(id, correctedChannel);
                 }
-                output.writeObject(new AuthSucceedEvent(event, user, userChannels));
+
+                // retrieve the friends list
+                HashMap<String, User> friendsMap = new HashMap<>();
+                Iterator<String> friendsItr = user.getFriends().iterator();
+                while (friendsItr.hasNext()) {
+                    String friendUsername = friendsItr.next();
+                    User friend = ChatServer.this.allUsers.get(friendUsername);
+                    // Theoretically, the friend should never be null, but better safe than sorry.
+                    if (friend != null) {
+                        friendsMap.put(friendUsername, friend);
+                    }
+                }
+                output.writeObject(new AuthSucceedEvent(event, user, userChannels, friendsMap));
                 output.flush();
             } catch (IOException e1) {
                 e1.printStackTrace();

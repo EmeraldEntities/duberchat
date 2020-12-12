@@ -24,7 +24,7 @@ import javax.imageio.ImageIO;
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {
-    static final long serialVersionUID = 4L;
+    static final long serialVersionUID = 5L;
 
     public static final int OFFLINE = 0;
     public static final int ONLINE = 1;
@@ -37,6 +37,7 @@ public class User implements Serializable {
     private int status;
     private transient BufferedImage pfp;
     private HashSet<Integer> channels;
+    private HashSet<String> friends;
 
     /**
      * Constructor for a user when no profile picture exists, used when first making
@@ -56,27 +57,7 @@ public class User implements Serializable {
             e.printStackTrace();
         }
         this.channels = new HashSet<>();
-    }
-
-    /**
-     * Constructor for a user when additional information exists, used for existing users.
-     * 
-     * @param username The user's username.
-     * @param hashedPassword The user's password, hashed.
-     * @param pfpPath  The file name of the user's profile picture.
-     * @param channels The set of all channel ids representing the channels the user is in.
-     */
-    public User(String username, long hashedPassword, String pfpPath, HashSet<Integer> channels) {
-        this.username = username;
-        this.hashedPassword = hashedPassword;
-        this.channels = channels;
-
-        this.status = ONLINE;
-        try {
-            this.pfp = ImageIO.read(new File("data/images/" + pfpPath));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.friends = new HashSet<>();
     }
 
     /**
@@ -90,6 +71,7 @@ public class User implements Serializable {
         this.channels = user.getChannels();
         this.pfp = user.getPfp();
         this.status = user.getStatus();
+        this.friends = user.getFriends();
     }
 
     /**
@@ -257,5 +239,14 @@ public class User implements Serializable {
      */
     public HashSet<Integer> getChannels() {
         return this.channels;
+    }
+
+    /**
+     * Retrieves the set of friends this user has.
+     * 
+     * @return HashSet<String>, the set of usernames of friends this user has.
+     */
+    public HashSet<String> getFriends() {
+        return this.friends;
     }
 }

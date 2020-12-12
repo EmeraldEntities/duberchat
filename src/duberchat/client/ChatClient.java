@@ -25,6 +25,7 @@ public class ChatClient {
     private Socket servSocket;
     private User user;
     private HashMap<Integer, Channel> channels;
+    private HashMap<String, User> friends;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
 
     private Channel currentChannel;
@@ -127,6 +128,7 @@ public class ChatClient {
 
                         this.user = authSuccess.getUser();
                         this.channels = authSuccess.getChannels();
+                        this.friends = authSuccess.getFriends();
                         this.user.setStatus(User.ONLINE);
 
                         System.out.println("SYSTEM: current channels: " + channels.size());

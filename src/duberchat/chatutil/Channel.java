@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 public class Channel implements Serializable {
-    static final long serialVersionUID = 6L;
+    static final long serialVersionUID = 7L;
 
     public static final int MESSAGE_CLUSTER_AMT = 30;
     public static final int LOCAL_SAVE_AMT = MESSAGE_CLUSTER_AMT;
@@ -61,16 +61,16 @@ public class Channel implements Serializable {
         this.messageClusters = 0;
     }
 
-    public Channel(Channel fullChannel, ArrayList<Message> messageBlock) {
-        this.messages = messageBlock;
-        this.users = fullChannel.getUsers();
-        this.adminUsers = fullChannel.getAdminUsers();
+    public Channel(Channel channel) {
+        this.messages = channel.getMessages();
+        this.users = channel.getUsers();
+        this.adminUsers = channel.getAdminUsers();
 
-        this.channelName = fullChannel.getChannelName();
-        this.channelId = fullChannel.getChannelId();
+        this.channelName = channel.getChannelName();
+        this.channelId = channel.getChannelId();
 
-        this.totalMessages = fullChannel.getTotalMessages();
-        this.messageClusters = fullChannel.getMessageClusters();
+        this.totalMessages = channel.getTotalMessages();
+        this.messageClusters = channel.getMessageClusters();
     }
 
     /**
@@ -103,6 +103,15 @@ public class Channel implements Serializable {
      */
     public ArrayList<Message> getMessages() {
         return this.messages;
+    }
+
+    /**
+     * Sets this channel's list of messages to the specified list of messages.
+     * 
+     * @param messages the new list of messages.
+     */
+    public void setMessages(ArrayList<Message> messages) {
+        this.messages = messages;
     }
 
     /**
@@ -165,6 +174,9 @@ public class Channel implements Serializable {
      */
     public void removeUser(User user) {
         this.users.remove(user.getUsername());
+        if (this.adminUsers.contains(user)) {
+            this.removeAdminUser(user);
+        }
     }
 
     /**
@@ -195,7 +207,7 @@ public class Channel implements Serializable {
     }
 
     /**
-     * Removes a user from this channel's list of users.
+     * Removes a user from this channel's list of admin users.
      * <p>
      * The user provided should be a reference to a user that is present in the
      * admin user list, or an object that equals an existing user.

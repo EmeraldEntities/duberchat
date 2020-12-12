@@ -90,8 +90,9 @@ public class ServerChannelCreateHandler implements Handleable {
             messageBlock.add(fullMessages.get(fullMessages.size() - i));
           }
           try {
-            output.writeObject(new ChannelCreateEvent(creator, new Channel(channel, messageBlock), 
-                                                      usersFound));
+            Channel newChannel = new Channel(channel);
+            newChannel.setMessages(messageBlock);
+            output.writeObject(new ChannelCreateEvent(creator, newChannel, usersFound));
             output.flush();
           } catch (IOException e) {
             e.printStackTrace();
@@ -113,7 +114,7 @@ public class ServerChannelCreateHandler implements Handleable {
     try {
       // Make a new file and write the channel object to it.
       System.out.println(newChannel);
-      server.getFileWriteQueue().add(new FileWriteEvent(newChannel, "data/channels/" + id + ".txt"));
+      server.getFileWriteQueue().add(new FileWriteEvent(newChannel, "data/channels/" + id));
       
       // update all the users (and their files) with the new channel
       // Output a corresponding event to the user clients in the channel
@@ -121,7 +122,7 @@ public class ServerChannelCreateHandler implements Handleable {
       while (iterator.hasNext()) {
         User user = iterator.next();
         user.getChannels().add(id);
-        String filePath = "data/users/" + user.getUsername() + ".txt";
+        String filePath = "data/users/" + user.getUsername();
         server.getFileWriteQueue().add(new FileWriteEvent(user, filePath));
         if (!server.getCurUsers().containsKey(user)) {
           continue;

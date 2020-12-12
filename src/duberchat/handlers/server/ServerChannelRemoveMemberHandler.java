@@ -23,16 +23,16 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
   public void handleEvent(SerializableEvent newEvent) {
     ChannelRemoveMemberEvent event = (ChannelRemoveMemberEvent) newEvent;
     Channel toDeleteFrom = event.getChannel();
-    Channel serverToDeleteFrom = server.getChannels().get(toDeleteFrom.getChannelId());
+    int id = toDeleteFrom.getChannelId();
+    Channel serverToDeleteFrom = server.getChannels().get(id);
     String username = event.getUsername();
     User toDelete = server.getAllUsers().get(username);
-    int id = toDeleteFrom.getChannelId();
     
     try {
       // If the user doesn't exist, send back a request failed event
       if (toDelete == null) {
         ObjectOutputStream output = server.getCurUsers().get((User) event.getSource()).getOutputStream();
-        output.writeObject(new RequestFailedEvent((User) event.getSource()));
+        output.writeObject(new RequestFailedEvent(new User(toDelete)));
         return;
       }
 
@@ -40,11 +40,19 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
       toDeleteFrom.removeUser(toDelete);  // technically unnecessary? TODO
       toDelete.getChannels().remove(id);
 
-      // Remove this user from the channel file.
-      String channelFilePath = "data/channels/" + id + ".txt";
-      server.getFileWriteQueue().add(new FileWriteEvent(serverToDeleteFrom, channelFilePath));
+      // If this channel has no more users, purge it from the server and delete its file.
+      // Otherwise, remove the user from the channel file.
+      String channelFilePath = "data/channels/" + id;
+      if (serverToDeleteFrom.getUsers().size() <= 0) {
+        server.getChannels().remove(id);
+        File channelFile = new File(channelFilePath);
+        channelFile.delete();
+      } else {
+        server.getFileWriteQueue().add(new FileWriteEvent(serverToDeleteFrom, channelFilePath));
+      }
+
       // Remove this channel from the user's file.
-      String userFilePath = "data/users/" + toDelete.getUsername() + ".txt";
+      String userFilePath = "data/users/" + toDelete.getUsername();
       server.getFileWriteQueue().add(new FileWriteEvent(toDelete, userFilePath));
 
       // Send back a message sent event to every online user in the channel
@@ -54,8 +62,9 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
         // skip offline users
         if (!server.getCurUsers().containsKey(member)) continue;
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
-        output.writeObject(new ChannelRemoveMemberEvent((User) event.getSource(), 
-                                                        serverToDeleteFrom, username));
+        output.writeObject(new ChannelRemoveMemberEvent(new User(toDelete), 
+                                                        new Channel(serverToDeleteFrom), 
+                                                        username));
         output.flush();
       }
     } catch (IOException e) {
