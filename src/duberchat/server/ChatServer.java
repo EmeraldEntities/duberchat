@@ -322,7 +322,12 @@ public class ChatServer {
                         notifiedAlready.add(member);
                     }
                     fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id + ".txt"));
-                    userChannels.put(id, curChannel);
+                    ArrayList<Message> messages = curChannel.getMessages();
+                    ArrayList<Message> messageBlock = new ArrayList<>();
+                    for (int i = 1; i <= Math.min(30, messages.size()); i++) {
+                        messageBlock.add(messages.get(messages.size() - i));
+                    }
+                    userChannels.put(id, new Channel(curChannel, messageBlock));
                 }
                 output.writeObject(new AuthSucceedEvent(event, user, userChannels));
                 output.flush();
