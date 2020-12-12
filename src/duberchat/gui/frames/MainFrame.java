@@ -2,12 +2,17 @@ package duberchat.gui.frames;
 
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Date;
 import java.util.Iterator;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import duberchat.events.*;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
@@ -38,7 +43,7 @@ public class MainFrame extends DynamicFrame {
     public static final Color SECONDARY_TEXT_COLOR = new Color(180, 180, 180);
     public static final Color BRIGHT_TEXT_COLOR = new Color(220, 220, 220);
     
-    private int maxChannelWidth = DEFAULT_SIZE.width / 4;
+    private int maxChannelWidth = DEFAULT_SIZE.width / 7;
     private int maxSidePanelGrids = DEFAULT_SIZE.height / SIDE_PANEL_HEIGHT;
     private int maxMessageGrids = DEFAULT_SIZE.height / MESSAGE_PANEL_HEIGHT;
     /** The index to load channels from, inclusive. */
@@ -55,6 +60,7 @@ public class MainFrame extends DynamicFrame {
     private JPanel profileConfigPanel;
     private JPanel channelConfigPanel;
     private JPanel textPanel;
+    private JPanel sideButtonPanel;
 
     private ChannelCreateFrame addChannelFrame;
     private ProfileFrame profileFrame;
@@ -63,6 +69,7 @@ public class MainFrame extends DynamicFrame {
     private JButton addUserButton, deleteUserButton;
     private JButton addChannelButton, deleteChannelButton;
     private JButton homeButton;
+    private JButton leaveChannelButton;
     private JTextField typeField;
 
     private JLabel channelIndicator;
@@ -123,6 +130,9 @@ public class MainFrame extends DynamicFrame {
         textPanel.setLayout(new GridLayout(this.maxMessageGrids, 1));
         profileConfigPanel.setLayout(new FlowLayout(FlowLayout.LEADING, 25, 5));
         channelConfigPanel.setLayout(new FlowLayout(FlowLayout.TRAILING, 25, 15));
+        sideButtonPanel.setLayout(new GridLayout(2, 1));
+        sideButtonPanel.add(homeButton);
+        sideButtonPanel.add(addChannelButton);
         configPanel.add(profileConfigPanel);
         configPanel.add(channelConfigPanel);
 
@@ -224,7 +234,7 @@ public class MainFrame extends DynamicFrame {
         textPanel.removeAll();
 
         this.maxSidePanelGrids = channelPanel.getHeight() / SIDE_PANEL_HEIGHT;
-        this.maxChannelWidth = this.getWidth() / 4;
+        this.maxChannelWidth = this.getWidth() / 7;
         this.maxMessageGrids = textPanel.getHeight() / MESSAGE_PANEL_HEIGHT;
 
         channelPanel.setLayout(new GridLayout(this.maxSidePanelGrids, 1));
@@ -243,8 +253,10 @@ public class MainFrame extends DynamicFrame {
         profileConfigPanel = new JPanel();
         channelConfigPanel = new JPanel();
         textPanel = new JPanel();
+        sideButtonPanel = new JPanel();
 
         channelPanel.setBackground(SIDE_COLOR);
+        sideButtonPanel.setBackground(channelPanel.getBackground());
         userPanel.setBackground(SIDE_COLOR);
         typingPanel.setBackground(SIDE_COLOR);
         profileConfigPanel.setBackground(DARK_SIDE_COLOR);
@@ -252,7 +264,7 @@ public class MainFrame extends DynamicFrame {
         textPanel.setBackground(MAIN_COLOR);
 
         // INITIALIZE BUTTONS ====================================================
-        profileButton = ComponentFactory.createButton("", SIDE_COLOR, MAIN_COLOR,
+        profileButton = ComponentFactory.createButton("", TEXT_COLOR, PANEL_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
                         System.out.println("max grids: " + maxSidePanelGrids); // TODO: yeet
@@ -268,7 +280,8 @@ public class MainFrame extends DynamicFrame {
         profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
         profileConfigPanel.add(profileButton);
 
-        deleteChannelButton = ComponentFactory.createButton("DELETE CHANNEL", SIDE_COLOR, TEXT_COLOR,
+        deleteChannelButton = ComponentFactory.createImageButton("DELETE CHANNEL", "data/system/trash.png", 20, 20,
+                TEXT_COLOR, PANEL_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
                         JLabel label = ComponentFactory.createLabel("Are you sure you want to delete this channel?",
@@ -288,7 +301,8 @@ public class MainFrame extends DynamicFrame {
                     }
                 });
 
-        addUserButton = ComponentFactory.createButton("ADD USER", SIDE_COLOR, TEXT_COLOR, new ActionListener() {
+        addUserButton = ComponentFactory.createImageButton("ADD USER", "data/system/adduser.png", 20, 20, TEXT_COLOR,
+                PANEL_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
                         BRIGHT_TEXT_COLOR);
@@ -310,7 +324,8 @@ public class MainFrame extends DynamicFrame {
             }
         });
 
-        deleteUserButton = ComponentFactory.createButton("REMOVE USER", SIDE_COLOR, TEXT_COLOR, new ActionListener() {
+        deleteUserButton = ComponentFactory.createImageButton("REMOVE USER", "data/system/removeuser.png", 20, 20,
+                TEXT_COLOR, PANEL_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
                         BRIGHT_TEXT_COLOR);
@@ -355,7 +370,27 @@ public class MainFrame extends DynamicFrame {
             }
         });
 
-        addChannelButton = ComponentFactory.createButton("CREATE CHANNEL", MAIN_COLOR, TEXT_COLOR,
+        leaveChannelButton = ComponentFactory.createImageButton("LEAVE", "data/system/leave.png", 20, 20, TEXT_COLOR,
+                PANEL_COLOR, new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        JLabel label = ComponentFactory.createLabel("Are you sure you want to leave this channel?",
+                                BRIGHT_TEXT_COLOR);
+                        ActionListener action = new ActionListener() {
+                            public void actionPerformed(ActionEvent evt2) {
+                                // This button will only exist if a current channel exists
+                                client.offerEvent(new ChannelRemoveMemberEvent(client.getUser(),
+                                        client.getCurrentChannel(), client.getUser().getUsername()));
+                            }
+                        };
+
+                        JFrame removeConfirmPanel = FrameFactory.createConfirmFrame("Delete channel", MAIN_COLOR, label,
+                                action);
+                        removeConfirmPanel.setVisible(true);
+                    }
+                });
+
+        addChannelButton = ComponentFactory.createImageButton("CREATE CHANNEL", "data/system/plus sign.png", 20, 20,
+                TEXT_COLOR, PANEL_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (hasActiveChannelCreateFrame()) {
@@ -366,14 +401,17 @@ public class MainFrame extends DynamicFrame {
                         addChannelFrame.setVisible(true);
                     }
                 });
+        addChannelButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
 
-        homeButton = ComponentFactory.createButton("HOME", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                client.setCurrentChannel(null);
+        homeButton = ComponentFactory.createImageButton("HOME", "data/system/home.png", 20, 20, MAIN_COLOR, PANEL_COLOR,
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        client.setCurrentChannel(null);
 
                 switchChannelsToCurrent();
             }
         });
+        homeButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
 
         // INITIALIZE TYPING AREA =================================================
         typeField = ComponentFactory.createTextBox(20, BRIGHT_TEXT_COLOR, TEXTBOX_COLOR,
@@ -433,6 +471,8 @@ public class MainFrame extends DynamicFrame {
         } else if (source instanceof ChannelEvent) {
             this.reload();
             return;
+        } else {
+            this.reload();
         }
 
         this.repaint();
@@ -453,6 +493,7 @@ public class MainFrame extends DynamicFrame {
             typeField.setText("");
             channelIndicator.setText("Channel: " + client.getCurrentChannel().getChannelName());
 
+            channelConfigPanel.add(leaveChannelButton);
             channelConfigPanel.add(addUserButton);
             if (client.getCurrentChannel().getAdminUsers().contains(client.getUser())) {
                 channelConfigPanel.add(deleteUserButton);
@@ -463,6 +504,7 @@ public class MainFrame extends DynamicFrame {
             typeField.setEditable(false);
             channelIndicator.setText("No channel selected.");
 
+            channelConfigPanel.remove(leaveChannelButton);
             channelConfigPanel.remove(addUserButton);
             channelConfigPanel.remove(deleteUserButton);
             channelConfigPanel.remove(deleteChannelButton);
@@ -550,12 +592,18 @@ public class MainFrame extends DynamicFrame {
 
     private synchronized void reloadChannels() {
         channelPanel.removeAll();
-        if (maxSidePanelGrids >= 2) {
-            channelPanel.add(homeButton);
-            channelPanel.add(addChannelButton);
-        } else if (maxSidePanelGrids >= 1) {
-            channelPanel.add(homeButton);
+
+        if (maxSidePanelGrids >= 1) {
+            addChannelButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
+            homeButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
+            channelPanel.add(sideButtonPanel);
         }
+        // if (maxSidePanelGrids >= 2) {
+        // channelPanel.add(homeButton);
+        // channelPanel.add(addChannelButton);
+        // } else if (maxSidePanelGrids >= 1) {
+        // channelPanel.add(homeButton);
+        // }
 
         if (this.client.getChannels().size() > 0) {
             Iterator<Channel> channelIterator = this.client.getChannels().values().iterator();
@@ -573,7 +621,7 @@ public class MainFrame extends DynamicFrame {
                 }
 
                 channelPanel.add(new ChannelPanel(this.client, c, defaultColor));
-                channelPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
+                channelPanel.setMaximumSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
             }
         }
     }
@@ -609,6 +657,10 @@ public class MainFrame extends DynamicFrame {
 
     public ChannelCreateFrame getChannelCreateFrame() {
         return this.addChannelFrame;
+    }
+
+    public ProfileFrame getProfileFrame() {
+        return this.profileFrame;
     }
 
     public boolean closeChannelCreateFrame() {

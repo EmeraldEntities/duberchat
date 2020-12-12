@@ -1,25 +1,56 @@
 package duberchat.gui.frames;
 
-import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.awt.image.BufferedImage;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Toolkit;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.MouseAdapter;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
 
-import duberchat.events.*;
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JTextField;
+import javax.swing.JCheckBox;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JPasswordField;
+import javax.swing.JLabel;
+
+import duberchat.events.ClientLoginEvent;
 import duberchat.client.ChatClient;
 import duberchat.gui.filters.TextLengthFilter;
+import duberchat.gui.filters.LimitingRegexFilter;
 import duberchat.gui.util.ComponentFactory;
 
+/**
+ * This class is designed to construct the login page, which is the first frame
+ * that users who start up this application will see.
+ * <p>
+ * Created <b> 2020-12-09 </b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Joseph Wang
+ */
 @SuppressWarnings("serial")
 public class LoginFrame extends DynamicGridbagFrame {
+    /** The default size of this frame. */
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
 
     JPanel mainPanel;
-    // JPanel contentPanel;
 
     JTextField usernameField;
     JPasswordField passwordField;
@@ -58,17 +89,22 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
+        
+        initializeComponents(client);
 
-        // =============================================
+        this.add(mainPanel);
+    }
 
+    private void initializeComponents(ChatClient client) {
         usernameField = ComponentFactory.createTextBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.SIDE_COLOR,
-                new TextLengthFilter(16), BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                new LimitingRegexFilter(16, "[\\w]{1}[\\w\\.-]*"), BorderFactory.createEmptyBorder(5, 5, 5, 5));
         passwordField = ComponentFactory.createPasswordBox(20, MainFrame.BRIGHT_TEXT_COLOR, MainFrame.SIDE_COLOR,
                 new TextLengthFilter(40), BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
         passwordField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    sendLoginRequest();
+                    attemptSendingLoginRequest();
                 }
             }
         });
@@ -84,7 +120,7 @@ public class LoginFrame extends DynamicGridbagFrame {
         submitButton = ComponentFactory.createButton("Start DuberChatting", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        sendLoginRequest();
+                        attemptSendingLoginRequest();
                     }
                 });
 
@@ -118,21 +154,9 @@ public class LoginFrame extends DynamicGridbagFrame {
         });
         optionsButton.setIcon(settingsIcon);
 
-        JLabel picLabel = new JLabel("");
-        try {
-            BufferedImage logo = ImageIO.read(new File("data/system/duberchat.png"));
-            picLabel = new JLabel(new ImageIcon(logo.getScaledInstance(128, -1, Image.SCALE_SMOOTH)));
-        } catch (IOException e) {
-            System.out.println("SYSTEM: Could not load logo!");
-        }
+        JLabel picLabel = ComponentFactory.createImageLabel("", "data/system/duberchat.png", 128, -1,
+                MainFrame.TEXT_COLOR);
 
-        // JLabel image = new JLabel(new ImageIcon("/data/server/duberchat.png"));
-        // constraints.gridx = 0;
-        // constraints.gridy = 0;
-        // constraints.anchor = GridBagConstraints.CENTER;
-        // mainPanel.add(image, constraints);
-        // image.repaint();
-        // mainPanel.repaint();
 
         addConstrainedComponent(picLabel, mainPanel, loginLayout, constraints, 0, 0, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 20, 0));
@@ -150,8 +174,6 @@ public class LoginFrame extends DynamicGridbagFrame {
                 GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
         addConstrainedComponent(optionsButton, mainPanel, loginLayout, constraints, 0, 7, 1, 1, GridBagConstraints.NONE,
                 GridBagConstraints.CENTER, new Insets(16, 0, 0, 0));
-
-        this.add(mainPanel);
     }
 
     /**
@@ -192,13 +214,14 @@ public class LoginFrame extends DynamicGridbagFrame {
         alreadySentRequest = false;
     }
 
-    private void sendLoginRequest() {
-        // Ensure that multiple login events aren't performed
-        if (alreadySentRequest)
-            return;
-
+    private void attemptSendingLoginRequest() {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
+
+        // Ensure that multiple login events aren't performed
+        if (alreadySentRequest || password.equals("") || username.equals("")) {
+            return;
+        }
 
         passwordField.setText("");
 

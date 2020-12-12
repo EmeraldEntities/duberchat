@@ -4,7 +4,6 @@ import duberchat.chatutil.Channel;
 import duberchat.client.ChatClient;
 import duberchat.events.SerializableEvent;
 import duberchat.events.ChannelAddMemberEvent;
-import duberchat.events.ChannelEvent;
 import duberchat.handlers.Handleable;
 
 /**

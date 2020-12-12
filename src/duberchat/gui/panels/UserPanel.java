@@ -26,7 +26,7 @@ public class UserPanel extends JPanel {
         } else if (isAdmin) {
             mainColor = Color.PINK;
         }
-        String text = user.getUsername() + " - " + user.getStringStatus();
+        String text = user.getUsername() + " (" + user.getStringStatus() + ")";
 
         this.username = ComponentFactory.createLabel(text, mainColor, MainFrame.SIDE_COLOR);
         this.username.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));

@@ -87,9 +87,9 @@ public class MessagePanel extends JPanel {
         header.setMinimumSize(header.getPreferredSize());
 
         if (this.isShowingHeader()) {
-            picture = new JLabel(new ImageIcon(sender.getPfp().getScaledInstance(32, 32, Image.SCALE_SMOOTH)));
+            picture = ComponentFactory.createImageLabel(sender.getPfp().getScaledInstance(32, 32, Image.SCALE_SMOOTH));
         } else {
-            picture = new JLabel("");
+            picture = ComponentFactory.createLabel("");
         }
         picture.setPreferredSize(new Dimension(32, 32));
         picture.setMinimumSize(picture.getPreferredSize());

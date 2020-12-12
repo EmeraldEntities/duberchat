@@ -3,8 +3,6 @@ package duberchat.handlers.client;
 import duberchat.chatutil.Channel;
 import duberchat.client.ChatClient;
 import duberchat.events.SerializableEvent;
-import duberchat.events.ChannelAddMemberEvent;
-import duberchat.events.ChannelEvent;
 import duberchat.events.ChannelRemoveMemberEvent;
 import duberchat.handlers.Handleable;
 

@@ -1,9 +1,6 @@
 package duberchat.handlers.client;
 
-import java.util.ArrayList;
-
 import duberchat.chatutil.Channel;
-import duberchat.chatutil.Message;
 import duberchat.client.ChatClient;
 import duberchat.events.ClientRequestMessageEvent;
 import duberchat.events.SerializableEvent;

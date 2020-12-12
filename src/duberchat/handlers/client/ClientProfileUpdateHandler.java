@@ -47,21 +47,48 @@ public class ClientProfileUpdateHandler implements Handleable {
         User user = (User) statusEvent.getSource();
 
         // If i initialized it, the source would be from me
+        // Make sure my user is properly updated
         if (this.client.getUser().equals(user)) {
-            this.client.getUser().setStatus(user.getStatus());
-        } else {
-            for (Channel c : this.client.getChannels().values()) {
-                User userToFix = c.getUsers().get(user.getUsername());
+            adjustProperties(user, this.client.getUser());
 
-                if (userToFix != null && userToFix.getStatus() != user.getStatus()) {
-                    userToFix.setStatus(user.getStatus());
-                }
+            if (this.client.getMainMenuFrame().hasActiveProfileFrame()) {
+                this.client.getMainMenuFrame().getProfileFrame().reload(event);
+            }
+        }
+
+        // Reload every user in every channel if it does not originate from us
+        // Do the same if it does to ensure a good sync
+        for (Channel c : this.client.getChannels().values()) {
+            User userToFix = c.getUsers().get(user.getUsername());
+
+            if (userToFix != null) {
+                adjustProperties(user, userToFix);
             }
         }
 
         if (this.client.hasCurrentChannel()
-                && this.client.getCurrentChannel().getUsers().containsKey(this.client.getUser().getUsername())) {
+                && this.client.getCurrentChannel().getUsers().containsKey(user.getUsername())) {
             this.client.getMainMenuFrame().reload(event);
+        }
+    }
+
+    /**
+     * Properly checks and updates relevant properties.
+     * 
+     * @param newUser     the new user to check against.
+     * @param userToCheck the old user to check.
+     */
+    private void adjustProperties(User newUser, User userToCheck) {
+        if (userToCheck.getStatus() != newUser.getStatus()) {
+            userToCheck.setStatus(newUser.getStatus());
+        }
+
+        if (userToCheck.getHashedPassword() != newUser.getHashedPassword()) {
+            userToCheck.setHashedPassword(newUser.getHashedPassword());
+        }
+
+        if (!userToCheck.pfpEquals(newUser.getPfp())) {
+            userToCheck.setPfp(newUser.getPfp());
         }
     }
 }

@@ -24,7 +24,7 @@ import javax.imageio.ImageIO;
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {
-    static final long serialVersionUID = 4L;
+    static final long serialVersionUID = 6L;
 
     public static final int OFFLINE = 0;
     public static final int ONLINE = 1;
@@ -194,6 +194,15 @@ public class User implements Serializable {
     }
 
     /**
+     * Sets this user's hashed password to a specified one.
+     * 
+     * @param hashedPassword this user's new hashed password.
+     */
+    public void setHashedPassword(long hashedPassword) {
+        this.hashedPassword = hashedPassword;
+    }
+
+    /**
      * Returns the user's status (e.g. online, offline, etc.)
                         
      * 
@@ -218,7 +227,17 @@ public class User implements Serializable {
      * @return a string with this user's status.
      */
     public String getStringStatus() {
-        switch (this.status) {
+        return User.findStringStatus(this.status);
+    }
+
+    /**
+     * Converts an int constant into a string status.
+     * 
+     * @param status an int with the status to turn into a string.
+     * @return a string representing the provided status.
+     */
+    public static String findStringStatus(int status) {
+        switch (status) {
             case OFFLINE:
                 return "offline";
             case ONLINE:
@@ -230,6 +249,29 @@ public class User implements Serializable {
             default:
                 return "unknown";
         }
+    }
+
+    /**
+     * Converts a string status back into an int constant, or {@code -1} if not found.
+     * 
+     * @param status the string status to be look for.
+     * @return the associated int constant, or {@code -1} if not found.
+     */
+    public static int findIntStatus(String status) {
+        if (status.equals("offline")) {
+            return User.OFFLINE;
+        }
+        if (status.equals("online")) {
+            return User.ONLINE;
+        }
+        if (status.equals("away")) {
+            return User.AWAY;
+        }
+        if (status.equals("dnd")) {
+            return User.DND;
+        }
+
+        return -1;
     }
 
     /**

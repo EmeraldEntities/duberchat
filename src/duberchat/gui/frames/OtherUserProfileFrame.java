@@ -59,9 +59,12 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
         mainPanel.setLayout(layout);
 
         this.setLocation(clickLocation.x - this.getWidth(), clickLocation.y);
+        
+        profilePicture = ComponentFactory
+        .createImageLabel(otherUser.getPfp().getScaledInstance(128, 128, Image.SCALE_SMOOTH));
 
-        profilePicture = new JLabel(new ImageIcon(otherUser.getPfp().getScaledInstance(128, 128, Image.SCALE_SMOOTH)));
-        usernameLabel = ComponentFactory.createLabel(otherUser.getUsername(), MainFrame.BRIGHT_TEXT_COLOR);
+        String usernameText = otherUser.getUsername() + " ("+ otherUser.getStringStatus() + ")";
+        usernameLabel = ComponentFactory.createLabel(usernameText, MainFrame.BRIGHT_TEXT_COLOR);
         dmButton = ComponentFactory.createButton("Duberchat!", MainFrame.PANEL_COLOR, MainFrame.TEXT_COLOR,
                 new CreateChannelActionListener());
 
@@ -72,11 +75,6 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
         addConstrainedComponent(dmButton, mainPanel, layout, constraints, 0, 2, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
 
-        // this.addFocusListener(new FocusAdapter() {
-        // public void focusLost(FocusEvent e) {
-        // reload();
-        // }
-        // });
         this.addWindowListener(new WindowAdapter() {
             public void windowDeactivated(WindowEvent e) {
                 reload();
