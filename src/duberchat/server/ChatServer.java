@@ -252,8 +252,8 @@ public class ChatServer {
                     eventQueue.add(event);
                 } catch (IOException e) {
                     ChatServer.this.serverFrame.getTextArea().append("Failed to receive msg from the client\n");
-                    curUsers.remove(user);
-                    running = false;
+                    user.setStatus(0);
+                    eventHandlers.get(ClientProfileUpdateEvent.class).handleEvent(new ClientProfileUpdateEvent(user));
                 } catch (ClassNotFoundException e1) {
                     ChatServer.this.serverFrame.getTextArea().append("Class not found :(\n");
                     e1.printStackTrace();
