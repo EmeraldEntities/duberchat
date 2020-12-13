@@ -76,13 +76,11 @@ public class ServerChannelCreateHandler implements Handleable {
     // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
     // TODO: this is kinda scufffed lmao
     if (channelUsers.size() == 2) {
-      System.out.println("check 1");
-      Iterator<Integer> channelsItr = creator.getChannels().iterator();
+      Iterator<Integer> channelsItr = serverCreator.getChannels().iterator();
       while (channelsItr.hasNext()) {
         int channelId = channelsItr.next();
         Channel channel = server.getChannels().get(channelId);
         // skip non-dms
-        System.out.println(channel.getUsers().size());
         if (channel.getUsers().size() != 2) continue;
         Iterator<User> iterator = channel.getUsers().values().iterator();
         String user1 = iterator.next().getUsername();
@@ -96,7 +94,6 @@ public class ServerChannelCreateHandler implements Handleable {
           try {
             Channel newChannel = new Channel(channel);
             newChannel.setMessages(messageBlock);
-            System.out.println("duplicate found");
             output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), 
                                                       usersFound));
             output.flush();
