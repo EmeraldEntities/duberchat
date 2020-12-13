@@ -5,6 +5,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -150,9 +151,9 @@ public class ChatServer {
                         String filePath = writeInfo.getFilePath();
                         FileOutputStream fileOut = new FileOutputStream(filePath);
                         ObjectOutputStream out = new ObjectOutputStream(fileOut);
-                        ImageIO.write((BufferedImage) (writeInfo.getObjectToWrite()),
-                                Pattern.compile(".+\\.(\\w+)").matcher(filePath).group(0),
-                                       out);
+
+                        String extension = filePath.substring(filePath.lastIndexOf("."), filePath.length());
+                        ImageIO.write((BufferedImage) (writeInfo.getObjectToWrite()), extension, out);
                         ChatServer.this.serverFrame.getTextArea().append("Wrote to image file: " + filePath +"\n");
                     } catch (IOException e) {
                         e.printStackTrace();

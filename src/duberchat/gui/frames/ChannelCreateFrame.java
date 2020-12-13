@@ -1,11 +1,24 @@
 package duberchat.gui.frames;
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Color;
+import java.awt.Insets;
+
 import java.util.HashSet;
 import java.util.Arrays;
+
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JTextField;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
 
 import duberchat.events.ChannelCreateEvent;
 import duberchat.gui.filters.TextLengthFilter;
@@ -15,8 +28,6 @@ import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
 
 @SuppressWarnings("serial")
-// TODO: this should be a controlled frame so maybe work it so that it doesnt
-// need output
 public class ChannelCreateFrame extends DynamicGridbagFrame {
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
 

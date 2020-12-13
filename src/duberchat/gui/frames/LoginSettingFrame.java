@@ -1,14 +1,24 @@
 package duberchat.gui.frames;
 
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.text.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Color;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JTextField;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+
+import duberchat.client.ChatClient;
 import duberchat.gui.filters.LimitingRegexFilter;
 import duberchat.gui.util.ComponentFactory;
-import duberchat.client.ChatClient;
-
 @SuppressWarnings("serial")
 public class LoginSettingFrame extends DynamicGridbagFrame {
     public static final Dimension DEFAULT_SIZE = new Dimension(300, 400);

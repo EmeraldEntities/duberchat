@@ -11,9 +11,7 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
 import java.awt.event.KeyAdapter;
-import java.awt.event.MouseAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -233,8 +231,7 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         boolean isNewUser = newUserCheckbox.isSelected();
         
-        User clientUser = new User(client.getUser());
-        client.offerEvent(new ClientLoginEvent(clientUser, isNewUser, username, password));
+        client.offerEvent(new ClientLoginEvent(client.getUser(), isNewUser, username, password));
 
         // Add connecting... text to aid user
         mainPanel.remove(failedText); // attempt to remove failed text

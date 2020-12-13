@@ -1,22 +1,38 @@
 package duberchat.gui.frames;
 
-import java.awt.event.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JTextField;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 
-import duberchat.events.*;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.Insets;
+
 import duberchat.client.ChatClient;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
-import duberchat.chatutil.Channel;
+import duberchat.events.ClientProfileUpdateEvent;
+import duberchat.events.SerializableEvent;
 import duberchat.chatutil.User;
-import duberchat.client.ChatClient;
 
 @SuppressWarnings("serial")
 public class ProfileFrame extends DynamicGridbagFrame {
@@ -80,7 +96,6 @@ public class ProfileFrame extends DynamicGridbagFrame {
         } catch (IOException e) {
             System.out.println("SYSTEM: Failed to load profile picture.");
         }
-
         profilePicture.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 JFileChooser fc = new JFileChooser();
@@ -177,7 +192,6 @@ public class ProfileFrame extends DynamicGridbagFrame {
         this.repaint();
         this.revalidate();
     }
-
     /**
      * {@inheritDoc}
      * <p>

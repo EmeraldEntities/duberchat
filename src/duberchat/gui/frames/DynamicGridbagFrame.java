@@ -1,6 +1,10 @@
 package duberchat.gui.frames;
 
-import java.awt.*;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import java.awt.Component;
+import java.awt.Container;
 
 /**
  * A {@code DynamicGridbagFrame} is a {@code DynamicFrame} that supports a
