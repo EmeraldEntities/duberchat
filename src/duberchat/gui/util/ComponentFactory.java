@@ -23,6 +23,10 @@ import java.awt.*;
  * not hand out shared references if possible, and will prefer to create and
  * return new instances.
  * <p>
+ * As an added bonus, any changes made to methods of this class are immediately
+ * shared across any component that uses one of these factory methods, allowing
+ * for centralized and easy design configurations.
+ * <p>
  * As the factory only operates on static methods, it is designed to be
  * non-initializable.
  * <p>
@@ -45,6 +49,29 @@ public class ComponentFactory {
     }
 
     /**
+     * Attempts to load in and return an image icon with the requested width and
+     * height from the specified image path.
+     * 
+     * @param imagePath the path of the image.
+     * @param width     the width of the image, in px. This can be -1 to preserve
+     *                  aspect ratio, but only if height is not -1.
+     * @param height    the height of the image, in px. This can be -1 to preserve
+     *                  aspect ratio, but only if width is not -1.
+     * @return an {@ImageIcon} with the specified width and height from the image
+     *         path.
+     * @throws IOException if an error occured while reading the image.
+     * @see javax.swing.ImageIcon
+     */
+    private static ImageIcon getIcon(String imagePath, int width, int height) throws IOException {
+        File file = new File(imagePath);
+
+        BufferedImage img = ImageIO.read(file);
+        ImageIcon imgIcon = new ImageIcon(img.getScaledInstance(width, height, Image.SCALE_SMOOTH));
+
+        return imgIcon;
+    }
+
+    /**
      * Constructs a new {@link javax.swing.JButton JButton} based on the provided
      * parameters.
      * <p>
@@ -62,7 +89,7 @@ public class ComponentFactory {
      * @see java.awt.event.ActionListener
      * @see java.awt.Color
      */
-    static public JButton createButton(String startingText, Color foregroundColor, Color backgroundColor,
+    public static JButton createButton(String startingText, Color foregroundColor, Color backgroundColor,
             ActionListener onClick) {
         JButton newButton = new JButton(startingText);
         newButton.setForeground(foregroundColor);
@@ -81,7 +108,8 @@ public class ComponentFactory {
      * parameters.
      * <p>
      * To construct a {@code JButton} with a provided {@code ActionListener}, use
-     * {@link #createButton(String, Color, Color, ActionListener)}.
+     * {@link #createButton(String, Color, Color, ActionListener)}. Alternatively,
+     * construct the button and attach the listener after.
      * 
      * @param startingText    the starting text on the button.
      * @param foregroundColor the foreground color (text color).
@@ -91,7 +119,7 @@ public class ComponentFactory {
      * @see javax.swing.JButton
      * @see java.awt.Color
      */
-    static public JButton createButton(String startingText, Color foregroundColor, Color backgroundColor) {
+    public static JButton createButton(String startingText, Color foregroundColor, Color backgroundColor) {
         return ComponentFactory.createButton(startingText, foregroundColor, backgroundColor, null);
     }
 
@@ -112,7 +140,7 @@ public class ComponentFactory {
      * @see javax.swing.UIManager
      * @see java.awt.event.ActionListener
      */
-    static public JButton createButton(String startingText, ActionListener onClick) {
+    public static JButton createButton(String startingText, ActionListener onClick) {
         return ComponentFactory.createButton(startingText, UIManager.getColor("Button.foreground"),
                 UIManager.getColor("Button.background"), onClick);
     }
@@ -123,9 +151,10 @@ public class ComponentFactory {
      * <p>
      * To construct a {@code JButton} with provided colors and an
      * {@code ActionListener}, use
-     * {@link #createButton(String, Color, Color, ActionListener)}. This method
-     * internally calls said method with the {@code UIManager} default colours for
-     * {@code Button.foreground} and {@code Button.background}.
+     * {@link #createButton(String, Color, Color, ActionListener)}. Alternatively,
+     * if only the listener is desired, construct the button and attach the listener
+     * after. This method internally calls said method with the {@code UIManager}
+     * default colours for {@code Button.foreground} and {@code Button.background}.
      * 
      * @param startingText the starting text on the button.
      * 
@@ -133,7 +162,7 @@ public class ComponentFactory {
      * @see javax.swing.JButton
      * @see javax.swing.UIManager
      */
-    static public JButton createButton(String startingText) {
+    public static JButton createButton(String startingText) {
         return ComponentFactory.createButton(startingText, UIManager.getColor("Button.foreground"),
                 UIManager.getColor("Button.background"), null);
     }
@@ -143,7 +172,8 @@ public class ComponentFactory {
      * the provided parameters.
      * <p>
      * The {@code ActionListener} can be specified as {@code null} with no issue if
-     * not needed.
+     * not needed, but it is preferred to use
+     * {@link #createImageButton(String, String, int, int, Color, Color)} instead.
      * 
      * @param altText         the alt text on the button, if the image could not be
      *                        loaded.
@@ -163,20 +193,52 @@ public class ComponentFactory {
      * @see java.awt.event.ActionListener
      * @see java.awt.Color
      */
-    static public JButton createImageButton(String altText, String imagePath, int width, int height,
+    public static JButton createImageButton(String altText, String imagePath, int width, int height,
             Color foregroundColor, Color backgroundColor, ActionListener onClick) {
         JButton newButton = ComponentFactory.createButton(altText, foregroundColor, backgroundColor, onClick);
 
         try {
-            File file = new File(imagePath);
+            newButton.setIcon(getIcon(imagePath, width, height));
+            newButton.setText("");
 
-            if (!file.canRead()) {
-                return newButton;
-            }
+        } catch (IOException e) {
+            System.out.println("SYSTEM: Could not load button image!");
+        }
 
-            BufferedImage img = ImageIO.read(file);
-            ImageIcon imgIcon = new ImageIcon(img.getScaledInstance(width, height, Image.SCALE_SMOOTH));
-            newButton.setIcon(imgIcon);
+        return newButton;
+    }
+
+    /**
+     * Constructs a new {@link javax.swing.JButton JButton} with an icon based on
+     * the provided parameters.
+     * <p>
+     * This method allows construction of an image button without needing to attach
+     * an action listener. If an action listener is desired and attaching in this
+     * method is also desired, consider using
+     * {@link #createImageButton(String, String, int, int, Color, Color, ActionListener)}
+     * instead. Alternatively, construct the button and attach the listener after.
+     * 
+     * @param altText         the alt text on the button, if the image could not be
+     *                        loaded.
+     * @param imagePath       the path of the image.
+     * @param width           the width of the new image, in px. This can be -1 to
+     *                        preserve aspect ratio, but only if height is not -1.
+     * @param height          the height of the new image, in px. This can be -1 to
+     *                        preserve aspect ratio, but only if width is not -1.
+     * @param foregroundColor the foreground color (eg. text color) .
+     * @param backgroundColor the background color.
+     * 
+     * @return a new {@code JButton} with properties from the provided params and an
+     *         icon.
+     * @see javax.swing.JButton
+     * @see java.awt.Color
+     */
+    public static JButton createImageButton(String altText, String imagePath, int width, int height,
+            Color foregroundColor, Color backgroundColor) {
+        JButton newButton = ComponentFactory.createButton(altText, foregroundColor, backgroundColor, null);
+
+        try {
+            newButton.setIcon(getIcon(imagePath, width, height));
             newButton.setText("");
 
         } catch (IOException e) {
@@ -201,7 +263,7 @@ public class ComponentFactory {
      * @see javax.swing.JLabel
      * @see java.awt.Color
      */
-    static public JLabel createLabel(String startingText, Color foregroundColor, Color backgroundColor) {
+    public static JLabel createLabel(String startingText, Color foregroundColor, Color backgroundColor) {
         JLabel newLabel = new JLabel(startingText);
         newLabel.setForeground(foregroundColor);
         newLabel.setBackground(backgroundColor);
@@ -225,7 +287,7 @@ public class ComponentFactory {
      * @see java.awt.Color
      * @see javax.swing.UIManager
      */
-    static public JLabel createLabel(String startingText, Color foregroundColor) {
+    public static JLabel createLabel(String startingText, Color foregroundColor) {
         return ComponentFactory.createLabel(startingText, foregroundColor, UIManager.getColor("Label.background"));
     }
 
@@ -244,7 +306,7 @@ public class ComponentFactory {
      * @see javax.swing.JLabel
      * @see javax.swing.UIManager
      */
-    static public JLabel createLabel(String startingText) {
+    public static JLabel createLabel(String startingText) {
         return ComponentFactory.createLabel(startingText, UIManager.getColor("Label.foreground"),
                 UIManager.getColor("Label.background"));
     }
@@ -270,20 +332,13 @@ public class ComponentFactory {
      * @see java.awt.Color
      * @see javax.swing.UIManager
      */
-    static public JLabel createImageLabel(String altText, String imagePath, int width, int height,
+    public static JLabel createImageLabel(String altText, String imagePath, int width, int height,
             Color foregroundColor) {
         JLabel newLabel = ComponentFactory.createLabel(altText, foregroundColor,
                 UIManager.getColor("Label.background"));
 
         try {
-            File file = new File(imagePath);
-
-            if (!file.canRead()) {
-                return newLabel;
-            }
-
-            BufferedImage image = ImageIO.read(file);
-            newLabel.setIcon(new ImageIcon(image.getScaledInstance(128, -1, Image.SCALE_SMOOTH)));
+            newLabel.setIcon(getIcon(imagePath, width, height));
             newLabel.setText("");
         } catch (IOException e) {
             System.out.println("SYSTEM: Could not load label image!");
@@ -305,7 +360,7 @@ public class ComponentFactory {
      * @see javax.swing.JLabel
      * @see java.awt.Color
      */
-    static public JLabel createImageLabel(Image img) {
+    public static JLabel createImageLabel(Image img) {
         JLabel newLabel = ComponentFactory.createLabel("", UIManager.getColor("Label.foreground"),
                 UIManager.getColor("Label.background"));
         newLabel.setIcon(new ImageIcon(img));
@@ -334,7 +389,7 @@ public class ComponentFactory {
      * @see javax.swing.text.DocumentFilter
      * @see javax.swing.border.Border
      */
-    static public JTextField createTextBox(int viewsize, Color foregroundColor, Color backgroundColor,
+    public static JTextField createTextBox(int viewsize, Color foregroundColor, Color backgroundColor,
             DocumentFilter filter, Border border) {
         JTextField newTextBox = new JTextField(viewsize);
         newTextBox.setForeground(foregroundColor);
@@ -369,7 +424,7 @@ public class ComponentFactory {
      * @see java.awt.Color
      * @see javax.swing.text.DocumentFilter
      */
-    static public JTextField createTextBox(int viewsize, Color foregroundColor, Color backgroundColor,
+    public static JTextField createTextBox(int viewsize, Color foregroundColor, Color backgroundColor,
             DocumentFilter filter) {
         return ComponentFactory.createTextBox(viewsize, foregroundColor, backgroundColor, filter, null);
     }
@@ -390,7 +445,7 @@ public class ComponentFactory {
      * @see javax.swing.JTextBox
      * @see java.awt.Color
      */
-    static public JTextField createTextBox(int viewsize, Color foregroundColor, Color backgroundColor) {
+    public static JTextField createTextBox(int viewsize, Color foregroundColor, Color backgroundColor) {
         return ComponentFactory.createTextBox(viewsize, foregroundColor, backgroundColor, null, null);
     }
 
@@ -409,7 +464,7 @@ public class ComponentFactory {
      * @return a new {@code JTextBox} with properties from the provided params.
      * @see javax.swing.JTextBox
      */
-    static public JTextField createTextBox(int viewsize) {
+    public static JTextField createTextBox(int viewsize) {
         return ComponentFactory.createTextBox(viewsize, UIManager.getColor("TextField.foreground"),
                 UIManager.getColor("TextField.background"), null, null);
     }
@@ -434,7 +489,7 @@ public class ComponentFactory {
      * @see javax.swing.text.DocumentFilter
      * @see javax.swing.border.Border
      */
-    static public JPasswordField createPasswordBox(int viewsize, Color foregroundColor, Color backgroundColor,
+    public static JPasswordField createPasswordBox(int viewsize, Color foregroundColor, Color backgroundColor,
             DocumentFilter filter, Border border) {
         JPasswordField newTextBox = new JPasswordField(viewsize);
         newTextBox.setForeground(foregroundColor);
@@ -463,7 +518,7 @@ public class ComponentFactory {
      * @see javax.swing.JCheckBox
      * @see java.awt.Color
      */
-    static public JCheckBox createCheckbox(String text, Color foregroundColor, Color backgroundColor) {
+    public static JCheckBox createCheckbox(String text, Color foregroundColor, Color backgroundColor) {
         JCheckBox checkBox = new JCheckBox(text);
         checkBox.setForeground(foregroundColor);
         checkBox.setBackground(backgroundColor);
@@ -489,7 +544,8 @@ public class ComponentFactory {
      * @see java.awt.Color
      * @see java.awt.event.ActionListener
      */
-    static public JComboBox<String> createComboBox(String[] strings, int selectedIndex, Color foregroundColor, Color backgroundColor,
+    public static JComboBox<String> createComboBox(String[] strings, int selectedIndex, Color foregroundColor,
+            Color backgroundColor,
             ActionListener onChoice) {
         JComboBox<String> newComboBox = new JComboBox<>(strings);
         newComboBox.setSelectedIndex(selectedIndex);

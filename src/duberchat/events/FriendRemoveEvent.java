@@ -1,8 +1,9 @@
 package duberchat.events;
 
 /**
- * A {@code FriendRemoveEvent} is an event that is created when a friend is removed from a user.
- * 
+ * A {@code FriendRemoveEvent} is an event that is created when a friend is
+ * removed from a user.
+ * <p>
  * Since <b>2020-12-12</b>.
  * 
  * @since 1.0.0

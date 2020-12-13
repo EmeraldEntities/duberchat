@@ -4,7 +4,6 @@ package duberchat.events;
  * A {@code FriendEvent} is a generic event that represents any action involving a friend.
  * <p>
  * This includes events like adding and removing a friend.
- * 
  * <p>
  * Since <b>2020-12-12</b>.
  * 

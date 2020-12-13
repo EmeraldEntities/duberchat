@@ -30,7 +30,7 @@ public class MessagePanel extends JPanel {
     private boolean showHeader;
     private boolean showAdmin;
     private Message msg;
-    private ChatClient client;
+    protected ChatClient client;
     private User sender;
 
     private JButton editButton;

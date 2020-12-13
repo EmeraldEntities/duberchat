@@ -40,7 +40,7 @@ public class ProfileFrame extends DynamicGridbagFrame {
     public static final String[] STATUS_CHOICES = { User.findStringStatus(User.ONLINE),
             User.findStringStatus(User.AWAY), User.findStringStatus(User.DND) };
 
-    private ChatClient client;
+    protected ChatClient client;
 
     private JPanel mainPanel;
 

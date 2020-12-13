@@ -46,8 +46,11 @@ public class ClientChannelAddMemberHandler implements Handleable {
             // This user is the new user
             this.client.getChannels().put(modifiedChannel.getChannelId(), modifiedChannel);
             this.client.getUser().getChannels().add(modifiedChannel.getChannelId());
-            this.client.getMainMenuFrame().reload();
+
+            this.client.getMainMenuFrame().reload(event);
         } else {
+
+            // TODO: this is a known issue involving serialization, fix later.
             // This user is not the new user
             this.client.getChannels().get(modifiedChannel.getChannelId()).setUsers(modifiedChannel.getUsers());
 

@@ -2,13 +2,13 @@ package duberchat.gui.frames;
 
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.border.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.io.File;
 import java.io.IOException;
 
@@ -115,7 +115,7 @@ public class MainFrame extends DynamicFrame {
 
     private JLabel channelIndicator;
 
-    private ChatClient client;
+    protected ChatClient client;
 
     /** Whether this client has already requested messages from this frame. */
     private boolean requestedMessages = false; // important to prevent event spam
@@ -561,26 +561,36 @@ public class MainFrame extends DynamicFrame {
     public synchronized void reload(SerializableEvent source) {
         if (source instanceof MessageEvent) {
             this.reloadMessages();
+
         } else if (source instanceof ChannelAddMemberEvent || source instanceof ChannelRemoveMemberEvent) {
             this.reloadUsers();
+
         } else if (source instanceof ChannelHierarchyChangeEvent) {
             this.reloadUsers();
             this.reloadMessages();
+
         } else if (source instanceof ClientProfileUpdateEvent) {
             this.reloadUsers();
+            this.reloadFriends(); // to deal with friend discrepancies
+            this.reloadMessages(); // to deal with message discrepancies (pfp)
             if (this.client.getUser().equals(source.getSource())) {
                 this.reloadProfile();
             }
+
         } else if (source instanceof ClientRequestMessageEvent) {
             this.resetRequestedMessages();
             this.reloadMessages();
+
         } else if (source instanceof ClientEvent) {
             this.reloadUsers();
+
         } else if (source instanceof ChannelEvent) {
             this.reload();
             return;
+
         } else if (source instanceof FriendEvent) {
             this.reloadFriends();
+
         } else {
             this.reload();
             return;
@@ -648,7 +658,10 @@ public class MainFrame extends DynamicFrame {
 
         textPanel.removeAll();
 
-        ArrayList<Message> messages = client.getCurrentChannel().getMessages();
+        Channel sourceChannel = client.getCurrentChannel();
+        ArrayList<Message> messages = sourceChannel.getMessages();
+        LinkedHashMap<String, User> users = sourceChannel.getUsers();
+        HashSet<User> adminUsers = sourceChannel.getAdminUsers();
 
         for (int messageIndex = 0; messageIndex < messages.size(); messageIndex++) {
             if (messageIndex >= messages.size() - messageOffset
@@ -657,10 +670,9 @@ public class MainFrame extends DynamicFrame {
             }
 
             Message msg = messages.get(messageIndex);
-            Channel sourceChannel = client.getCurrentChannel();
-            User sender = sourceChannel.getUsers().get(msg.getSenderUsername());
+            User sender = users.get(msg.getSenderUsername());
 
-            boolean showAdmin = sourceChannel.getAdminUsers().contains(client.getUser());
+            boolean showAdmin = adminUsers.contains(client.getUser());
             boolean showHeader = false;
 
             if (messageIndex != 0) {

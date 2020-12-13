@@ -2,7 +2,7 @@ package duberchat.events;
 
 /**
  * A {@code FriendAddEvent} is an event that is created when a friend is added to a user.
- * 
+ * <p>
  * Since <b>2020-12-12</b>.
  * 
  * @since 1.0.0

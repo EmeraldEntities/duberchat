@@ -32,7 +32,7 @@ import duberchat.gui.filters.TextLengthFilter;
 public class FriendPanel extends JPanel {
     /** The header font. */
     private static final Font HEADER_FONT = new Font("courier", Font.BOLD, 12);
-    private ChatClient client;
+    protected ChatClient client;
     private User friend;
 
     private JButton chatButton;

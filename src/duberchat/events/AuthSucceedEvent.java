@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * <p>
  * This event should be used solely to indicate a success in authentication,
  * where the requesting client is able to retrieve the metadata stored in this
- * event and immedietely begin normal operations.
+ * event and immediately begin normal operations.
  * 
  * <p>
  * Since <b>2020-12-04</b>.

@@ -47,10 +47,17 @@ public class ClientChannelRemoveMemberHandler implements Handleable {
             // This user is the user to delete
             this.client.getChannels().remove(modifiedChannel.getChannelId());
             this.client.getUser().getChannels().remove(modifiedChannel.getChannelId());
-            this.client.getMainMenuFrame().reload();
+
+            if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(modifiedChannel)) {
+                this.client.setCurrentChannel(null);
+                this.client.getMainMenuFrame().switchChannelsToCurrent();
+            } else {
+                this.client.getMainMenuFrame().reload(event);
+            }
         } else {
             // This user is not the user to delete
-            this.client.getChannels().get(modifiedChannel.getChannelId()).setUsers(modifiedChannel.getUsers());
+            Channel localChannel = this.client.getChannels().get(modifiedChannel.getChannelId());
+            localChannel.getUsers().remove(memberEvent.getUsername());
 
             // We only need to reload if we are currently looking at the channel
             if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(modifiedChannel)) {

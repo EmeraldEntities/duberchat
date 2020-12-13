@@ -31,7 +31,7 @@ import duberchat.chatutil.User;
 public class ChannelCreateFrame extends DynamicGridbagFrame {
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
 
-    private ChatClient client;
+    protected ChatClient client;
 
     JPanel mainPanel;
     JTextField nameField;
@@ -79,7 +79,11 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
                 MainFrame.TEXT_COLOR);
 
         submitButton = ComponentFactory.createButton("Start DuberChatting!", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
-                new CreateChannelActionListener());
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        attemptCreatingNewChannel();
+                    }
+                });
 
         addConstrainedComponent(channelNameLabel, mainPanel, layout, constraints, 0, 0, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
@@ -98,6 +102,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         addConstrainedComponent(submitButton, mainPanel, layout, constraints, 0, 9, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
 
+        this.getRootPane().setDefaultButton(submitButton);
         this.add(mainPanel);
     }
 
@@ -122,28 +127,35 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         alreadySentRequest = false;
     }
 
-    private class CreateChannelActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent evt) {
-            if (alreadySentRequest) {
-                return;
-            }
-
-            String channelName = nameField.getText();
-            String[] users = usersField.getText().replace("@", "").split(", *");
-
-            System.out.println(Arrays.toString(users));
-            HashSet<String> usernames = new HashSet<>();
-
-            for (String user : users) {
-                usernames.add(user);
-            }
-
-            Channel newChannel = new Channel(channelName);
-            User clientUser = new User(client.getUser());
-            client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, usernames));
-
-            alreadySentRequest = true;
-            System.out.println("SYSTEM: Created new channel event.");
+    /**
+     * Attempts to create a new channel with the text from the name field and the
+     * users as specified in the user field.
+     * <p>
+     * This method will not send a request to create a new channel if it has already
+     * sent a request, to avoid spamming the server. This method will also not
+     * request to create a new channel if there is no given name for said channel.
+     */
+    private void attemptCreatingNewChannel() {
+        // Don't allow creation if name is nothing or a request was already sent
+        if (alreadySentRequest || nameField.getText().equals("")) {
+            return;
         }
+
+        String channelName = nameField.getText();
+        String[] users = usersField.getText().replace("@", "").split(", *");
+
+        System.out.println(Arrays.toString(users));
+        HashSet<String> usernames = new HashSet<>();
+
+        for (String user : users) {
+            usernames.add(user);
+        }
+
+        Channel newChannel = new Channel(channelName);
+        User clientUser = new User(client.getUser());
+        client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, usernames));
+
+        alreadySentRequest = true;
+        System.out.println("SYSTEM: Created new channel event.");
     }
 }

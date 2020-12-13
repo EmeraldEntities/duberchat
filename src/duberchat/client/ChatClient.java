@@ -385,7 +385,7 @@ public class ChatClient {
      * <p>
      * These settings will be written directly to "data/".
      */
-    public void saveIpSettings() {
+    public synchronized void saveIpSettings() {
         Thread saveIpSettingWorker = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -414,7 +414,7 @@ public class ChatClient {
      * This method should be used whenever this client must be closed, and will
      * ensure that any to-be-outgoing events will be served before closing.
      */
-    private void closeSafely() {
+    private synchronized void closeSafely() {
         while (!hasClosed) {
             // Make sure all outgoing events are served
             synchronized (outgoingEvents) {
@@ -456,7 +456,7 @@ public class ChatClient {
      * safe shutdown, (eg. the client {@link #start() start loop} to detect events
      * has not begun), use {@link #forceLogout()}
      */
-    public void initiateShutdown() {
+    public synchronized void initiateShutdown() {
         this.logout();
     }
 
@@ -466,7 +466,7 @@ public class ChatClient {
      * This method will ensure that all queued outgoing events are properly served
      * and that all connections are closed before closing.
      */
-    private void logout() {
+    private synchronized void logout() {
         if (!currentlyLoggingIn) {
             User newUser = new User(this.user);
             newUser.setStatus(0);
@@ -487,7 +487,7 @@ public class ChatClient {
      * If the program has executed correctly and the {@link #start()} loop has not
      * failed, use {@link #initiateShutdown()} for a safer shutdown method.
      */
-    public void forceLogout() {
+    public synchronized void forceLogout() {
         this.logout();
 
         System.exit(0);

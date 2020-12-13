@@ -45,8 +45,9 @@ public class ClientChannelDeleteHandler implements Handleable {
 
         if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(deleteEvent.getChannel())) {
             this.client.setCurrentChannel(null);
+            this.client.getMainMenuFrame().switchChannelsToCurrent();
+        } else {
+            this.client.getMainMenuFrame().reload(event);
         }
-
-        this.client.getMainMenuFrame().reload(event);
     }
 }

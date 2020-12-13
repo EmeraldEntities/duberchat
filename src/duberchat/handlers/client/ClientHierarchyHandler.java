@@ -7,7 +7,6 @@ import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
 import duberchat.events.SerializableEvent;
 import duberchat.events.ChannelHierarchyChangeEvent;
-import duberchat.events.FriendEvent;
 import duberchat.handlers.Handleable;
 
 /**
@@ -49,8 +48,8 @@ public class ClientHierarchyHandler implements Handleable {
     public void handleEvent(SerializableEvent event) {
         ChannelHierarchyChangeEvent hierarchyEvent = (ChannelHierarchyChangeEvent) event;
         Channel updatedChannel = hierarchyEvent.getChannel();
-        // TODO: does this kill pointers?
         HashSet<User> updatedUsers = updatedChannel.getAdminUsers();
+
         Channel localChannel = this.client.getChannels().get(updatedChannel.getChannelId());
         User toRemove = localChannel.getUsers().get(hierarchyEvent.getUsername());
 

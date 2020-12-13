@@ -30,7 +30,10 @@ import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
 
 /**
- * [INSERT DESCRIPTION HERE]
+ * This class is used primarily as an information/action frame for when a user is clicked on the
+ * side panel, and is designed to provide easy access of information for that user.
+ * <p>
+ * This frame will destroy itself upon loss of focus or upon an action, for ease of synchronization and convenience to the client.
  * <p>
  * Created <b>2020-12-10</b>
  * 
@@ -40,25 +43,40 @@ import duberchat.chatutil.User;
  */
 @SuppressWarnings("serial")
 public class OtherUserProfileFrame extends DynamicGridbagFrame {
+    /** The default size of this frame. */
     public static final Dimension DEFAULT_SIZE = new Dimension(300, 400);
 
-    private ChatClient client;
+    /** The associated client. */
+    protected ChatClient client;
+    /** The user that this frame is representing. */
     private User otherUser;
 
+    /** The main panel for this frame. */
     private JPanel mainPanel;
 
+    /** The profile picture label. */
     private JLabel profilePicture;
+    /** The username label. */
     private JLabel usernameLabel;
+    /** The dm button that starts a chat with this user. */
     private JButton dmButton;
+    /** The add friend button that adds this user as a friend. */
     private JButton addFriendButton;
+    /** The remove button that removes this user from the channel. */
     private JButton removeButton;
+    /** The promote button that OPs this user. */
     private JButton promoteButton;
+    /** The demote button that de-OPs this user. */
     private JButton demoteButton;
 
+    /** The GridBagLayout for this frame. */
     private GridBagLayout layout;
+    /** A shared constraints object for working with the layout. */
     private GridBagConstraints constraints;
 
+    /** True if the client is an admin. */
     private boolean isClientAdmin;
+    /** True if the client is already friends with this user. */
     private boolean isAlreadyFriends;
 
     /**
@@ -84,7 +102,55 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
         this.setResizable(false);
         this.setUndecorated(true);
         this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
+        this.setLocation(clickLocation.x - this.getWidth(), clickLocation.y);
+        // Close this frame upon focus lost
+        this.addWindowListener(new WindowAdapter() {
+            public void windowDeactivated(WindowEvent e) {
+                reload();
+            }
+        });
 
+        this.initializeComponents();
+
+        // Add all components
+        addConstrainedComponent(profilePicture, mainPanel, layout, constraints, 0, 0, 1, 1,
+                GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(20, 20, 20, 20));
+        addConstrainedComponent(usernameLabel, mainPanel, layout, constraints, 0, 1, 1, 1,
+                GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 40, 0));
+        if (!isAlreadyFriends && !otherUser.equals(this.client.getUser())) {
+            addConstrainedComponent(addFriendButton, mainPanel, layout, constraints, 0, 2, 1, 1,
+                    GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
+        }
+        addConstrainedComponent(dmButton, mainPanel, layout, constraints, 0, 3, 1, 1, GridBagConstraints.REMAINDER,
+                GridBagConstraints.CENTER, new Insets(0, 0, 16, 0));
+
+        // Only specfically add these buttons if client is admin and this user is not
+        // client
+        if (isClientAdmin && !otherUser.equals(this.client.getUser())) {
+            addConstrainedComponent(removeButton, mainPanel, layout, constraints, 0, 4, 1, 1,
+                    GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
+
+            // If this user is already admin, show demote button
+            // Otherwise show promote button
+            if (isAdmin) {
+                addConstrainedComponent(demoteButton, mainPanel, layout, constraints, 0, 5, 1, 1,
+                        GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
+            } else {
+                addConstrainedComponent(promoteButton, mainPanel, layout, constraints, 0, 5, 1, 1,
+                        GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
+            }
+        }
+
+        this.add(mainPanel);
+    }
+
+    /**
+     * Initializes all the components needed for this frame.
+     * <p>
+     * Certain buttons will not be loaded depending on the permission level of the
+     * client and this user, etc.
+     */
+    private void initializeComponents() {
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();
 
@@ -94,8 +160,6 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
         mainPanel.setBackground(MainFrame.PANEL_COLOR);
         mainPanel.setLayout(layout);
 
-        this.setLocation(clickLocation.x - this.getWidth(), clickLocation.y);
-        
         profilePicture = ComponentFactory
         .createImageLabel(otherUser.getPfp().getScaledInstance(128, 128, Image.SCALE_SMOOTH));
         profilePicture.setBorder(BorderFactory.createRaisedBevelBorder());
@@ -143,44 +207,6 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
                         }
                     });
         }
-
-        // Add all components
-        addConstrainedComponent(profilePicture, mainPanel, layout, constraints, 0, 0, 1, 1,
-                GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(20, 20, 20, 20));
-        addConstrainedComponent(usernameLabel, mainPanel, layout, constraints, 0, 1, 1, 1,
-                GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 40, 0));
-        if (!isAlreadyFriends && !otherUser.equals(this.client.getUser())) {
-            addConstrainedComponent(addFriendButton, mainPanel, layout, constraints, 0, 2, 1, 1,
-                    GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
-        }
-        addConstrainedComponent(dmButton, mainPanel, layout, constraints, 0, 3, 1, 1, GridBagConstraints.REMAINDER,
-                GridBagConstraints.CENTER, new Insets(0, 0, 16, 0));
-
-        // Only specfically add these buttons if client is admin and this user is not
-        // client
-        if (isClientAdmin && !otherUser.equals(this.client.getUser())) {
-            addConstrainedComponent(removeButton, mainPanel, layout, constraints, 0, 4, 1, 1,
-                    GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
-
-            // If this user is already admin, show demote button
-            // Otherwise show promote button
-            if (isAdmin) {
-                addConstrainedComponent(demoteButton, mainPanel, layout, constraints, 0, 5, 1, 1,
-                        GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
-            } else {
-                addConstrainedComponent(promoteButton, mainPanel, layout, constraints, 0, 5, 1, 1,
-                        GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
-            }
-        }
-
-        // Close this frame upon focus lost
-        this.addWindowListener(new WindowAdapter() {
-            public void windowDeactivated(WindowEvent e) {
-                reload();
-            }
-        });
-
-        this.add(mainPanel);
     }
 
     /**

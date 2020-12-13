@@ -57,7 +57,7 @@ public class ClientProfileUpdateHandler implements Handleable {
         }
 
         // Reload every user in every channel if it does not originate from us
-        // Do the same if it does to ensure a good sync
+        // Do the same if it does originate from us to ensure a good sync
         for (Channel c : this.client.getChannels().values()) {
             User userToFix = c.getUsers().get(user.getUsername());
 
