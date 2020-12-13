@@ -60,6 +60,9 @@ public class ChatServer {
         ServerFriendHandler friendHandler = new ServerFriendHandler(this);
         this.eventHandlers.put(FriendAddEvent.class, friendHandler);
         this.eventHandlers.put(FriendRemoveEvent.class, friendHandler);
+        ServerHierarchyHandler hierarchyHandler = new ServerHierarchyHandler(this);
+        this.eventHandlers.put(ChannelPromoteMemberEvent.class, hierarchyHandler);
+        this.eventHandlers.put(ChannelDemoteMemberEvent.class, hierarchyHandler);
 
         this.textConversions = new HashMap<>();
         this.textConversions.put("/shrug", "¯\\_(ツ)_/¯");
