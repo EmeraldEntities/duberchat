@@ -150,25 +150,25 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
         addConstrainedComponent(usernameLabel, mainPanel, layout, constraints, 0, 1, 1, 1,
                 GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER, new Insets(0, 0, 40, 0));
         if (!isAlreadyFriends && !otherUser.equals(this.client.getUser())) {
-            addConstrainedComponent(addFriendButton, mainPanel, layout, constraints, 0, 3, 1, 1,
+            addConstrainedComponent(addFriendButton, mainPanel, layout, constraints, 0, 2, 1, 1,
                     GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
         }
-        addConstrainedComponent(dmButton, mainPanel, layout, constraints, 0, 2, 1, 1, GridBagConstraints.REMAINDER,
+        addConstrainedComponent(dmButton, mainPanel, layout, constraints, 0, 3, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(0, 0, 16, 0));
 
         // Only specfically add these buttons if client is admin and this user is not
         // client
         if (isClientAdmin && !otherUser.equals(this.client.getUser())) {
-            addConstrainedComponent(removeButton, mainPanel, layout, constraints, 0, 3, 1, 1,
+            addConstrainedComponent(removeButton, mainPanel, layout, constraints, 0, 4, 1, 1,
                     GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
 
             // If this user is already admin, show demote button
             // Otherwise show promote button
             if (isAdmin) {
-                addConstrainedComponent(demoteButton, mainPanel, layout, constraints, 0, 4, 1, 1,
+                addConstrainedComponent(demoteButton, mainPanel, layout, constraints, 0, 5, 1, 1,
                         GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
             } else {
-                addConstrainedComponent(promoteButton, mainPanel, layout, constraints, 0, 4, 1, 1,
+                addConstrainedComponent(promoteButton, mainPanel, layout, constraints, 0, 5, 1, 1,
                         GridBagConstraints.REMAINDER, GridBagConstraints.CENTER, new Insets(0, 0, 0, 0));
             }
         }
