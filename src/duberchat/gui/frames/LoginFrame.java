@@ -30,6 +30,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JLabel;
 
 import duberchat.events.ClientLoginEvent;
+import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.filters.LimitingRegexFilter;
@@ -231,8 +232,8 @@ public class LoginFrame extends DynamicGridbagFrame {
         passwordField.setText("");
 
         boolean isNewUser = newUserCheckbox.isSelected();
-
-        clientUser = new User(client.getUser());
+        
+        User clientUser = new User(client.getUser());
         client.offerEvent(new ClientLoginEvent(clientUser, isNewUser, username, password));
 
         // Add connecting... text to aid user
