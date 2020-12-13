@@ -130,13 +130,17 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
 
     private void promoteUser() {
         // client current channel should be this user panel's channel
+        User clientUser = new User(client.getUser());
+        Channel curChannel = new Channel(client.getCurrentChannel());
         client.offerEvent(
-                new ChannelPromoteMemberEvent(client.getUser(), client.getCurrentChannel(), otherUser.getUsername()));
+                new ChannelPromoteMemberEvent(clientUser, curChannel, otherUser.getUsername()));
     }
 
     private void demoteUser() {
+        User clientUser = new User(client.getUser());
+        Channel curChannel = new Channel(client.getCurrentChannel());
         client.offerEvent(
-                new ChannelDemoteMemberEvent(client.getUser(), client.getCurrentChannel(), otherUser.getUsername()));
+                new ChannelDemoteMemberEvent(clientUser, curChannel, otherUser.getUsername()));
     }
 
     private class CreateChannelActionListener implements ActionListener {
@@ -146,12 +150,11 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
             }
 
             Channel newChannel = new Channel("@" + otherUser.getUsername());
-            client.offerEvent(new ChannelCreateEvent(client.getUser(), newChannel, otherUser.getUsername()));
+            User clientUser = new User(client.getUser());
+            client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, otherUser.getUsername()));
 
             sentDmRequest = true;
             System.out.println("SYSTEM: Created DM with " + otherUser.getUsername() + ".");
         }
     }
 }
-
-//

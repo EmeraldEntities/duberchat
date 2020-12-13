@@ -54,6 +54,7 @@ public class FrameFactory {
                     reload();
                 }
             });
+            this.getRootPane().setDefaultButton(submitButton);
 
             addConstrainedComponent(text, mainPanel, layout, constraints, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL,
                     GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
@@ -111,10 +112,10 @@ public class FrameFactory {
 
             addConstrainedComponent(text, mainPanel, layout, constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL,
                     GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
-            addConstrainedComponent(confirmButton, mainPanel, layout, constraints, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL,
-                    GridBagConstraints.EAST, new Insets(8, 8, 8, 8));
-            addConstrainedComponent(denyButton, mainPanel, layout, constraints, 1, 1, 1, 1, GridBagConstraints.HORIZONTAL,
-                    GridBagConstraints.CENTER, new Insets(8, 8, 8, 8));
+            addConstrainedComponent(confirmButton, mainPanel, layout, constraints, 0, 1, 1, 1, 1.0, 1.0,
+                    GridBagConstraints.HORIZONTAL, GridBagConstraints.PAGE_END, new Insets(8, 8, 8, 8));
+            addConstrainedComponent(denyButton, mainPanel, layout, constraints, 1, 1, 1, 1, 1.0, 1.0,
+                    GridBagConstraints.HORIZONTAL, GridBagConstraints.PAGE_START, new Insets(8, 8, 8, 8));
 
             this.add(mainPanel);
         }

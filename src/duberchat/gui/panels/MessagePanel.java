@@ -198,7 +198,8 @@ public class MessagePanel extends JPanel {
     }
 
     private void deleteMessage() {
-        MessageDeleteEvent deleteEvent = new MessageDeleteEvent(client.getUser(), msg);
+        User clientUser = new User(client.getUser());
+        MessageDeleteEvent deleteEvent = new MessageDeleteEvent(clientUser, msg);
         client.offerEvent(deleteEvent);
         System.out.println("SYSTEM: Deleted!");
 
@@ -229,7 +230,8 @@ public class MessagePanel extends JPanel {
          */
         msg.setMessage(newText);
 
-        client.offerEvent(new MessageEditEvent(client.getUser(), new Message(msg, newText)));
+        User clientUser = new User(client.getUser());
+        client.offerEvent(new MessageEditEvent(clientUser, new Message(msg, newText)));
         System.out.println("SYSTEM: edited!");
 
         resetEditingMessage();

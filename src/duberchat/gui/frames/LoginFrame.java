@@ -232,7 +232,8 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         boolean isNewUser = newUserCheckbox.isSelected();
 
-        client.offerEvent(new ClientLoginEvent(client.getUser(), isNewUser, username, password));
+        clientUser = new User(client.getUser());
+        client.offerEvent(new ClientLoginEvent(clientUser, isNewUser, username, password));
 
         // Add connecting... text to aid user
         mainPanel.remove(failedText); // attempt to remove failed text

@@ -3,5 +3,5 @@ src/**/*.class
 *.java~
 *.swp
 .vscode/
-data/channels/
-data/users/
+data/channels/*
+data/users/*

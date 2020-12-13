@@ -213,8 +213,10 @@ public class MainFrame extends DynamicFrame {
                     } else if (curChannel.getMessages().size() >= Channel.LOCAL_SAVE_AMT
                             && (curChannel.getMessages().size() - messageOffset) <= maxMessageGrids
                             && !requestedMessages) {
-                        client.offerEvent(new ClientRequestMessageEvent(client.getUser(),
-                                curChannel.getMessages().get(0), client.getCurrentChannel()));
+                        User clientUser = new User(client.getUser());
+                        Channel clientChannel = new Channel(client.getCurrentChannel());
+                        client.offerEvent(new ClientRequestMessageEvent(clientUser, curChannel.getMessages().get(0),
+                                clientChannel));
                         requestedMessages = true;
                     }
                 }
@@ -323,7 +325,9 @@ public class MainFrame extends DynamicFrame {
                                 BRIGHT_TEXT_COLOR);
                         ActionListener action = new ActionListener() {
                             public void actionPerformed(ActionEvent evt2) {
-                                client.offerEvent(new ChannelDeleteEvent(client.getUser(), client.getCurrentChannel()));
+                                User clientUser = new User(client.getUser());
+                                Channel curChannel = new Channel(client.getCurrentChannel());
+                                client.offerEvent(new ChannelDeleteEvent(clientUser, curChannel));
 
                                 System.out.println(
                                         "SYSTEM: Deleting channel " + client.getCurrentChannel().getChannelName());
@@ -372,7 +376,9 @@ public class MainFrame extends DynamicFrame {
                                 return;
                             }
 
-                            client.offerEvent(new ChannelRemoveMemberEvent(client.getUser(), client.getCurrentChannel(),
+                                    User clientUser = new User(client.getUser());
+                                    Channel curChannel = new Channel(client.getCurrentChannel());
+                                    client.offerEvent(new ChannelRemoveMemberEvent(clientUser, curChannel,
                                     username));
 
                             System.out.println("SYSTEM: Removing user " + username);
@@ -409,8 +415,10 @@ public class MainFrame extends DynamicFrame {
                         ActionListener action = new ActionListener() {
                             public void actionPerformed(ActionEvent evt2) {
                                 // This button will only exist if a current channel exists
-                                client.offerEvent(new ChannelRemoveMemberEvent(client.getUser(),
-                                        client.getCurrentChannel(), client.getUser().getUsername()));
+                                User clientUser = new User(client.getUser());
+                                Channel curChannel = new Channel(client.getCurrentChannel());
+                                client.offerEvent(new ChannelRemoveMemberEvent(clientUser, curChannel,
+                                        client.getUser().getUsername()));
                             }
                         };
 
@@ -497,7 +505,8 @@ public class MainFrame extends DynamicFrame {
 
         Message msg = new Message(typeField.getText(), client.getUser().getUsername(), -1, new Date(),
                 client.getCurrentChannel());
-        client.offerEvent(new MessageSentEvent(client.getUser(), msg));
+        User clientUser = new User(client.getUser());
+        client.offerEvent(new MessageSentEvent(clientUser, msg));
         typeField.setText("");
 
         System.out.println("SYSTEM: Sent message " + typeField.getText());
@@ -593,7 +602,18 @@ public class MainFrame extends DynamicFrame {
     }
 
     private synchronized void reloadProfile() {
-        profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
+        try {
+            BufferedImage image = ImageIO.read(new File("data/system/trash.png"));
+            profileButton.setIcon(new ImageIcon(image.getScaledInstance(128, -1, Image.SCALE_SMOOTH)));
+        } catch (IOException e) {
+            System.out.println("SYSTEM: Could not load label image!");
+        }
+
+        // profileButton.setIcon(new
+        // ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48,
+        // Image.SCALE_SMOOTH)));
+        // profileButton.repaint();
+        // profileButton.revalidate();
     }
 
     // TODO: make this a lot better
@@ -784,8 +804,11 @@ public class MainFrame extends DynamicFrame {
             return;
         }
 
+        User clientUser = new User(client.getUser());
+        Channel curChannel = new Channel(client.getCurrentChannel());
+
         client.offerEvent(
-                new ChannelAddMemberEvent(client.getUser(), client.getCurrentChannel(), user.replaceFirst("@", "")));
+                new ChannelAddMemberEvent(clientUser, curChannel, user.replaceFirst("@", "")));
     }
 
     private void addFriend(String user) {
@@ -793,6 +816,8 @@ public class MainFrame extends DynamicFrame {
             return;
         }
 
-        client.offerEvent(new FriendAddEvent(client.getUser(), user.replaceFirst("@", "")));
+        User clientUser = new User(client.getUser());
+
+        client.offerEvent(new FriendAddEvent(clientUser, user.replaceFirst("@", "")));
     }
 }

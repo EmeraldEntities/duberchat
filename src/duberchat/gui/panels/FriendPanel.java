@@ -136,13 +136,15 @@ public class FriendPanel extends JPanel {
         friendName.add(friend.getUsername());
 
         Channel newChannel = new Channel("@" + friend.getUsername());
-        client.offerEvent(new ChannelCreateEvent(client.getUser(), newChannel, friendName));
+        User clientUser = new User(client.getUser());
+        client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, friendName));
 
         System.out.println("Started chatting!");
     }
 
     private void removeFriend() {
-        client.offerEvent(new FriendRemoveEvent(client.getUser(), friend.getUsername()));
+        User clientUser = new User(client.getUser());
+        client.offerEvent(new FriendRemoveEvent(clientUser, friend.getUsername()));
         System.out.println("SYSTEM: Friendship is over with " + friend.getUsername());
     }
 

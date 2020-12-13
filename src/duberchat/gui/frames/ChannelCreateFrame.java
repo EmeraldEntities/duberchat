@@ -12,6 +12,7 @@ import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
 import duberchat.client.ChatClient;
 import duberchat.chatutil.Channel;
+import duberchat.chatutil.User;
 
 @SuppressWarnings("serial")
 // TODO: this should be a controlled frame so maybe work it so that it doesnt
@@ -127,7 +128,8 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
             }
 
             Channel newChannel = new Channel(channelName);
-            client.offerEvent(new ChannelCreateEvent(client.getUser(), newChannel, usernames));
+            User clientUser = new User(client.getUser());
+            client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, usernames));
 
             alreadySentRequest = true;
             System.out.println("SYSTEM: Created new channel event.");
