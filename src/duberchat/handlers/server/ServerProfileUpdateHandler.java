@@ -2,8 +2,6 @@ package duberchat.handlers.server;
 
 import duberchat.chatutil.User;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.HashSet;
@@ -35,7 +33,7 @@ public class ServerProfileUpdateHandler implements Handleable {
     if (!serverUser.pfpEquals(user.getPfp())) {
       serverUser.setPfp(user.getPfp());
       String filePath = "data/images/" + serverUser.getUsername();
-      server.getFileWriteQueue().add(new FileWriteEvent(user.getPfp(), filePath));
+      server.getImageWriteQueue().add(new FileWriteEvent(user.getPfp(), filePath));
     }
 
     // close down the appropriate client thread if the user logs off

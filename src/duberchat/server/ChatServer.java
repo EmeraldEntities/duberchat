@@ -1,11 +1,13 @@
 package duberchat.server;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 import duberchat.events.*;
 import duberchat.gui.frames.ServerFrame;
@@ -36,6 +38,7 @@ public class ChatServer {
     private HashMap<String, User> allUsers; // map of all the usernames to their users
     private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
     private ConcurrentLinkedQueue<FileWriteEvent> fileWriteQueue;
+    private ConcurrentLinkedQueue<FileWriteEvent> imageWriteQueue;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
     private HashMap<String, String> textConversions; // For text commands or emojis
     private ServerFrame serverFrame;
@@ -46,6 +49,7 @@ public class ChatServer {
         this.allUsers = new HashMap<>();
         this.eventQueue = new ConcurrentLinkedQueue<>();
         this.fileWriteQueue = new ConcurrentLinkedQueue<>();
+        this.imageWriteQueue= new ConcurrentLinkedQueue<>();
 
         this.eventHandlers = new HashMap<>();
         this.eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
@@ -114,7 +118,6 @@ public class ChatServer {
 
         Socket client = null; // hold the client connection
 
-        ExecutorService fileWriteExecutor = Executors.newCachedThreadPool();
         Thread fileWriteThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
@@ -133,6 +136,26 @@ public class ChatServer {
             }
         });
         fileWriteThread.start();
+
+        Thread imageWriteThread = new Thread(new Runnable() {
+            public void run() {
+                while (true) {
+                    FileWriteEvent writeInfo = imageWriteQueue.poll();
+                    if (writeInfo == null) continue;
+                    try {
+                        String filePath = writeInfo.getFilePath();
+                        FileOutputStream fileOut = new FileOutputStream(filePath);
+                        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                        ImageIO.write((BufferedImage) (writeInfo.getObjectToWrite()),
+                                       Pattern.compile(".+\\.(\\w+)").matcher(filePath).group(1),
+                                       out);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        imageWriteThread.start();
 
         // start new thread to handle events
         Thread eventsThread = new Thread(new Runnable() {
@@ -189,6 +212,10 @@ public class ChatServer {
 
     public ConcurrentLinkedQueue<FileWriteEvent> getFileWriteQueue() {
         return this.fileWriteQueue;
+    }
+
+    public ConcurrentLinkedQueue<FileWriteEvent> getImageWriteQueue() {
+        return this.imageWriteQueue;
     }
 
     public HashMap<String, String> getTextConversions() {

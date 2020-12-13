@@ -24,7 +24,7 @@ import javax.imageio.ImageIO;
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {
-    static final long serialVersionUID = 6L;
+    static final long serialVersionUID = 7L;
 
     public static final int OFFLINE = 0;
     public static final int ONLINE = 1;
@@ -36,6 +36,7 @@ public class User implements Serializable {
     private long hashedPassword;
     private int status;
     private transient BufferedImage pfp;
+    private String pfpFormat;
     private HashSet<Integer> channels;
     private HashSet<String> friends;
 
@@ -53,6 +54,7 @@ public class User implements Serializable {
         this.status = ONLINE;
         try {
             this.pfp = ImageIO.read(new File("data/images/default.png"));
+            this.pfpFormat = "png";
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -70,6 +72,7 @@ public class User implements Serializable {
         this.hashedPassword = user.getHashedPassword();
         this.channels = user.getChannels();
         this.pfp = user.getPfp();
+        this.pfpFormat = user.getPfpFormat();
         this.status = user.getStatus();
         this.friends = user.getFriends();
     }
@@ -133,7 +136,7 @@ public class User implements Serializable {
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
-        ImageIO.write(this.pfp, "png", out);
+        ImageIO.write(this.pfp, this.pfpFormat, out);
     }
  
     /**
@@ -272,6 +275,15 @@ public class User implements Serializable {
      */
     public void setPfp(BufferedImage pfp) {
         this.pfp = pfp;
+    }
+
+    /**
+     * Retrieves the file format of this user's profile picture.
+     * 
+     * @return String, the profile picture's format.
+     */
+    public String getPfpFormat() {
+        return this.pfpFormat;
     }
 
     /**
