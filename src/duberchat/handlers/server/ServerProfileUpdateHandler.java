@@ -36,6 +36,10 @@ public class ServerProfileUpdateHandler implements Handleable {
       server.getImageWriteQueue().add(new FileWriteEvent(user.getPfp(), filePath));
     }
 
+    if (serverUser.getHashedPassword() != user.getHashedPassword()) {
+      serverUser.setHashedPassword(user.getHashedPassword());
+    }
+
     // close down the appropriate client thread if the user logs off
     if (serverUser.getStatus() == 0) {
       server.getCurUsers().get(user).setRunning(false);
