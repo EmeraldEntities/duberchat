@@ -40,24 +40,25 @@ public class ServerProfileUpdateHandler implements Handleable {
       serverUser.setHashedPassword(user.getHashedPassword());
     }
 
+    HashSet<String> alreadyNotified = new HashSet<>();
     // close down the appropriate client thread if the user logs off
     if (serverUser.getStatus() == 0) {
       server.getCurUsers().get(user).setRunning(false);
       server.getCurUsers().remove(user);
+    } else {
+      alreadyNotified.add(serverUser.getUsername());
+      ObjectOutputStream output = server.getCurUsers().get(serverUser).getOutputStream();
+      try {
+        output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
+        output.flush();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
 
     // Send a status update event to every other user in every channel this user is in
     // Also, update every channel's file because the user information has changed. :/
     Iterator<Integer> setItr = serverUser.getChannels().iterator();
-    HashSet<String> alreadyNotified = new HashSet<>();
-    alreadyNotified.add(serverUser.getUsername());
-    ObjectOutputStream output = server.getCurUsers().get(serverUser).getOutputStream();
-    try {
-      output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
-      output.flush();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
     while (setItr.hasNext()) {
       int channelId = setItr.next();
       Channel channel = server.getChannels().get(channelId);
@@ -70,7 +71,7 @@ public class ServerProfileUpdateHandler implements Handleable {
         }
         alreadyNotified.add(member.getUsername());
         System.out.println("hihi " + member.getUsername());
-        output = server.getCurUsers().get(member).getOutputStream();
+        ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
           output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
           output.flush();

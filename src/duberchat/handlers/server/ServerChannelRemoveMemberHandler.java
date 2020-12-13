@@ -27,6 +27,7 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
     Channel serverToDeleteFrom = server.getChannels().get(id);
     String username = event.getUsername();
     User toDelete = server.getAllUsers().get(username);
+    User source = (User) event.getSource();
     
     try {
       // If the user doesn't exist, send back a request failed event
@@ -34,6 +35,8 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
         ObjectOutputStream output = server.getCurUsers().get((User) event.getSource()).getOutputStream();
         output.writeObject(new RequestFailedEvent(new User(toDelete)));
         output.flush();
+        server.getServerFrame().getTextArea()
+            .append(source.getUsername() + " tried to remove a nonexistent user. Sent request failed event\n");
         return;
       }
 
@@ -68,6 +71,8 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
                                                         username));
         output.flush();
       }
+      server.getServerFrame().getTextArea().append(
+          username + " removed from channel " + id + " by " + source.getUsername() + " and events sent to users\n");
     } catch (IOException e) {
       e.printStackTrace();
     }

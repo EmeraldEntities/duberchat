@@ -41,11 +41,13 @@ public class ServerChannelDeleteHandler implements Handleable {
                                                   new Channel(serverToDelete)));
         output.flush();
       }
+      server.getServerFrame().getTextArea()
+          .append("Sent channel deletion events to all users in channel" + toDeleteId + "\n");
 
       //Remove the channel file
       File channelFile = new File("data/channels/" + toDeleteId);
       channelFile.delete();
-      server.getServerFrame().getTextArea().append("channel " + toDeleteId + " was deleted\n");
+      server.getServerFrame().getTextArea().append("channel " + toDeleteId + "file was deleted\n");
     } catch (IOException e) {
       e.printStackTrace();
     }

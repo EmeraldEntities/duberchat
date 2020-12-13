@@ -64,9 +64,9 @@ public class ServerChannelAddMemberHandler implements Handleable {
         output.writeObject(new ChannelAddMemberEvent(new User(source), new Channel(toAddTo), 
                                                      newUserUsername));
         output.flush();
-        server.getServerFrame().getTextArea()
-            .append(newUserUsername + " added to channel with id " + id + " by " + source.getUsername() + "\n");
       }
+      server.getServerFrame().getTextArea().append(
+          newUserUsername + " added to channel " + id + " by " + source.getUsername() + " and events sent to users\n");
     } catch (IOException e) {
       e.printStackTrace();
     }
