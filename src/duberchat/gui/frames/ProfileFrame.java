@@ -66,13 +66,16 @@ public class ProfileFrame extends DynamicGridbagFrame {
         mainPanel.setLayout(layout);
 
         try {
-            BufferedImage currentPfp = user.getPfp();
+            currentPfp = user.getPfp();
             profilePicture = ComponentFactory
                     .createImageLabel(currentPfp.getScaledInstance(128, 128, Image.SCALE_SMOOTH));
 
             currentPfpIcon = new ImageIcon(currentPfp.getScaledInstance(128, 128, Image.SCALE_SMOOTH));
             addPfpIcon = new ImageIcon(ImageIO.read(new File("data/system/plus sign.png")).getScaledInstance(128, 128,
-                    Image.SCALE_SMOOTH));
+            Image.SCALE_SMOOTH));
+
+            profilePicture.setIcon(currentPfpIcon);
+            profilePicture.setBorder(BorderFactory.createRaisedBevelBorder());
 
         } catch (IOException e) {
             System.out.println("SYSTEM: Failed to load profile picture.");
@@ -88,6 +91,7 @@ public class ProfileFrame extends DynamicGridbagFrame {
                     try {
                         currentPfp = ImageIO.read(fc.getSelectedFile().getAbsoluteFile());
                         currentPfpIcon = new ImageIcon(currentPfp.getScaledInstance(128, 128, Image.SCALE_SMOOTH));
+                        profilePicture.setIcon(currentPfpIcon);
                     } catch (IOException e2) {
                         System.out.println("SYSTEM: Failed to load new profile picture");
                     }

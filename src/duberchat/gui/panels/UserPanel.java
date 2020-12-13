@@ -37,11 +37,10 @@ public class UserPanel extends JPanel {
 
         this.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                OtherUserProfileFrame profileFrame = new OtherUserProfileFrame(client, user, e.getLocationOnScreen());
+                OtherUserProfileFrame profileFrame = new OtherUserProfileFrame(client, user, e.getLocationOnScreen(),
+                        isAdmin);
                 profileFrame.setVisible(true);
                 profileFrame.requestFocus();
-
-                System.out.println("User pressed " + user.getUsername());
             }
 
             public void mouseEntered(MouseEvent e) {

@@ -204,6 +204,11 @@ public class LoginFrame extends DynamicGridbagFrame {
             mainPanel.remove(connectingText);
         }
 
+        if (newUserCheckbox.isSelected()) {
+            failedText.setText("Failed! User already exists.");
+        } else {
+            failedText.setText("Failed! Wrong username/password.");
+        }
         addConstrainedComponent(failedText, mainPanel, loginLayout, constraints, 0, 8, 1, 1, GridBagConstraints.NONE,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
 

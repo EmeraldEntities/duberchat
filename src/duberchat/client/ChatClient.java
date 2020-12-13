@@ -100,6 +100,13 @@ public class ChatClient {
 
         this.eventHandlers.put(ChannelAddMemberEvent.class, new ClientChannelAddMemberHandler(this));
         this.eventHandlers.put(ChannelRemoveMemberEvent.class, new ClientChannelRemoveMemberHandler(this));
+        
+        ClientFriendAdjustHandler friendHandler = new ClientFriendAdjustHandler(this);
+        ClientHierarchyHandler hierarchyHandler = new ClientHierarchyHandler(this);
+        this.eventHandlers.put(FriendAddEvent.class, friendHandler);
+        this.eventHandlers.put(FriendRemoveEvent.class, friendHandler);
+        this.eventHandlers.put(ChannelPromoteMemberEvent.class, hierarchyHandler);
+        this.eventHandlers.put(ChannelDemoteMemberEvent.class, hierarchyHandler);
 
         this.eventHandlers.put(ClientProfileUpdateEvent.class, new ClientProfileUpdateHandler(this));
         this.eventHandlers.put(ClientRequestMessageEvent.class, new ClientRequestMessageHandler(this));
@@ -243,6 +250,20 @@ public class ChatClient {
         return this.channels;
     }
 
+    /**
+     * Retrieves this client's friends.
+     * 
+     * @return a {@code HashMap} with this client's friends.
+     */
+    public HashMap<String, User> getFriends() {
+        return this.friends;
+    }
+
+    /**
+     * Checks whether this client has a current channel or not.
+     * 
+     * @return true if this client has a current channel.
+     */
     public boolean hasCurrentChannel() {
         return this.currentChannel != null;
     }
@@ -398,6 +419,19 @@ public class ChatClient {
                 if (this.outgoingEvents.peek() == null) {
                     this.running = false;
                     try {
+                        // Close all JFrames
+                        if (this.hasMainMenuFrame()) {
+                            if (this.mainMenu.hasActiveProfileFrame()) {
+                                this.mainMenu.getProfileFrame().destroy();
+                            }
+
+                            if (this.mainMenu.hasActiveChannelCreateFrame()) {
+                                this.mainMenu.getChannelCreateFrame().destroy();
+                            }
+
+                            this.mainMenu.destroy();
+                        }
+
                         input.close();
                         output.close();
                         servSocket.close();

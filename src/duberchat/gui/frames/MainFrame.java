@@ -17,6 +17,7 @@ import duberchat.events.*;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
 import duberchat.gui.util.FrameFactory;
+import duberchat.gui.panels.FriendPanel;
 import duberchat.gui.panels.ChannelPanel;
 import duberchat.gui.panels.MessagePanel;
 import duberchat.gui.panels.UserPanel;
@@ -33,6 +34,7 @@ public class MainFrame extends DynamicFrame {
     /** The height of a channel panel, in pixels. */
     public static final int SIDE_PANEL_HEIGHT = 50;
     public static final Dimension DEFAULT_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
+
     public static final Color MAIN_COLOR = new Color(60, 60, 60);
     public static final Color PANEL_COLOR = new Color(50, 50, 50);
     public static final Color SIDE_COLOR = new Color(40, 40, 40);
@@ -42,7 +44,9 @@ public class MainFrame extends DynamicFrame {
     public static final Color TEXT_COLOR = new Color(150, 150, 150);
     public static final Color SECONDARY_TEXT_COLOR = new Color(180, 180, 180);
     public static final Color BRIGHT_TEXT_COLOR = new Color(220, 220, 220);
-    
+
+    public static final Font HEADING_FONT = new Font("Courier", Font.BOLD, 16);
+
     private int maxChannelWidth = DEFAULT_SIZE.width / 7;
     private int maxSidePanelGrids = DEFAULT_SIZE.height / SIDE_PANEL_HEIGHT;
     private int maxMessageGrids = DEFAULT_SIZE.height / MESSAGE_PANEL_HEIGHT;
@@ -52,6 +56,8 @@ public class MainFrame extends DynamicFrame {
     private int userOffset = 0;
     /** The index to load messages from, inclusive, to work with gridlayout. */
     private int messageOffset = 0;
+    /** The index to load friends from, inclusive. */
+    private int friendOffset = 0;
 
     private JPanel channelPanel;
     private JPanel userPanel;
@@ -65,11 +71,14 @@ public class MainFrame extends DynamicFrame {
     private ChannelCreateFrame addChannelFrame;
     private ProfileFrame profileFrame;
 
+    private JLabel profileLabel;
     private JButton sendButton, quitButton, profileButton;
     private JButton addUserButton, deleteUserButton;
     private JButton addChannelButton, deleteChannelButton;
     private JButton homeButton;
     private JButton leaveChannelButton;
+    private JButton addFriendButton;
+    private JLabel friendsLabel;
     private JTextField typeField;
 
     private JLabel channelIndicator;
@@ -86,6 +95,11 @@ public class MainFrame extends DynamicFrame {
         this.client = client;
 
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                setExtendedState(JFrame.ICONIFIED);
+            }
+        });
         this.setSize(MainFrame.DEFAULT_SIZE);
         this.setResizable(true);
         this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
@@ -176,6 +190,10 @@ public class MainFrame extends DynamicFrame {
         // TODO: make sure this is right, incorporate this into message loading
         textPanel.addMouseWheelListener(new MouseWheelListener() {
             public void mouseWheelMoved(MouseWheelEvent e) {
+                if (!client.hasCurrentChannel()) {
+                    return;
+                }
+
                 if (e.getWheelRotation() > 0) {
                     if (messageOffset > 0) {
                         messageOffset--;
@@ -187,12 +205,6 @@ public class MainFrame extends DynamicFrame {
                     }
 
                     Channel curChannel = client.getCurrentChannel();
-                    // System.out.println(curChannel.getMessages().size() > maxMessageGrids
-                    // && curChannel.getMessages().size() - messageOffset > maxMessageGrids);
-                    // System.out.println(curChannel.getMessages().size() >=
-                    // Channel.LOCAL_SAVE_AMT);
-                    // System.out.println((curChannel.getMessages().size() - messageOffset) <=
-                    // maxMessageGrids);
 
                     if (curChannel.getMessages().size() > maxMessageGrids
                             && curChannel.getMessages().size() - messageOffset > maxMessageGrids) {
@@ -204,6 +216,26 @@ public class MainFrame extends DynamicFrame {
                         client.offerEvent(new ClientRequestMessageEvent(client.getUser(),
                                 curChannel.getMessages().get(0), client.getCurrentChannel()));
                         requestedMessages = true;
+                    }
+                }
+            }
+        });
+        textPanel.addMouseWheelListener(new MouseWheelListener() {
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                if (client.hasCurrentChannel()) {
+                    return;
+                }
+
+                if (e.getWheelRotation() < 0) {
+                    if (friendOffset > 0) {
+                        friendOffset--;
+                        onlyReloadFriends();
+                    }
+                } else {
+                    if (client.getFriends().size() > maxMessageGrids
+                            && client.getFriends().size() - userOffset > maxSidePanelGrids) {
+                        friendOffset++;
+                        onlyReloadFriends();
                     }
                 }
             }
@@ -264,6 +296,8 @@ public class MainFrame extends DynamicFrame {
         textPanel.setBackground(MAIN_COLOR);
 
         // INITIALIZE BUTTONS ====================================================
+        profileLabel = ComponentFactory.createLabel(this.client.getUser().getUsername(), TEXT_COLOR);
+        profileLabel.setFont(HEADING_FONT);
         profileButton = ComponentFactory.createButton("", TEXT_COLOR, PANEL_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
@@ -279,6 +313,7 @@ public class MainFrame extends DynamicFrame {
         profileButton.setBorder(null);
         profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
         profileConfigPanel.add(profileButton);
+        profileConfigPanel.add(profileLabel);
 
         deleteChannelButton = ComponentFactory.createImageButton("DELETE CHANNEL", "data/system/trash.png", 20, 20,
                 TEXT_COLOR, PANEL_COLOR,
@@ -304,19 +339,14 @@ public class MainFrame extends DynamicFrame {
         addUserButton = ComponentFactory.createImageButton("ADD USER", "data/system/adduser.png", 20, 20, TEXT_COLOR,
                 PANEL_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
+                        JLabel label = ComponentFactory.createLabel(
+                                "Add a username to add, starting with @ (eg. @EmeraldPhony)",
                         BRIGHT_TEXT_COLOR);
                 JTextField input = ComponentFactory.createTextBox(20);
                 JButton submit = ComponentFactory.createButton("Add User", new ActionListener() {
                     public void actionPerformed(ActionEvent evt2) {
-
-                        if (input.getText() != "") {
-                            client.offerEvent(new ChannelAddMemberEvent(client.getUser(), client.getCurrentChannel(),
-                                    input.getText().replaceFirst("@", "")));
-
-                            System.out.println("SYSTEM: Adding user " + input.getText().replaceFirst("@", ""));
-                        }
-                    }
+                                addUserToChannel(input.getText());
+                            }
                 });
 
                 JFrame addUser = FrameFactory.createRequestFrame("Add user", MAIN_COLOR, label, input, submit);
@@ -327,7 +357,8 @@ public class MainFrame extends DynamicFrame {
         deleteUserButton = ComponentFactory.createImageButton("REMOVE USER", "data/system/removeuser.png", 20, 20,
                 TEXT_COLOR, PANEL_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                JLabel label = ComponentFactory.createLabel("Add a username, starting with @ (eg. @EmeraldPhony)",
+                        JLabel label = ComponentFactory.createLabel(
+                                "Add a username to remove, starting with @ (eg. @EmeraldPhony)",
                         BRIGHT_TEXT_COLOR);
                 JTextField input = ComponentFactory.createTextBox(20);
                 JButton submit = ComponentFactory.createButton("Remove User", new ActionListener() {
@@ -413,6 +444,33 @@ public class MainFrame extends DynamicFrame {
         });
         homeButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
 
+        // INITIALIZE FRIENDS =================================================
+        friendsLabel = ComponentFactory.createLabel("Friends", TEXT_COLOR);
+        friendsLabel.setFont(HEADING_FONT);
+        try {
+            BufferedImage image = ImageIO.read(new File("data/system/user.png"));
+            friendsLabel.setIcon(new ImageIcon(image.getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
+        } catch (IOException e) {
+            System.out.println("SYSTEM: Could not load friend image!");
+        }
+        addFriendButton = ComponentFactory.createImageButton("ADD USER", "data/system/adduser.png", 20, 20, TEXT_COLOR,
+                PANEL_COLOR, new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        JLabel label = ComponentFactory.createLabel(
+                                "Add a friend's username, starting with @ (eg. @EmeraldPhony)", BRIGHT_TEXT_COLOR);
+                        JTextField input = ComponentFactory.createTextBox(20);
+                        JButton submit = ComponentFactory.createButton("Add Friend!", new ActionListener() {
+                            public void actionPerformed(ActionEvent evt2) {
+                                addFriend(input.getText());
+                            }
+                        });
+
+                        JFrame addFriend = FrameFactory.createRequestFrame("Add friend", MAIN_COLOR, label, input,
+                                submit);
+                        addFriend.setVisible(true);
+                    }
+                });
+
         // INITIALIZE TYPING AREA =================================================
         typeField = ComponentFactory.createTextBox(20, BRIGHT_TEXT_COLOR, TEXTBOX_COLOR,
                 new TextLengthFilter(Message.MAX_LENGTH));
@@ -429,7 +487,7 @@ public class MainFrame extends DynamicFrame {
         });
 
         channelIndicator = ComponentFactory.createLabel("No channel selected.", SECONDARY_TEXT_COLOR);
-        channelIndicator.setFont(new Font("Courier", Font.BOLD, 16));
+        channelIndicator.setFont(HEADING_FONT);
     }
 
     private void sendMessage(ChatClient client) {
@@ -463,6 +521,12 @@ public class MainFrame extends DynamicFrame {
             this.reloadMessages();
         } else if (source instanceof ChannelAddMemberEvent || source instanceof ChannelRemoveMemberEvent) {
             this.reloadUsers();
+        } else if (source instanceof ChannelHierarchyChangeEvent) {
+            this.reloadUsers();
+            this.reloadMessages();
+        } else if (source instanceof ClientProfileUpdateEvent) {
+            this.reloadUsers();
+            this.reloadProfile();
         } else if (source instanceof ClientRequestMessageEvent) {
             this.resetRequestedMessages();
             this.reloadMessages();
@@ -471,8 +535,11 @@ public class MainFrame extends DynamicFrame {
         } else if (source instanceof ChannelEvent) {
             this.reload();
             return;
+        } else if (source instanceof FriendEvent) {
+            this.reloadFriends();
         } else {
             this.reload();
+            return;
         }
 
         this.repaint();
@@ -493,6 +560,9 @@ public class MainFrame extends DynamicFrame {
             typeField.setText("");
             channelIndicator.setText("Channel: " + client.getCurrentChannel().getChannelName());
 
+            channelConfigPanel.remove(friendsLabel);
+            channelConfigPanel.remove(addFriendButton);
+
             channelConfigPanel.add(leaveChannelButton);
             channelConfigPanel.add(addUserButton);
             if (client.getCurrentChannel().getAdminUsers().contains(client.getUser())) {
@@ -508,23 +578,31 @@ public class MainFrame extends DynamicFrame {
             channelConfigPanel.remove(addUserButton);
             channelConfigPanel.remove(deleteUserButton);
             channelConfigPanel.remove(deleteChannelButton);
+
+            channelConfigPanel.add(friendsLabel);
+            channelConfigPanel.add(addFriendButton);
         }
 
         this.reloadMessages();
         this.reloadUsers();
         this.reloadChannels();
+        this.reloadFriends();
 
         this.repaint();
         this.revalidate();
     }
 
+    private synchronized void reloadProfile() {
+        profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
+    }
+
     // TODO: make this a lot better
     private synchronized void reloadMessages() {
-        textPanel.removeAll();
-
         if (client.getCurrentChannel() == null) {
             return;
         }
+
+        textPanel.removeAll();
 
         ArrayList<Message> messages = client.getCurrentChannel().getMessages();
 
@@ -562,10 +640,6 @@ public class MainFrame extends DynamicFrame {
 
         Channel curChannel = client.getCurrentChannel();
 
-        // int userIndex = 0;
-        // System.out.println("offset: " + userOffset + " " + (maxSidePanelGrids +
-        // userOffset));
-
         Iterator<User> userIterator = client.getCurrentChannel().getUsers().values().iterator();
         for (int userIndex = 0; userIterator.hasNext(); userIndex++) {
             User u = userIterator.next();
@@ -574,20 +648,9 @@ public class MainFrame extends DynamicFrame {
                 continue;
             }
 
-            // System.out.println(u.getUsername());
             userPanel.add(new UserPanel(client, u, curChannel.getAdminUsers().contains(u)));
             userPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
         }
-
-        // for (User u : curChannel.getUsers().values()) {
-        // if (userIndex < userOffset || userIndex >= maxSidePanelGrids + userOffset) {
-        // continue;
-        // }
-
-        // System.out.println(u.getUsername());
-        // userPanel.add(new UserPanel(client, u,
-        // curChannel.getAdminUsers().contains(u)));
-        // userPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
     }
 
     private synchronized void reloadChannels() {
@@ -610,7 +673,7 @@ public class MainFrame extends DynamicFrame {
             for (int channelIndex = 0; channelIterator.hasNext(); channelIndex++) {
                 Channel c = channelIterator.next();
 
-                if (channelIndex < channelOffset || channelIndex >= (maxSidePanelGrids - 2) + channelOffset) {
+                if (channelIndex < channelOffset || channelIndex >= (maxSidePanelGrids - 1) + channelOffset) {
                     continue;
                 }
 
@@ -623,6 +686,25 @@ public class MainFrame extends DynamicFrame {
                 channelPanel.add(new ChannelPanel(this.client, c, defaultColor));
                 channelPanel.setMaximumSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
             }
+        }
+    }
+
+    private synchronized void reloadFriends() {
+        if (client.getCurrentChannel() != null) {
+            return;
+        }
+
+        textPanel.removeAll();
+
+        Iterator<User> friendIterator = this.client.getFriends().values().iterator();
+        for (int friendIndex = 0; friendIterator.hasNext(); friendIndex++) {
+            User friend = friendIterator.next();
+
+            if (friendIndex < friendOffset || friendIndex >= maxMessageGrids + friendOffset) {
+                continue;
+            }
+
+            textPanel.add(new FriendPanel(this.client, friend, textPanel.getWidth()));
         }
     }
 
@@ -642,6 +724,13 @@ public class MainFrame extends DynamicFrame {
 
     private void onlyReloadMessages() {
         this.reloadMessages();
+
+        this.repaint();
+        this.revalidate();
+    }
+
+    private void onlyReloadFriends() {
+        this.reloadFriends();
 
         this.repaint();
         this.revalidate();
@@ -688,5 +777,22 @@ public class MainFrame extends DynamicFrame {
         this.messageOffset = 0;
         this.reload();
         this.resetRequestedMessages();
+    }
+
+    private void addUserToChannel(String user) {
+        if (user.equals("") || user.equals(client.getUser().getUsername())) {
+            return;
+        }
+
+        client.offerEvent(
+                new ChannelAddMemberEvent(client.getUser(), client.getCurrentChannel(), user.replaceFirst("@", "")));
+    }
+
+    private void addFriend(String user) {
+        if (user.equals("") || user.equals(client.getUser().getUsername())) {
+            return;
+        }
+
+        client.offerEvent(new FriendAddEvent(client.getUser(), user.replaceFirst("@", "")));
     }
 }

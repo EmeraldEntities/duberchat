@@ -147,7 +147,7 @@ public class ChatServer {
                         FileOutputStream fileOut = new FileOutputStream(filePath);
                         ObjectOutputStream out = new ObjectOutputStream(fileOut);
                         ImageIO.write((BufferedImage) (writeInfo.getObjectToWrite()),
-                                       Pattern.compile(".+\\.(\\w+)").matcher(filePath).group(1),
+                                Pattern.compile(".+\\.(\\w+)").matcher(filePath).group(0),
                                        out);
                     } catch (IOException e) {
                         e.printStackTrace();

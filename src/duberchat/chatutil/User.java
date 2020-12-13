@@ -24,7 +24,7 @@ import javax.imageio.ImageIO;
  * @author Joseph Wang, Paula Yuan
  */
 public class User implements Serializable {
-    static final long serialVersionUID = 7L;
+    static final long serialVersionUID = 15L;
 
     public static final int OFFLINE = 0;
     public static final int ONLINE = 1;
@@ -252,7 +252,7 @@ public class User implements Serializable {
         if (status.equals("away")) {
             return User.AWAY;
         }
-        if (status.equals("dnd")) {
+        if (status.equals("DND")) {
             return User.DND;
         }
 
