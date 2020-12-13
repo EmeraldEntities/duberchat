@@ -45,6 +45,7 @@ public class ServerChannelDeleteHandler implements Handleable {
       //Remove the channel file
       File channelFile = new File("data/channels/" + toDeleteId);
       channelFile.delete();
+      server.getServerFrame().getTextArea().append("channel " + toDeleteId + " was deleted\n");
     } catch (IOException e) {
       e.printStackTrace();
     }

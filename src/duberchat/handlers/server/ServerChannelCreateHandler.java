@@ -97,6 +97,8 @@ public class ServerChannelCreateHandler implements Handleable {
             output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), 
                                                       usersFound));
             output.flush();
+            server.getServerFrame().getTextArea().append(user1 + " + " + user2 + 
+                                                         ": DM found, thus new DM not created.\n");
           } catch (IOException e) {
             e.printStackTrace();
           }
@@ -132,6 +134,7 @@ public class ServerChannelCreateHandler implements Handleable {
         output = server.getCurUsers().get(user).getOutputStream();
         output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), usersFound));
         output.flush();
+        server.getServerFrame().getTextArea().append("New channel made by " + creator.getUsername() + "\n");
       }
 
     } catch (IOException e) {

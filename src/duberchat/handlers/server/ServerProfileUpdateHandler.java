@@ -50,6 +50,14 @@ public class ServerProfileUpdateHandler implements Handleable {
     // Also, update every channel's file because the user information has changed. :/
     Iterator<Integer> setItr = serverUser.getChannels().iterator();
     HashSet<String> alreadyNotified = new HashSet<>();
+    alreadyNotified.add(serverUser.getUsername());
+    ObjectOutputStream output = server.getCurUsers().get(serverUser).getOutputStream();
+    try {
+      output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
+      output.flush();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     while (setItr.hasNext()) {
       int channelId = setItr.next();
       Channel channel = server.getChannels().get(channelId);
@@ -61,7 +69,8 @@ public class ServerProfileUpdateHandler implements Handleable {
           continue;
         }
         alreadyNotified.add(member.getUsername());
-        ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
+        System.out.println("hihi " + member.getUsername());
+        output = server.getCurUsers().get(member).getOutputStream();
         try {
           output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
           output.flush();
