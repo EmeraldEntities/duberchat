@@ -134,8 +134,9 @@ public class ServerChannelCreateHandler implements Handleable {
         output = server.getCurUsers().get(user).getOutputStream();
         output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), usersFound));
         output.flush();
-        server.getServerFrame().getTextArea().append("New channel made by " + creator.getUsername() + "\n");
       }
+      server.getServerFrame().getTextArea()
+          .append("New channel made by " + creator.getUsername() + " and events sent to users\n");
 
     } catch (IOException e) {
       e.printStackTrace();

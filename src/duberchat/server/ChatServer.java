@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,8 +36,8 @@ public class ChatServer {
     static boolean running = true; // controls if the server is accepting clients
     private HashMap<Integer, Channel> channels; // channel id to all channels
     private int numChannelsCreated;
-    private HashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
-    private HashMap<String, User> allUsers; // map of all the usernames to their users
+    private ConcurrentHashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
+    private ConcurrentHashMap<String, User> allUsers; // map of all the usernames to their users
     private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
     private ConcurrentLinkedQueue<FileWriteEvent> fileWriteQueue;
     private ConcurrentLinkedQueue<FileWriteEvent> imageWriteQueue;
@@ -45,9 +46,9 @@ public class ChatServer {
     private ServerFrame serverFrame;
 
     public ChatServer() {
-        this.curUsers = new HashMap<>();
+        this.curUsers = new ConcurrentHashMap<>();
         this.channels = new HashMap<>();
-        this.allUsers = new HashMap<>();
+        this.allUsers = new ConcurrentHashMap<>();
         this.eventQueue = new ConcurrentLinkedQueue<>();
         this.fileWriteQueue = new ConcurrentLinkedQueue<>();
         this.imageWriteQueue= new ConcurrentLinkedQueue<>();
@@ -211,11 +212,11 @@ public class ChatServer {
         this.numChannelsCreated = newNum;
     }
 
-    public HashMap<String, User> getAllUsers() {
+    public ConcurrentHashMap<String, User> getAllUsers() {
         return this.allUsers;
     }
 
-    public HashMap<User, ConnectionHandler> getCurUsers() {
+    public ConcurrentHashMap<User, ConnectionHandler> getCurUsers() {
         return this.curUsers;
     }
 
