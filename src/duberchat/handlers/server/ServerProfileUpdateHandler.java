@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
@@ -37,18 +38,27 @@ public class ServerProfileUpdateHandler implements Handleable {
       server.getFileWriteQueue().add(new FileWriteEvent(user.getPfp(), filePath));
     }
 
+    // close down the appropriate client thread if the user logs off
+    if (serverUser.getStatus() == 0) {
+      server.getCurUsers().get(user).setRunning(false);
+      server.getCurUsers().remove(user);
+    }
+
     // Send a status update event to every other user in every channel this user is in
     // Also, update every channel's file because the user information has changed. :/
     Iterator<Integer> setItr = serverUser.getChannels().iterator();
+    HashSet<String> alreadyNotified = new HashSet<>();
     while (setItr.hasNext()) {
       int channelId = setItr.next();
       Channel channel = server.getChannels().get(channelId);
       Iterator<User> itr = channel.getUsers().values().iterator();
       while (itr.hasNext()) {
         User member = itr.next();
-        if (member.equals(serverUser) || !server.getCurUsers().containsKey(member)) {
+        if (!server.getCurUsers().containsKey(member) ||
+            alreadyNotified.contains(member.getUsername())) {
           continue;
         }
+        alreadyNotified.add(member.getUsername());
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
           output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
@@ -64,11 +74,5 @@ public class ServerProfileUpdateHandler implements Handleable {
     // Update the user file
     String userFilePath = "data/users/" + user.getUsername();
     server.getFileWriteQueue().add(new FileWriteEvent(serverUser, userFilePath));
-
-    // close down the appropriate client thread if the user logs off
-    if (serverUser.getStatus() == 0) {
-      server.getCurUsers().get(user).setRunning(false);
-      server.getCurUsers().remove(user);
-    }
   }
 }
