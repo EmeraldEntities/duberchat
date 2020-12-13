@@ -306,7 +306,7 @@ public class ChatServer {
                 try {
                     // If the username is already taken, send auth failed event
                     if (ChatServer.this.allUsers.containsKey(username)) {
-                        ChatServer.this.serverFrame.getTextArea().append("Authentication failed\n");
+                        ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication failed\n");
                         output.writeObject(new AuthFailedEvent(event));
                         output.flush();
                         return;
@@ -316,15 +316,12 @@ public class ChatServer {
                     user = new User(username, password);
 
                     // make new user file
-                    FileOutputStream fileOut = new FileOutputStream("data/users/" + username);
-                    ObjectOutputStream out = new ObjectOutputStream(fileOut);
-                    out.writeObject(user);
-                    out.close();
+                    fileWriteQueue.add(new FileWriteEvent(user, "data/users/" + username));
 
                     // TODO: NOTE: NOT THREAD SAFE
                     ChatServer.this.allUsers.put(username, user);
                     ChatServer.this.curUsers.put(user, this);
-                    ChatServer.this.serverFrame.getTextArea().append("Authentication succeded\n");
+                    ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication succeded\n");
                     output.writeObject(new AuthSucceedEvent(event, user, 
                                                             new HashMap<Integer, Channel>(), 
                                                             new HashMap<String, User>()));
@@ -334,7 +331,6 @@ public class ChatServer {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
                 return;
             }
 
@@ -396,6 +392,7 @@ public class ChatServer {
                         friendsMap.put(friendUsername, friend);
                     }
                 }
+                ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication succeded\n");
                 output.writeObject(new AuthSucceedEvent(event, user, userChannels, friendsMap));
                 output.flush();
             } catch (IOException e1) {

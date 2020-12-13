@@ -32,7 +32,7 @@ public class ServerProfileUpdateHandler implements Handleable {
 
     if (!serverUser.pfpEquals(user.getPfp())) {
       serverUser.setPfp(user.getPfp());
-      String filePath = "data/images/" + serverUser.getUsername();
+      String filePath = "data/images/" + serverUser.getUsername() + "." + serverUser.getPfpFormat();
       server.getImageWriteQueue().add(new FileWriteEvent(user.getPfp(), filePath));
     }
 
