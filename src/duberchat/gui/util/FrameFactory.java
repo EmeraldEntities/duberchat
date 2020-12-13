@@ -113,9 +113,9 @@ public class FrameFactory {
             addConstrainedComponent(text, mainPanel, layout, constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL,
                     GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
             addConstrainedComponent(confirmButton, mainPanel, layout, constraints, 0, 1, 1, 1, 1.0, 1.0,
-                    GridBagConstraints.HORIZONTAL, GridBagConstraints.PAGE_END, new Insets(8, 8, 8, 8));
+                    GridBagConstraints.HORIZONTAL, GridBagConstraints.LINE_END, new Insets(8, 8, 8, 8));
             addConstrainedComponent(denyButton, mainPanel, layout, constraints, 1, 1, 1, 1, 1.0, 1.0,
-                    GridBagConstraints.HORIZONTAL, GridBagConstraints.PAGE_START, new Insets(8, 8, 8, 8));
+                    GridBagConstraints.HORIZONTAL, GridBagConstraints.LINE_START, new Insets(8, 8, 8, 8));
 
             this.add(mainPanel);
         }

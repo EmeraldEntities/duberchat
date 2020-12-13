@@ -373,6 +373,8 @@ public class ChatClient {
 
     /**
      * Offers an event to this client's output queue.
+     * 
+     * @param event the event to be enqueued.
      */
     public synchronized void offerEvent(SerializableEvent event) {
         this.outgoingEvents.offer(event);

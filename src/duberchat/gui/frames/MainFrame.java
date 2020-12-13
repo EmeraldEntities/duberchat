@@ -33,22 +33,42 @@ public class MainFrame extends DynamicFrame {
     public static final int MESSAGE_PANEL_HEIGHT = 45;
     /** The height of a channel panel, in pixels. */
     public static final int SIDE_PANEL_HEIGHT = 50;
+    /** The default size of this frame. */
     public static final Dimension DEFAULT_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
+    /** The main background color of this application. */
     public static final Color MAIN_COLOR = new Color(60, 60, 60);
+    /** An alternative "panel color" of this application. */
     public static final Color PANEL_COLOR = new Color(50, 50, 50);
+    /** An alternative "side color" of this application. */
     public static final Color SIDE_COLOR = new Color(40, 40, 40);
+    /** An alternative "dark side color" of this application. */
     public static final Color DARK_SIDE_COLOR = new Color(20, 20, 20);
-    public static final Color DARK_TEXTBOX_COLOR = new Color(40, 40, 40);
+    /** The main textbox color of this application. */
     public static final Color TEXTBOX_COLOR = new Color(80, 80, 80);
+    /** An alternative "dark textbox color" of this application. */
+    public static final Color DARK_TEXTBOX_COLOR = new Color(40, 40, 40);
+    /** The main text color of this application. */
     public static final Color TEXT_COLOR = new Color(150, 150, 150);
+    /** An alternative "secondary text color" of this application. */
     public static final Color SECONDARY_TEXT_COLOR = new Color(180, 180, 180);
+    /** An alternative "bright text color" of this application. */
     public static final Color BRIGHT_TEXT_COLOR = new Color(220, 220, 220);
 
+    /** A heading font for the important messages in this frame. */
     public static final Font HEADING_FONT = new Font("Courier", Font.BOLD, 16);
 
+    /** The maximum width a channel can be. */
     private int maxChannelWidth = DEFAULT_SIZE.width / 7;
+    /**
+     * The max amount of side panels that can be added to the side panels without
+     * squishing.
+     */
     private int maxSidePanelGrids = DEFAULT_SIZE.height / SIDE_PANEL_HEIGHT;
+    /**
+     * The max amount of message panels that can be added to the text panel without
+     * squishing.
+     */
     private int maxMessageGrids = DEFAULT_SIZE.height / MESSAGE_PANEL_HEIGHT;
     /** The index to load channels from, inclusive. */
     private int channelOffset = 0;
@@ -59,20 +79,32 @@ public class MainFrame extends DynamicFrame {
     /** The index to load friends from, inclusive. */
     private int friendOffset = 0;
 
+    /** The panel for all the channels. */
     private JPanel channelPanel;
+    /** The panel for all the users. */
     private JPanel userPanel;
+    /** The bottom panel with the input box. */
     private JPanel typingPanel;
+    /** The top panel with profile/config options. */
     private JPanel configPanel;
+    /** The panel for profile-related components. */
     private JPanel profileConfigPanel;
+    /** The panel for all channel-related config components. */
     private JPanel channelConfigPanel;
+    /** The panel for all the messages/friends. */
     private JPanel textPanel;
+    /** The panel for the side channel create and home buttons. */
     private JPanel sideButtonPanel;
-
+    
+    /** This frame's custom frame for adding channels. */
     private ChannelCreateFrame addChannelFrame;
+    /** This frame's custom frame for editing this user's profile information. */
     private ProfileFrame profileFrame;
 
     private JLabel profileLabel;
-    private JButton sendButton, quitButton, profileButton;
+    private JButton profileButton;
+    private JButton sendButton;
+    private JButton quitButton;
     private JButton addUserButton, deleteUserButton;
     private JButton addChannelButton, deleteChannelButton;
     private JButton homeButton;
@@ -85,7 +117,8 @@ public class MainFrame extends DynamicFrame {
 
     private ChatClient client;
 
-    private boolean requestedMessages = false;
+    /** Whether this client has already requested messages from this frame. */
+    private boolean requestedMessages = false; // important to prevent event spam
 
     // private ArrayList<ChannelPanel> activeChannelPanels;
     // private ArrayList<UserPanel> activeUserPanels;
@@ -535,7 +568,9 @@ public class MainFrame extends DynamicFrame {
             this.reloadMessages();
         } else if (source instanceof ClientProfileUpdateEvent) {
             this.reloadUsers();
-            this.reloadProfile();
+            if (this.client.getUser().equals(source.getSource())) {
+                this.reloadProfile();
+            }
         } else if (source instanceof ClientRequestMessageEvent) {
             this.resetRequestedMessages();
             this.reloadMessages();
@@ -602,18 +637,7 @@ public class MainFrame extends DynamicFrame {
     }
 
     private synchronized void reloadProfile() {
-        try {
-            BufferedImage image = ImageIO.read(new File("data/system/trash.png"));
-            profileButton.setIcon(new ImageIcon(image.getScaledInstance(128, -1, Image.SCALE_SMOOTH)));
-        } catch (IOException e) {
-            System.out.println("SYSTEM: Could not load label image!");
-        }
-
-        // profileButton.setIcon(new
-        // ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48,
-        // Image.SCALE_SMOOTH)));
-        // profileButton.repaint();
-        // profileButton.revalidate();
+        profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
     }
 
     // TODO: make this a lot better
@@ -669,7 +693,7 @@ public class MainFrame extends DynamicFrame {
             }
 
             userPanel.add(new UserPanel(client, u, curChannel.getAdminUsers().contains(u)));
-            userPanel.setMaximumSize(new Dimension(SIDE_PANEL_HEIGHT, maxChannelWidth));
+            userPanel.setMaximumSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
         }
     }
 
@@ -728,6 +752,9 @@ public class MainFrame extends DynamicFrame {
         }
     }
 
+    /**
+     * Exclusively reloads channels, and reverifies this frame.
+     */
     private void onlyReloadChannels() {
         this.reloadChannels();
 
@@ -735,6 +762,9 @@ public class MainFrame extends DynamicFrame {
         this.revalidate();
     }
 
+    /**
+     * Exclusively reloads users, and reverifies this frame.
+     */
     private void onlyReloadUsers() {
         this.reloadUsers();
 
@@ -742,6 +772,9 @@ public class MainFrame extends DynamicFrame {
         this.revalidate();
     }
 
+    /**
+     * Exclusively reloads messages, and reverifies this frame.
+     */
     private void onlyReloadMessages() {
         this.reloadMessages();
 
@@ -749,6 +782,9 @@ public class MainFrame extends DynamicFrame {
         this.revalidate();
     }
 
+    /**
+     * Exclusively reloads friends, and reverifies this frame.
+     */
     private void onlyReloadFriends() {
         this.reloadFriends();
 
@@ -756,22 +792,49 @@ public class MainFrame extends DynamicFrame {
         this.revalidate();
     }
 
+    /**
+     * Checks if this frame has an active {@code ChannelCreateFrame}.
+     * 
+     * @return true if this frame has an active {@code ChannelCreateFrame}.
+     */
     public boolean hasActiveChannelCreateFrame() {
         return (this.addChannelFrame != null && this.addChannelFrame.isVisible());
     }
 
+    /**
+     * Checks if this frame has an active {@code ProfileFrame}.
+     * 
+     * @return true if this frame has an active {@code ProfileFrame}.
+     */
     public boolean hasActiveProfileFrame() {
         return (this.profileFrame != null && this.profileFrame.isVisible());
     }
 
+    /**
+     * Retrieves this frame's {@code ChannelCreateFrame}.
+     * 
+     * @return this frame's {@code ChannelCreateFrame}.
+     */
     public ChannelCreateFrame getChannelCreateFrame() {
         return this.addChannelFrame;
     }
 
+    /**
+     * Retrieves this frame's {@code ProfileFrame}.
+     * 
+     * @return this frame's {@code ProfileFrame}.
+     */
     public ProfileFrame getProfileFrame() {
         return this.profileFrame;
     }
 
+    /**
+     * Attempts to close this frame's {@code ChannelCreateFrame}, and returns a
+     * boolean based on success.
+     * 
+     * @return true if this channel's {@code ChannelCreateFrame} was successfully
+     *         closed.
+     */
     public boolean closeChannelCreateFrame() {
         if (this.addChannelFrame == null) {
             return false;
@@ -789,16 +852,29 @@ public class MainFrame extends DynamicFrame {
         super.destroy();
     }
 
+    /**
+     * Resets this frame's requestedMessages flag, allowing the client to request
+     * more messages again.
+     */
     public void resetRequestedMessages() {
         this.requestedMessages = false;
     }
 
+    /**
+     * Swaps this frame's currently displaying channel to the client's current
+     * channel, and reloads all the side components.
+     */
     public void switchChannelsToCurrent() {
         this.messageOffset = 0;
         this.reload();
         this.resetRequestedMessages();
     }
 
+    /**
+     * Adds a specified user to the client's current channel.
+     * 
+     * @param user the username of the user to add.
+     */
     private void addUserToChannel(String user) {
         if (user.equals("") || user.equals(client.getUser().getUsername())) {
             return;
@@ -811,6 +887,11 @@ public class MainFrame extends DynamicFrame {
                 new ChannelAddMemberEvent(clientUser, curChannel, user.replaceFirst("@", "")));
     }
 
+    /**
+     * Adds a specified user to the client's friend list.
+     * 
+     * @param user the username of the user to add.
+     */
     private void addFriend(String user) {
         if (user.equals("") || user.equals(client.getUser().getUsername())) {
             return;

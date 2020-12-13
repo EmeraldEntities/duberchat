@@ -71,10 +71,7 @@ public class ClientProfileUpdateHandler implements Handleable {
             adjustProperties(user, this.client.getFriends().get(user.getUsername()));
         }
 
-        if (this.client.hasCurrentChannel()
-                && this.client.getCurrentChannel().getUsers().containsKey(user.getUsername())) {
-            this.client.getMainMenuFrame().reload(event);
-        }
+        this.client.getMainMenuFrame().reload(event);
     }
 
     /**

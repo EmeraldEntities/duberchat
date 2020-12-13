@@ -51,6 +51,12 @@ public class ClientHierarchyHandler implements Handleable {
         Channel updatedChannel = hierarchyEvent.getChannel();
         // TODO: does this kill pointers?
         HashSet<User> updatedUsers = updatedChannel.getAdminUsers();
+        Channel localChannel = this.client.getChannels().get(updatedChannel.getChannelId());
+        User toRemove = localChannel.getUsers().get(hierarchyEvent.getUsername());
+
+        if (updatedUsers.contains(toRemove)) {
+            updatedUsers.remove(toRemove);
+        }
 
         this.client.getChannels().get(updatedChannel.getChannelId()).setAdminUsers(updatedUsers);
         if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(updatedChannel)) {
