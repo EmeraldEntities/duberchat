@@ -25,13 +25,15 @@ public class ServerChannelAddMemberHandler implements Handleable {
     Channel serverToAddTo = server.getChannels().get(toAddTo.getChannelId());
     String newUserUsername = event.getNewUserUsername();
     User toAdd = server.getAllUsers().get(newUserUsername);
+    User source = (User) event.getSource();
     int id = toAddTo.getChannelId();
     
     try {
       // If the user doesn't exist, send back a request failed event
       if (toAdd == null) {
         ObjectOutputStream output = server.getCurUsers().get((User) event.getSource()).getOutputStream();
-        output.writeObject(new RequestFailedEvent((User) event.getSource()));
+        output.writeObject(new RequestFailedEvent(new User(source)));
+        output.flush();
         return;
       }
       
@@ -57,7 +59,7 @@ public class ServerChannelAddMemberHandler implements Handleable {
           continue;
         }
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
-        output.writeObject(new ChannelAddMemberEvent((User) event.getSource(), toAddTo, 
+        output.writeObject(new ChannelAddMemberEvent(new User(source), new Channel(toAddTo), 
                                                      newUserUsername));
         output.flush();
       }

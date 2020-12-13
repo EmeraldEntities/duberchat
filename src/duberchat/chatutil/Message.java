@@ -22,12 +22,12 @@ public class Message implements Serializable {
         this.associatedChannel = channel;
     }
 
-    public Message(Message oldMsg, String newMsg) {
-        this.senderUsername = oldMsg.getSenderUsername();
-        this.message = newMsg;
-        this.messageId = oldMsg.getMessageId();
-        this.timestamp = oldMsg.getTimestamp();
-        this.associatedChannel = oldMsg.getChannel();
+    public Message(Message msg) {
+        this.senderUsername = msg.getSenderUsername();
+        this.message = msg.getMessage();
+        this.messageId = msg.getMessageId();
+        this.timestamp = msg.getTimestamp();
+        this.associatedChannel = msg.getChannel();
     }
 
     /**

@@ -231,7 +231,9 @@ public class MessagePanel extends JPanel {
         msg.setMessage(newText);
 
         User clientUser = new User(client.getUser());
-        client.offerEvent(new MessageEditEvent(clientUser, new Message(msg, newText)));
+        Message newMessage = new Message(msg);
+        newMessage.setMessage(newText);
+        client.offerEvent(new MessageEditEvent(clientUser, newMessage));
         System.out.println("SYSTEM: edited!");
 
         resetEditingMessage();

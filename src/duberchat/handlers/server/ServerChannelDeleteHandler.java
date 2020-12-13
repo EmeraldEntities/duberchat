@@ -37,7 +37,8 @@ public class ServerChannelDeleteHandler implements Handleable {
         // Give back a channel deletion event to all currently online users in the channel
         if (!server.getCurUsers().containsKey(user)) continue;
         ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
-        output.writeObject(new ChannelDeleteEvent((User) event.getSource(), serverToDelete));
+        output.writeObject(new ChannelDeleteEvent(new User((User) event.getSource()), 
+                                                  new Channel(serverToDelete)));
         output.flush();
       }
 

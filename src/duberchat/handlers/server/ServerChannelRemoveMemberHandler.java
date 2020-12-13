@@ -33,6 +33,7 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
       if (toDelete == null) {
         ObjectOutputStream output = server.getCurUsers().get((User) event.getSource()).getOutputStream();
         output.writeObject(new RequestFailedEvent(new User(toDelete)));
+        output.flush();
         return;
       }
 

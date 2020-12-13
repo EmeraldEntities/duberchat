@@ -113,6 +113,7 @@ public class ChatServer {
         } catch (ClassNotFoundException e1) {
             e1.printStackTrace();
         }
+        this.serverFrame.getTextArea().append("User and channel preloading completed.\n");
 
         this.serverFrame.getTextArea().append("Waiting for a client connection..\n");
 
@@ -124,17 +125,20 @@ public class ChatServer {
                     FileWriteEvent writeInfo = fileWriteQueue.poll();
                     if (writeInfo == null) continue;
                     try {
-                        FileOutputStream fileOut = new FileOutputStream(writeInfo.getFilePath());
+                        String filePath = writeInfo.getFilePath();
+                        FileOutputStream fileOut = new FileOutputStream(filePath);
                         ObjectOutputStream out = new ObjectOutputStream(fileOut);
                         out.writeObject(writeInfo.getObjectToWrite());
                         out.flush();
                         out.close();
+                        ChatServer.this.serverFrame.getTextArea().append("Wrote to file: " + filePath + "\n");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
         });
+        this.serverFrame.getTextArea().append("Started file writing thread.\n");
         fileWriteThread.start();
 
         Thread imageWriteThread = new Thread(new Runnable() {
@@ -149,12 +153,14 @@ public class ChatServer {
                         ImageIO.write((BufferedImage) (writeInfo.getObjectToWrite()),
                                 Pattern.compile(".+\\.(\\w+)").matcher(filePath).group(0),
                                        out);
+                        ChatServer.this.serverFrame.getTextArea().append("Wrote to image file: " + filePath +"\n");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
         });
+        this.serverFrame.getTextArea().append("Started image writing thread.\n");
         imageWriteThread.start();
 
         // start new thread to handle events
@@ -167,6 +173,7 @@ public class ChatServer {
                 }
             }
         });
+        this.serverFrame.getTextArea().append("Started event handler thread." + "\n");
         eventsThread.start();
 
         try {
@@ -176,6 +183,7 @@ public class ChatServer {
                 this.serverFrame.getTextArea().append("Client connected\n");
                 Thread t = new Thread(new ConnectionHandler(client));
                 t.start(); // start the new thread
+                this.serverFrame.getTextArea().append("Started new client connection thread.\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -220,6 +228,10 @@ public class ChatServer {
 
     public HashMap<String, String> getTextConversions() {
         return this.textConversions;
+    }
+
+    public ServerFrame getServerFrame() {
+        return this.serverFrame;
     }
 
     // ***** Inner class - thread for client connection
@@ -327,7 +339,7 @@ public class ChatServer {
                                                             new HashMap<String, User>()));
                     output.flush();
 
-                    ChatServer.this.serverFrame.getTextArea().append("Sent authentication event\n");
+                    ChatServer.this.serverFrame.getTextArea().append("Sent " + username + "'s authentication event\n");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -395,6 +407,7 @@ public class ChatServer {
                 ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication succeded\n");
                 output.writeObject(new AuthSucceedEvent(event, user, userChannels, friendsMap));
                 output.flush();
+                ChatServer.this.serverFrame.getTextArea().append("Sent " + username + "'s authentication event\n");
             } catch (IOException e1) {
                 e1.printStackTrace();
             }

@@ -76,14 +76,18 @@ public class ServerChannelCreateHandler implements Handleable {
     // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
     // TODO: this is kinda scufffed lmao
     if (channelUsers.size() == 2) {
-      for (int channelId : creator.getChannels()) {
+      System.out.println("check 1");
+      Iterator<Integer> channelsItr = creator.getChannels().iterator();
+      while (channelsItr.hasNext()) {
+        int channelId = channelsItr.next();
         Channel channel = server.getChannels().get(channelId);
         // skip non-dms
+        System.out.println(channel.getUsers().size());
         if (channel.getUsers().size() != 2) continue;
         Iterator<User> iterator = channel.getUsers().values().iterator();
-        User user1 = iterator.next();
-        User user2 = iterator.next();
-        if (channelUsers.containsValue(user1) && channelUsers.containsValue(user2)) {
+        String user1 = iterator.next().getUsername();
+        String user2 = iterator.next().getUsername();
+        if (channelUsers.containsKey(user1) && channelUsers.containsKey(user2)) {
           ArrayList<Message> messageBlock = new ArrayList<>();
           ArrayList<Message> fullMessages = channel.getMessages();
           for (int i = 0; i < Math.min(30, fullMessages.size()); i++) {
@@ -92,7 +96,9 @@ public class ServerChannelCreateHandler implements Handleable {
           try {
             Channel newChannel = new Channel(channel);
             newChannel.setMessages(messageBlock);
-            output.writeObject(new ChannelCreateEvent(creator, newChannel, usersFound));
+            System.out.println("duplicate found");
+            output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), 
+                                                      usersFound));
             output.flush();
           } catch (IOException e) {
             e.printStackTrace();
@@ -113,7 +119,6 @@ public class ServerChannelCreateHandler implements Handleable {
 
     try {
       // Make a new file and write the channel object to it.
-      System.out.println(newChannel);
       server.getFileWriteQueue().add(new FileWriteEvent(newChannel, "data/channels/" + id));
       
       // update all the users (and their files) with the new channel
@@ -128,7 +133,7 @@ public class ServerChannelCreateHandler implements Handleable {
           continue;
         }
         output = server.getCurUsers().get(user).getOutputStream();
-        output.writeObject(new ChannelCreateEvent(creator, newChannel, usersFound));
+        output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), usersFound));
         output.flush();
       }
 

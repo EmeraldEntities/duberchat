@@ -35,7 +35,8 @@ public class ServerMessageDeleteHandler implements Handleable {
         User user = itr.next();
         if (!server.getCurUsers().containsKey(user)) continue;
         ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
-        output.writeObject(new MessageDeleteEvent((User) event.getSource(), serverToDelete));
+        output.writeObject(new MessageDeleteEvent(new User((User) event.getSource()), 
+                                                  new Message(serverToDelete)));
         output.flush();
       }
     } catch (IOException e) {
