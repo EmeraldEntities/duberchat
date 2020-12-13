@@ -87,9 +87,9 @@ public class ServerFriendHandler implements Handleable {
         friendOutput.flush();
       }
       if (adding) {
-        userOutput.writeObject(new FriendAddEvent(new User(serverUser), friendUsername));
+        userOutput.writeObject(new FriendAddEvent(new User(friend), friendUsername));
       } else {
-        userOutput.writeObject(new FriendRemoveEvent(new User(serverUser), friendUsername));
+        userOutput.writeObject(new FriendRemoveEvent(new User(friend), friendUsername));
       }
       userOutput.flush();
     } catch (IOException e) {
