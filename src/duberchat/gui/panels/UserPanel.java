@@ -1,8 +1,13 @@
 package duberchat.gui.panels;
 
-import java.awt.event.*;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.GridBagLayout;
+import java.awt.Color;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
+
+import javax.swing.JPanel;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 
 import duberchat.gui.util.ComponentFactory;
 import duberchat.gui.frames.MainFrame;

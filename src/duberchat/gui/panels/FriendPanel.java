@@ -1,26 +1,38 @@
 package duberchat.gui.panels;
 
-import java.awt.event.*;
-import java.util.HashSet;
+import javax.swing.JPanel;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
 
-import duberchat.chatutil.Channel;
-import duberchat.chatutil.Message;
 import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
 import duberchat.events.ChannelCreateEvent;
 import duberchat.events.FriendRemoveEvent;
-import duberchat.events.MessageDeleteEvent;
-import duberchat.events.MessageEditEvent;
 import duberchat.gui.frames.DynamicGridbagFrame;
 import duberchat.gui.frames.MainFrame;
 import duberchat.gui.util.ComponentFactory;
-import duberchat.gui.filters.TextLengthFilter;
 
 /**
- * [INSERT DESCRIPTION HERE]
+ * The {@code FriendPanel} is designed to act like a responsive way to display
+ * and interact with friends.
+ * <p>
+ * Friends should only show if the current channel is null.
+ * <p>
+ * This panel is designed to be able to be constructed fast and simply. It
+ * optimizes what it can.
  * <p>
  * Created <b>2020-12-12</b>
  * 
@@ -32,22 +44,39 @@ import duberchat.gui.filters.TextLengthFilter;
 public class FriendPanel extends JPanel {
     /** The header font. */
     private static final Font HEADER_FONT = new Font("courier", Font.BOLD, 12);
+    /** The associated client. */
     protected ChatClient client;
+    /** The friend to be represented by this panel. */
     private User friend;
 
+    /** The chat button which starts a channel with the friend. */
     private JButton chatButton;
+    /** The delete button that removes the friend from the client's friend list. */
     private JButton deleteButton;
 
+    /** The friend's username and status. */
     private JLabel userLabel;
+    /** The friend's profile picture. */
     private JLabel picture;
 
+    /** The panel that holds the buttons. */
     private JPanel buttonPanel;
-    private JPanel messagePanel;
 
+    /** The layout for the buttons. */
     private FlowLayout buttonLayout;
+    /** The GridBagLayout for this frame. */
     private GridBagLayout layout;
+    /** A shared constraints object for working with the layout. */
     private GridBagConstraints constraints;
 
+    /**
+     * Constructs a new {@code FriendPanel}. his panel is expected to be constructed
+     * multiple times, and keeps that in mind with implementation.
+     * 
+     * @param client     the associated client.
+     * @param friend     the friend to represent.
+     * @param frameWidth the width of the parent frame.
+     */
     public FriendPanel(ChatClient client, User friend, int frameWidth) {
         super();
 
@@ -58,6 +87,11 @@ public class FriendPanel extends JPanel {
         this.reload();
     }
 
+    /**
+     * Initializes all the components needed for this panel.
+     * 
+     * @param frameWidth the width of the parent frame.
+     */
     private void initializeComponents(int frameWidth) {
         buttonLayout = new FlowLayout();
         buttonLayout.setAlignment(FlowLayout.TRAILING);
@@ -107,14 +141,13 @@ public class FriendPanel extends JPanel {
                 });
         deleteButton.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // new Dimension(editButton.getWidth() + deleteButton.getWidth() + 25,
-        // MainFrame.MESSAGE_PANEL_HEIGHT));
-        // buttonPanel.setMinimumSize(buttonPanel.getPreferredSize());
-
         buttonPanel.add(chatButton);
         buttonPanel.add(deleteButton);
     }
 
+    /**
+     * Reloads this panel, and re-adds existing components.
+     */
     private void reload() {
         this.removeAll();
 
@@ -131,6 +164,10 @@ public class FriendPanel extends JPanel {
         this.revalidate();
     }
 
+    /**
+     * Attempts to initialize chatting with a friend by sending a request to the
+     * server.
+     */
     private void initializeChatting() {
         String friendName = friend.getUsername();
 
@@ -139,12 +176,25 @@ public class FriendPanel extends JPanel {
         client.offerEvent(new ChannelCreateEvent(clientUsername, -1, newChannelName, friendName, null));
     }
 
+    /**
+     * Attempts to remove a friend by sending a request to the server.
+     */
     private void removeFriend() {
         String clientUsername = client.getUser().getUsername();
         String friendName = friend.getUsername();
         client.offerEvent(new FriendRemoveEvent(clientUsername, friendName));
     }
 
+    /**
+     * This class is a helper panel listener that provides mouse functionality if
+     * the mouse enters or exist this panel.
+     * <p>
+     * Created <b>2020-12-12</b>
+     * 
+     * @since 1.0.0
+     * @version 1.0.0
+     * @author Joseph Wang
+     */
     private final class PanelMouseListener extends MouseAdapter {
         public void mouseEntered(MouseEvent e) {
             setBackground(MainFrame.SIDE_COLOR);

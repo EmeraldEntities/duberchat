@@ -110,6 +110,7 @@ public class ProfileFrame extends DynamicGridbagFrame {
                 if (option == JFileChooser.APPROVE_OPTION) {
                     try {
                         String fileLocation = fc.getSelectedFile().toString();
+                        // Get extension of the file
                         currentPfpFormat = fileLocation.substring(fileLocation.lastIndexOf(".")+1);
 
                         currentPfp = ImageIO.read(fc.getSelectedFile().getAbsoluteFile());
@@ -146,7 +147,7 @@ public class ProfileFrame extends DynamicGridbagFrame {
                         }
 
                         if (!client.getUser().pfpEquals(currentPfp)) {
-                            client.offerEvent(new ClientPfpUpdateEvent(clientUsername, currentPfp, "jpg"));
+                            client.offerEvent(new ClientPfpUpdateEvent(clientUsername, currentPfp, currentPfpFormat));
                         }
 
                         if (!passwordField.getText().equals("")) {

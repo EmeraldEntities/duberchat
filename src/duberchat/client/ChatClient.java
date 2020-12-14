@@ -1,47 +1,121 @@
 package duberchat.client;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.EOFException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.net.Socket;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.HashMap;
 
-import duberchat.chatutil.*;
-import duberchat.events.*;
-import duberchat.gui.frames.*;
-import duberchat.handlers.*;
-import duberchat.handlers.client.*;
+import duberchat.chatutil.User;
+import duberchat.chatutil.Channel;
+import duberchat.events.AuthSucceedEvent;
+import duberchat.events.ChannelAddMemberEvent;
+import duberchat.events.ChannelCreateEvent;
+import duberchat.events.ChannelDeleteEvent;
+import duberchat.events.ChannelDemoteMemberEvent;
+import duberchat.events.ChannelPromoteMemberEvent;
+import duberchat.events.ChannelRemoveMemberEvent;
+import duberchat.events.ClientPasswordUpdateEvent;
+import duberchat.events.ClientRequestMessageEvent;
+import duberchat.events.ClientStatusUpdateEvent;
+import duberchat.events.ClientPfpUpdateEvent;
+import duberchat.events.FriendAddEvent;
+import duberchat.events.FriendRemoveEvent;
+import duberchat.events.MessageDeleteEvent;
+import duberchat.events.MessageEditEvent;
+import duberchat.events.MessageSentEvent;
+import duberchat.events.RequestFailedEvent;
+import duberchat.events.SerializableEvent;
+import duberchat.handlers.Handleable;
+import duberchat.handlers.client.ClientChannelAddMemberHandler;
+import duberchat.handlers.client.ClientChannelCreateHandler;
+import duberchat.handlers.client.ClientChannelDeleteHandler;
+import duberchat.handlers.client.ClientChannelRemoveMemberHandler;
+import duberchat.handlers.client.ClientFriendAdjustHandler;
+import duberchat.handlers.client.ClientHierarchyHandler;
+import duberchat.handlers.client.ClientMessageDeleteHandler;
+import duberchat.handlers.client.ClientMessageEditHandler;
+import duberchat.handlers.client.ClientMessageSentHandler;
+import duberchat.handlers.client.ClientPasswordUpdateHandler;
+import duberchat.handlers.client.ClientPfpUpdateHandler;
+import duberchat.handlers.client.ClientRequestFailedHandler;
+import duberchat.handlers.client.ClientRequestMessageHandler;
+import duberchat.handlers.client.ClientStatusUpdateHandler;
+import duberchat.gui.frames.MainFrame;
+import duberchat.gui.frames.LoginFrame;
 
 /**
- * A not-so-pretty implementation of a basic chat client
+ * THe {@code ChatClient} class runs, starts, and maintains all client-side
+ * operations involving the application.
+ * <p>
+ * All events are sent and read from here, and delegate to their respective
+ * handlers. All client information is kept here, and accessed from here to
+ * maintain a consistant, synchronized, steady list of constantly changing
+ * structures.
+ * <p>
+ * A few of the methods must be synchronized to ensure thread safety, as
+ * multiple threads may call specific methods.
+ * <p>
+ * Created <b> 2020-12-03 </b>
  * 
  * @since 1.0.0
  * @version 1.0.0
  * @author Joseph Wang
  */
 public class ChatClient {
+    /** The ip to connect to. */
     private String ip = "";
+    /** The port to connect to. */
     private int port = -1;
 
+    /** The socket for connection. */
     private Socket servSocket;
+    /** This client's user. */
     private User user;
+    /** All the channels this client has. */
     private HashMap<Integer, Channel> channels;
+    /** This client's friends. */
     private HashMap<String, User> friends;
+    /** The event handlers for this client, to easily handle events. */
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
 
+    /** This client's current channel */
     private Channel currentChannel;
 
+    /** The input stream from the server socket. */
     private ObjectInputStream input;
+    /** The output stream from the server socket. */
     private ObjectOutputStream output;
 
+    /** Whether this client is running or not. */
     private boolean running = true;
+    /** Whether this client is currently logging in or not. */
     private boolean currentlyLoggingIn = true;
+    /** Whether this client has closed or not. */
     private boolean hasClosed = false;
 
+    /** A blocking queue for outgoing events to be sent. */
     private LinkedBlockingQueue<SerializableEvent> outgoingEvents;
+    /** The associated login frame for this client. */
     private LoginFrame loginWindow;
+    /** The associated main menu frame for this client. */
     private MainFrame mainMenu;
 
+    /**
+     * Starts up this client, and begins login attempts.
+     * <p>
+     * Once login succeeds, this method will listen and respond to events as well.
+     * This should be the only method that listens to events at this point. This
+     * method is implemented to prevent conflicts with the login method input and
+     * this input.
+     */
     public void start() {
         // call a method that connects to the server
         this.outgoingEvents = new LinkedBlockingQueue<>();
@@ -74,6 +148,10 @@ public class ChatClient {
         this.logout();
     }
 
+    /**
+     * Attempts to initialize connection information by reading said information
+     * from the "data/ipconfig" file, if it exists.
+     */
     private void initializeConnectionInformation() {
         try {
             File ipSettings = new File("data/ipconfig");
@@ -95,6 +173,10 @@ public class ChatClient {
         }
     }
 
+    /**
+     * Initializes all the event handlers and places them inside the eventHandlers
+     * map.
+     */
     private void initializeHandlers() {
         this.eventHandlers = new HashMap<>();
 
@@ -121,6 +203,16 @@ public class ChatClient {
         this.eventHandlers.put(MessageDeleteEvent.class, new ClientMessageDeleteHandler(this));
     }
 
+    /**
+     * Attempts to login the user.
+     * <p>
+     * Since login is such a radically different protocal and has a different action
+     * performed, this method serves as the handler for both AuthFailed and
+     * AuthSucceed events.
+     * <p>
+     * No input stream should be used as the same time as this login method, as this
+     * method will attempt to read from the input socket.
+     */
     private void login() {
         loginWindow = new LoginFrame(this);
         loginWindow.setVisible(true);
@@ -160,6 +252,14 @@ public class ChatClient {
         loginWindow.destroy();
     }
 
+    /**
+     * Launches a thread worker that attempts to connect to the server. This thread
+     * will continue to attempt connections until a connection happens or the
+     * application is killed.
+     * <p>
+     * The design of this method also allows for ip and port to be changed, and for
+     * the changes to immediately be reflected here.
+     */
     public void attemptConnection() {
         if (servSocket != null) {
             return;
@@ -193,6 +293,13 @@ public class ChatClient {
         connectorWorker.start();
     }
 
+    /**
+     * Initializes a thread worker that takes outgoing events from the outgoing
+     * event queue and sends them to the server.
+     * <p>
+     * This ensures that all outputs are at one location, to prevent stream
+     * conflicts and synchronizations.
+     */
     private void initializeOutgoingEventWorker() {
         Thread outgoingEventWorker = new Thread(new Runnable() {
             public synchronized void run() {
@@ -200,6 +307,7 @@ public class ChatClient {
                     synchronized (outgoingEvents) {
                         if (servSocket != null) {
                             try {
+                                // A blocking call
                                 SerializableEvent event = outgoingEvents.take();
                                 System.out.println("SYSTEM: logged event in queue: " + event);
 
@@ -207,6 +315,8 @@ public class ChatClient {
                                 output.flush();
                                 output.reset();
                                 System.out.println("SYSTEM: sent event.");
+                            } catch (EOFException e) {
+                                System.out.println("SYSTEM: End of stream.");
                             } catch (InterruptedException e) {
                                 System.out.println("SYSTEM: queue was interrupted while blocking.");
                             } catch (IOException e) {
@@ -221,6 +331,15 @@ public class ChatClient {
         outgoingEventWorker.start();
     }
 
+    /**
+     * Attempts to connect to the specified IP at the specified port.
+     * <p>
+     * Returns a boolean success value.
+     * 
+     * @param ip   the it to connect to.
+     * @param port the port to connect to.
+     * @return true if connection succeeded.
+     */
     public boolean connect(String ip, int port) {
         System.out.println("SYSTEM: Attempting to connect to central servers...");
 
