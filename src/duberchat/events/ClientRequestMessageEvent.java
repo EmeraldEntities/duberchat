@@ -68,14 +68,29 @@ public class ClientRequestMessageEvent extends ClientEvent {
         this.newMessageBlock = newMessageBlock;
     }
     
+    /**
+     * Retrieves this event's starting message id.
+     * 
+     * @return this event's new start message id.
+     */
     public int getStartMsgId() {
         return this.startMsgId;
     }
 
+    /**
+     * Retrieves this event's new channel id.
+     * 
+     * @return this event's new channel id.
+     */
     public int getChannelId() {
         return this.channelId;
     }
 
+    /**
+     * Retrieves this event's associated message block with the new messages.
+     * 
+     * @return a {@code ArrayList} object with this event's new message block.
+     */
     public ArrayList<Message> getNewMessageBlock() {
         return this.newMessageBlock;
     }

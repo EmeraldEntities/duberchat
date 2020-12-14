@@ -64,6 +64,11 @@ public class ChannelCreateEvent extends ChannelEvent {
         this.newChannel = newChannel;
     }
 
+    /**
+     * Retrieves the new channel's name.
+     * 
+     * @return a {@code String} representing the channel's name.
+     */
     public String getChannelName() {
         return this.channelName;
     }
@@ -77,6 +82,11 @@ public class ChannelCreateEvent extends ChannelEvent {
         return this.usernames;
     }
 
+    /**
+     * Retrieves the new channel associated with this event.
+     * 
+     * @return a {@code Channel} representing the new channel that was created.
+     */
     public Channel getNewChannel() {
         return this.newChannel;
     }

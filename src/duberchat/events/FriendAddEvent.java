@@ -38,6 +38,11 @@ public class FriendAddEvent extends FriendEvent {
         super(source, friendUsername);
     }
 
+    /**
+     * Retrieves this event's associated friend.
+     * 
+     * @return the associated friend user.
+     */
     public User getFriend() {
         return this.friend;
     }

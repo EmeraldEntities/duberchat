@@ -30,6 +30,11 @@ public class ClientStatusUpdateEvent extends ClientProfileUpdateEvent {
         this.status = status;
     }
 
+    /**
+     * Retrieves this event's associated status.
+     * 
+     * @return the new status.
+     */
     public int getStatus() {
         return this.status;
     }

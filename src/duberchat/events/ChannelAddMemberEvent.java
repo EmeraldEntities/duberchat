@@ -55,22 +55,47 @@ public class ChannelAddMemberEvent extends ChannelEvent {
         this.newUserUsername = newUserUsername;
     }
 
+    /**
+     * Retrieves the new user's username.
+     * 
+     * @return a {@code String} object with the new user's username.
+     */
     public String getNewUserUsername() {
         return this.newUserUsername;
     }
 
+    /**
+     * Retrieves the new user to add/that was added.
+     * 
+     * @return a {@code User} object representing the new user that was added.
+     */
     public User getNewUser() {
         return this.newUser;
     }
 
+    /**
+     * Assigns the new user to add/was added.
+     * 
+     * @param newUser a {@code User} object representing the new user to add.
+     */
     public void setNewUser(User newUser) {
         this.newUser = newUser;
     }
 
+    /**
+     * Retrieves the new channel that the new user should be/now is added to.
+     * 
+     * @return a {@code Channel} object representing the channel being added to.
+     */
     public Channel getNewChannel() {
         return this.newChannel;
     }
 
+    /**
+     * Assigns the new channel to be added to/was added to.
+     * 
+     * @param channel a {@code Channel} object representing the channel that will be/was added to.
+     */
     public void setNewChannel(Channel channel) {
         this.newChannel = channel;
     }

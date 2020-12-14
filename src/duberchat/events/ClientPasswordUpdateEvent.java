@@ -40,10 +40,20 @@ public class ClientPasswordUpdateEvent extends ClientProfileUpdateEvent {
         this.hashedPassword = password.hashCode();
     }
 
+    /**
+     * Retrieves the new password associated with this event.
+     * 
+     * @return a {@code long} representing the user's new password, hashed.
+     */
     public long getHashedPassword() {
         return this.hashedPassword;
     }
 
+    /**
+     * Assigns the new password associated with this event.
+     * 
+     * @param hashedPassword, a {@code long} representing the user's new password, hashed.
+     */
     public void setHashedPassword(long hashedPassword) {
         this.hashedPassword = hashedPassword;
     }

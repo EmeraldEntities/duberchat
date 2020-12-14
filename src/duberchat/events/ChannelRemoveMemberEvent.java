@@ -36,7 +36,7 @@ public class ChannelRemoveMemberEvent extends ChannelEvent {
     /**
      * Retrieves the {@code String} username of the user to remove.
      * 
-     * @returns String, the username of the user to remove.
+     * @return String, the username of the user to remove.
      */
     public String getUsername() {
         return this.username;

@@ -100,7 +100,7 @@ public class ClientPfpUpdateEvent extends ClientProfileUpdateEvent {
     /**
      * Sets this event's pfp format.
      * 
-     * @return this event's pfp format.
+     * @param pfpFormat this event's pfp format.
      */
     public void setPfpFormat(String pfpFormat) {
         this.pfpFormat = pfpFormat;
