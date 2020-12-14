@@ -203,6 +203,7 @@ public class ChatClient {
                             try {
                                 output.writeObject(event);
                                 output.flush();
+                                output.reset();
                                 System.out.println("SYSTEM: sent event.");
                             } catch (IOException e) {
                                 System.out.println("SYSTEM: Could not send a " + event.getClass().toString());

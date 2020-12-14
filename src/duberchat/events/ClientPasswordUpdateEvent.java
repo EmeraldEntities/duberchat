@@ -11,7 +11,7 @@ package duberchat.events;
  * @version 1.0.0
  * @author Joseph Wang, Paula Yuan
  */
-public class ClientPasswordUpdateEvent extends ClientEvent {
+public class ClientPasswordUpdateEvent extends ClientProfileUpdateEvent {
     static final long serialVersionUID = 1L;
 
     protected long hashedPassword;

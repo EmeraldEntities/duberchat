@@ -15,7 +15,7 @@ package duberchat.events;
  * @version 1.0.0
  * @author Joseph Wang, Paula Yuan
  */
-public class ClientStatusUpdateEvent extends ClientEvent {
+public class ClientStatusUpdateEvent extends ClientProfileUpdateEvent {
     static final long serialVersionUID = 1L;
     protected int status;
 

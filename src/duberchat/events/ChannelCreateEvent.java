@@ -70,8 +70,4 @@ public class ChannelCreateEvent extends ChannelEvent {
     public Channel getNewChannel() {
         return this.newChannel;
     }
-
-    public void setNewChannel(Channel newChannel) {
-        this.newChannel = newChannel;
-    }
 }
