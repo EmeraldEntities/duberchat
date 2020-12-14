@@ -7,7 +7,9 @@ import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 import duberchat.chatutil.Channel;

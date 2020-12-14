@@ -7,7 +7,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
-import duberchat.chatutil.*;
+import duberchat.chatutil.Channel;
+import duberchat.chatutil.Message;
+import duberchat.chatutil.User;
 import duberchat.events.ChannelCreateEvent;
 import duberchat.events.FileWriteEvent;
 import duberchat.events.SerializableEvent;
@@ -108,9 +110,8 @@ public class ServerChannelCreateHandler implements Handleable {
           return;
         }
       }
-      Iterator<User> iterator = channelUsers.values().iterator();
-      while (iterator.hasNext()) {
-        admins.add(iterator.next());
+      for (User user : channelUsers.values()) {
+        admins.add(user);
       }
     }
 

@@ -155,6 +155,11 @@ public class User implements Serializable {
         return (this.username.equals(user.getUsername()));
     }
 
+    /**
+     * Custom hashCode method so {@code User} can work in hashed data structures.
+     * 
+     * @return int, the hashcode for the user.
+     */
     @Override
     public int hashCode() {
         return this.username.hashCode();

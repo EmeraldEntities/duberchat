@@ -6,6 +6,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
+/**
+ * A {@code Channel} represents a single chat channel, with all related information.
+ * <p>
+ * Each client is associated with as many channels as their user belongs to.
+ * 
+ * <p>
+ * Since <b>2020-12-04</b>.
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Joseph Wang, Paula Yuan
+ */
 public class Channel implements Serializable {
     static final long serialVersionUID = 7L;
 
@@ -52,15 +64,6 @@ public class Channel implements Serializable {
 
         this.totalMessages = totalMessages;
 
-        this.messageClusters = 0;
-    }
-
-    public Channel(String channelName) {
-        this.messages = new ArrayList<>(LOCAL_SAVE_AMT);
-        this.channelName = channelName;
-        this.channelId = -1;
-
-        this.totalMessages = 0;
         this.messageClusters = 0;
     }
 
