@@ -28,7 +28,6 @@ public class AuthSucceedEvent extends AuthEvent {
     protected User user;
     protected HashMap<Integer, Channel> channels;
     protected HashMap<String, User> friends;
-    protected ArrayList<Message> recentChannelMessages;
 
     /**
      * Constructs a new {@code AuthSucceedEvent}

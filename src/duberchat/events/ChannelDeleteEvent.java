@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import duberchat.chatutil.Channel;
-
 /**
  * A {@code ChannelDeleteEvent} is an event that is created when a client
  * deletes a channel.
@@ -21,10 +19,10 @@ public class ChannelDeleteEvent extends ChannelEvent {
     /**
      * Constructs a new {@code ChannelDeleteEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The channel associated with this event.
+     * @param source    The source of this event.
+     * @param channelId The channel id associated with this event.
      */
-    public ChannelDeleteEvent(Object source, Channel channel) {
-        super(source, channel);
+    public ChannelDeleteEvent(Object source, int channelId) {
+        super(source, channelId);
     }
 }

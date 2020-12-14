@@ -1,12 +1,8 @@
 package duberchat.events;
 
 /**
- * A {@code ClientStatusUpdateEvent} is an event that is created when a client
- * updates their client status.
- * <p>
- * This could be from a manual change to a supported status, or as a result of a
- * log-out procedure. The server should ensure that other online clients will
- * view this client as offline.
+ * A {@code ClientProfileUpdateEvent} is an event that is created when a client
+ * updates their profile in any way.
  * 
  * <p>
  * Since <b>2020-12-04</b>.
@@ -22,7 +18,6 @@ public class ClientProfileUpdateEvent extends ClientEvent {
      * Constructs a new {@code ClientStatusUpdateEvent}.
      * 
      * @param source The source of this event.
-     * @see duberchat.chatutil.User
      */
     public ClientProfileUpdateEvent(Object source) {
         super(source);

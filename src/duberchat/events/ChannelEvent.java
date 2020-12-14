@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import duberchat.chatutil.Channel;
-
 /**
  * A {@code ChannelEvent} is a generic, abstract event that represents any
  * action performed involving a channel.
@@ -20,30 +18,30 @@ import duberchat.chatutil.Channel;
  */
 public abstract class ChannelEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
-    protected Channel associatedChannel;
+    protected int associatedChannel;
 
     /**
      * Constructs a new {@code ChannelEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param source    The source of this event.
+     * @param channelId The associated channel id with this event.
      */
-    public ChannelEvent(Object source, Channel channel) {
+    public ChannelEvent(Object source, int channelId) {
         super(source);
 
-        this.associatedChannel = channel;
+        this.associatedChannel = channelId;
     }
 
     /**
-     * Retrieves this event's associated channel.
+     * Retrieves this event's associated channel id.
      * <p>
-     * This is the channel that the event occured in, or {@code null} if the client
+     * This is the id of the channel that the event occured in, or {@code -1} if the client
      * is sending this event and it does not know the specific channel (eg.
      * {@link duberchat.events.ChannelCreateEvent ChannelCreateEvent}).
      * 
      * @return a {@code Channel} object with the associated channel.
      */
-    public Channel getChannel() {
+    public int getChannelId() {
         return this.associatedChannel;
     }
 }

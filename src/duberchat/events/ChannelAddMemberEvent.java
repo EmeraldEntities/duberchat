@@ -1,6 +1,7 @@
 package duberchat.events;
 
 import duberchat.chatutil.Channel;
+import duberchat.chatutil.User;
 
 /**
  * A {@code ChannelAddMemberEvent} is an event that is created when a channel needs to
@@ -21,16 +22,20 @@ import duberchat.chatutil.Channel;
 public class ChannelAddMemberEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
     protected String newUserUsername;
+    protected User newUser;
 
     /**
      * Constructs a new {@code ChannelAddMemberEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param source          The source of this event.
+     * @param channelId       The associated channel's id with this event.
+     * @param newUserUsername the new user's username.
+     * @param newUser         the new user.
      */
-    public ChannelAddMemberEvent(Object source, Channel channel, String newUserUsername) {
-        super(source, channel);
+    public ChannelAddMemberEvent(Object source, int channelId, String newUserUsername, User newUser) {
+        super(source, channelId);
         this.newUserUsername = newUserUsername;
+        this.newUser = newUser;
     }
 
     public String getNewUserUsername() {

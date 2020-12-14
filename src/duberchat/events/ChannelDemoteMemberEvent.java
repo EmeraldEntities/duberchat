@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import duberchat.chatutil.Channel;
-
 /**
  * A {@code ChannelDemoteMemberEvent} is an event that is created when a user is
  * demoted from admin to normal user. 
@@ -26,11 +24,11 @@ public class ChannelDemoteMemberEvent extends ChannelHierarchyChangeEvent {
     /**
      * Constructs a new {@code ChannelDemoteMemberEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param source    The source of this event.
+     * @param channelId The associated channel's id with this event.
      * @param username  The username of the user to demote.
      */
-    public ChannelDemoteMemberEvent(Object source, Channel channel, String username) {
-        super(source, channel, username);
+    public ChannelDemoteMemberEvent(Object source, int channelId, String username) {
+        super(source, channelId, username);
     }
 }

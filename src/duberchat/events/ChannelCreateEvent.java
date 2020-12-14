@@ -23,18 +23,21 @@ import duberchat.chatutil.Channel;
 public class ChannelCreateEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
     protected HashSet<String> usernames;
+    protected Channel newChannel;
 
     /**
      * Constructs a new {@code ChannelCreateEvent}.
      * 
-     * @param source    The source of this event.
-     * @param channel   The channel associated with this event.
-     * @param usernames The usernames of the users to add initially.
+     * @param source     The source of this event.
+     * @param channelId  The channel id associated with this event.
+     * @param usernames  The usernames of the users to add initially.
+     * @param newChannel The new channel that was created.
      */
-    public ChannelCreateEvent(Object source, Channel channel, HashSet<String> usernames) {
-        super(source, channel);
+    public ChannelCreateEvent(Object source, int channelId, HashSet<String> usernames, Channel newChannel) {
+        super(source, channelId);
 
         this.usernames = usernames;
+        this.newChannel = newChannel;
     }
 
     /**
@@ -42,15 +45,17 @@ public class ChannelCreateEvent extends ChannelEvent {
      * <p>
      * This will create a DM with the specified user.
      * 
-     * @param source   The source of this event.
-     * @param channel  The channel associated with this event.
-     * @param username The username of the user to add.
+     * @param source     The source of this event.
+     * @param channelId  The channel id associated with this event.
+     * @param username   The username of the user to add.
+     * @param newChannel The new channel that was created.
      */
-    public ChannelCreateEvent(Object source, Channel channel, String username) {
-        super(source, channel);
+    public ChannelCreateEvent(Object source, int channelId, String username, Channel newChannel) {
+        super(source, channelId);
 
         this.usernames = new HashSet<String>();
         this.usernames.add(username);
+        this.newChannel = newChannel;
     }
 
     /**
@@ -60,5 +65,13 @@ public class ChannelCreateEvent extends ChannelEvent {
      */
     public HashSet<String> getUsernames() {
         return this.usernames;
+    }
+
+    public Channel getNewChannel() {
+        return this.newChannel;
+    }
+
+    public void setNewChannel(Channel newChannel) {
+        this.newChannel = newChannel;
     }
 }

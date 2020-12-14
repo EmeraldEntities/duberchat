@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import duberchat.chatutil.Channel;
-
 /**
  * A {@code ChannelHierarchyChangeEvent} is a generic event representing either
  * a user promotion or demotion within a channel.
@@ -25,12 +23,12 @@ public class ChannelHierarchyChangeEvent extends ChannelEvent {
     /**
      * Constructs a new {@code ChannelHierarchyChangeEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param source    The source of this event.
+     * @param channelId The associated channel id with this event.
      * @param username  The username of the user to promote/demote.
      */
-    public ChannelHierarchyChangeEvent(Object source, Channel channel, String username) {
-        super(source, channel);
+    public ChannelHierarchyChangeEvent(Object source, int channelId, String username) {
+        super(source, channelId);
         this.username = username;
     }
 

@@ -1,6 +1,6 @@
 package duberchat.events;
 
-import duberchat.chatutil.Channel;
+import java.util.ArrayList;
 import duberchat.chatutil.Message;
 
 /**
@@ -34,28 +34,49 @@ import duberchat.chatutil.Message;
 public class ClientRequestMessageEvent extends ClientEvent {
     static final long serialVersionUID = 1L;
 
-    protected Message startMsg;
-    protected Channel channel;
+    protected int startMsgId;
+    protected int channelId;
+    protected ArrayList<Message> newMessageBlock;
 
     /**
      * Constructs a new {@code ClientRequestMessageEvent}.
      * 
-     * @param source   The source of this event.
-     * @param startMsg The message to begin loading from, non-inclusive.
-     * @param channel  The associated channel.
+     * @param source     The source of this event.
+     * @param startMsgId The message to begin loading from, non-inclusive.
+     * @param channelId  The associated channel.
      */
-    public ClientRequestMessageEvent(Object source, Message startMsg, Channel channel) {
+    public ClientRequestMessageEvent(Object source, int startMsgId, int channelId) {
         super(source);
 
-        this.startMsg = startMsg;
-        this.channel = channel;
+        this.startMsgId = startMsgId;
+        this.channelId = channelId;
     }
 
-    public Message getStartMsg() {
-        return this.startMsg;
+    /**
+     * Constructs a new {@code ClientRequestMessageEvent}.
+     * 
+     * @param source          The source of this event.
+     * @param startMsgId      The message to begin loading from, non-inclusive.
+     * @param channelId       The associated channel.
+     * @param newMessageBlock The new block of messages as a result of loading.
+     */
+    public ClientRequestMessageEvent(Object source, int startMsgId, int channelId, ArrayList<Message> newMessageBlock) {
+        super(source);
+
+        this.startMsgId = startMsgId;
+        this.channelId = channelId;
+        this.newMessageBlock = newMessageBlock;
+    }
+    
+    public int getStartMsgId() {
+        return this.startMsgId;
     }
 
-    public Channel getChannel() {
-        return this.channel;
+    public int getChannelId() {
+        return this.channelId;
+    }
+
+    public ArrayList<Message> getNewMessageBlock() {
+        return this.newMessageBlock;
     }
 }

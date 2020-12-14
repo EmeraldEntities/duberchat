@@ -27,12 +27,12 @@ public class ChannelRemoveMemberEvent extends ChannelEvent {
     /**
      * Constructs a new {@code ChannelRemoveMemberEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param source    The source of this event.
+     * @param channelId The associated channel's id with this event.
      * @param username  The username of the user to remove.
      */
-    public ChannelRemoveMemberEvent(Object source, Channel channel, String username) {
-        super(source, channel);
+    public ChannelRemoveMemberEvent(Object source, int channelId, String username) {
+        super(source, channelId);
         this.username = username;
     }
 

@@ -1,7 +1,5 @@
 package duberchat.events;
 
-import duberchat.chatutil.Channel;
-
 /**
  * A {@code ChannelPromoteMemberEvent} is an event that is created when a user is
  * promoted from normal user to admin.
@@ -26,11 +24,11 @@ public class ChannelPromoteMemberEvent extends ChannelHierarchyChangeEvent {
     /**
      * Constructs a new {@code ChannelPromoteMemberEvent}.
      * 
-     * @param source  The source of this event.
-     * @param channel The associated channel with this event.
+     * @param source    The source of this event.
+     * @param channelId The associated channel's id with this event.
      * @param username  The username of the user to promote.
      */
-    public ChannelPromoteMemberEvent(Object source, Channel channel, String username) {
-        super(source, channel, username);
+    public ChannelPromoteMemberEvent(Object source, int channelId, String username) {
+        super(source, channelId, username);
     }
 }
