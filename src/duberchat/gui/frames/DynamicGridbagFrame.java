@@ -34,6 +34,32 @@ public abstract class DynamicGridbagFrame extends DynamicFrame {
         super(title);
     }
 
+    /**
+     * Adds a constrained component to a specified container, with a specified
+     * layout and constraints.
+     * <p>
+     * The component will be added according to the parameters set. This method
+     * exists to prevent repeat of common code, at the expense of looking absolutely
+     * terrifying.
+     * <p>
+     * See {@link java.awt.GridBagLayout GridBagLayout} and
+     * {@link java.awt.GridBagConstraints GridBagConstraints} for a more detailed
+     * explanation about each parameter.
+     * 
+     * @param comp    the component to add to the container.
+     * @param cont    the container to be added to.
+     * @param layout  the layout of the container.
+     * @param gbc     the shared GridBagConstraints object.
+     * @param rows    the grid x position to start at.
+     * @param cols    the grid y position to start at.
+     * @param width   the amount of columns the component should take up.
+     * @param height  the amount of rows the component should take up.
+     * @param weightX the weight of the component in the x direction.
+     * @param weightY the weight of the component in the y direction.
+     * @param fill    the direction to fill the component if possible.
+     * @param anchor  the anchored start location of the component.
+     * @param insets  any {@code Insets} to specify spacing.
+     */
     public static void addConstrainedComponent(Component comp, Container cont, GridBagLayout layout,
             GridBagConstraints gbc, int rows, int cols, int width, int height, double weightX, double weightY, int fill,
             int anchor, Insets insets) {
@@ -55,6 +81,36 @@ public abstract class DynamicGridbagFrame extends DynamicFrame {
         cont.add(comp);
     }
 
+    /**
+     * Adds a constrained component to a specified container, with a specified
+     * layout and constraints.
+     * <p>
+     * The component will be added according to the parameters set. This method
+     * exists to prevent repeat of common code, at the expense of looking absolutely
+     * terrifying.
+     * <p>
+     * See {@link java.awt.GridBagLayout GridBagLayout} and
+     * {@link java.awt.GridBagConstraints GridBagConstraints} for a more detailed
+     * explanation about each parameter.
+     * <p>
+     * This method will assign default values (0.0) to the weight of both
+     * directions. If more precise control over the component is required, consider
+     * using
+     * {@link #addConstrainedComponent(Component, Container, GridBagLayout, GridBagConstraints, int, int, int, int, double, double, int, int, Insets)}
+     * instead.
+     * 
+     * @param comp   the component to add to the container.
+     * @param cont   the container to be added to.
+     * @param layout the layout of the container.
+     * @param gbc    the shared GridBagConstraints object.
+     * @param rows   the grid x position to start at.
+     * @param cols   the grid y position to start at.
+     * @param width  the amount of columns the component should take up.
+     * @param height the amount of rows the component should take up.
+     * @param fill   the direction to fill the component if possible.
+     * @param anchor the anchored start location of the component.
+     * @param insets any {@code Insets} to specify spacing.
+     */
     public static void addConstrainedComponent(Component comp, Container cont, GridBagLayout layout,
             GridBagConstraints gbc, int rows, int cols, int width, int height, int fill, int anchor, Insets insets) {
 
@@ -62,6 +118,37 @@ public abstract class DynamicGridbagFrame extends DynamicFrame {
                 GridBagConstraints.CENTER, insets);
     }
 
+    /**
+     * Adds a constrained component to a specified container, with a specified
+     * layout and constraints.
+     * <p>
+     * The component will be added according to the parameters set. This method
+     * exists to prevent repeat of common code, at the expense of looking absolutely
+     * terrifying.
+     * <p>
+     * See {@link java.awt.GridBagLayout GridBagLayout} and
+     * {@link java.awt.GridBagConstraints GridBagConstraints} for a more detailed
+     * explanation about each parameter.
+     * <p>
+     * This method will assign default values (0.0) to the weight of both
+     * directions, and use default values for fill, anchor, and insets
+     * ({@link java.awt.GridBagConstraints#NONE},
+     * {@link java.awt.GridBagConstraints#CENTER}, and a new Insets object with 0
+     * for all directions respectively).
+     * <p>
+     * If more precise control over the component is required, consider using
+     * {@link #addConstrainedComponent(Component, Container, GridBagLayout, GridBagConstraints, int, int, int, int, double, double, int, int, Insets)}
+     * instead.
+     * 
+     * @param comp   the component to add to the container.
+     * @param cont   the container to be added to.
+     * @param layout the layout of the container.
+     * @param gbc    the shared GridBagConstraints object.
+     * @param rows   the grid x position to start at.
+     * @param cols   the grid y position to start at.
+     * @param width  the amount of columns the component should take up.
+     * @param height the amount of rows the component should take up.
+     */
     public static void addConstrainedComponent(Component comp, Container cont, GridBagLayout layout,
             GridBagConstraints gbc, int rows, int cols, int width, int height) {
         addConstrainedComponent(comp, cont, layout, gbc, rows, cols, width, height, GridBagConstraints.NONE,

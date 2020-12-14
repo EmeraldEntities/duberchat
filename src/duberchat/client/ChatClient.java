@@ -317,6 +317,8 @@ public class ChatClient {
                                 System.out.println("SYSTEM: sent event.");
                             } catch (EOFException e) {
                                 System.out.println("SYSTEM: End of stream.");
+                                running = false;
+                                ChatClient.this.forceLogout();
                             } catch (InterruptedException e) {
                                 System.out.println("SYSTEM: queue was interrupted while blocking.");
                             } catch (IOException e) {
@@ -591,7 +593,7 @@ public class ChatClient {
      * and that all connections are closed before closing.
      */
     private synchronized void logout() {
-        if (!currentlyLoggingIn) {
+        if (!currentlyLoggingIn && !hasClosed) {
             outgoingEvents.offer(new ClientStatusUpdateEvent(this.user.getUsername(), 0));
         }
     

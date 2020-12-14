@@ -27,6 +27,26 @@ import duberchat.chatutil.Channel;
 import duberchat.chatutil.Message;
 import duberchat.chatutil.User;
 
+/**
+ * The {@code MainFrame} contains all the main GUI elements as well as all the
+ * main logic and methods behind the main menu screen.
+ * <p>
+ * Many child frames and child panels stem from this main frame. This main frame
+ * should be launched upon login success, and handles most gui elements and all
+ * main gui logic.
+ * <p>
+ * In order to keep a steady sync and keep displayed components constantly
+ * updated, reloads to this frame are common, and new components may be made to
+ * replace old, outdated components. This frame contains many listeners,
+ * intended to assist with keeping components updated, but none of these
+ * listeners will consume the event.
+ * <p>
+ * Created <b> 2020-12-09 </b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Joseph Wang
+ */
 @SuppressWarnings("serial")
 public class MainFrame extends DynamicFrame {
     /** The height of a message panel, in pixels. */
@@ -95,34 +115,60 @@ public class MainFrame extends DynamicFrame {
     private JPanel textPanel;
     /** The panel for the side channel create and home buttons. */
     private JPanel sideButtonPanel;
-    
+
     /** This frame's custom frame for adding channels. */
     private ChannelCreateFrame addChannelFrame;
     /** This frame's custom frame for editing this user's profile information. */
     private ProfileFrame profileFrame;
 
+    /** The profile label with the user's username. */
     private JLabel profileLabel;
+    /** The profile button, which opens up a new ProfileFrame. */
     private JButton profileButton;
+    /** The send button, which will send a message. */
     private JButton sendButton;
+    /** The quit button, which will quit this application. */
     private JButton quitButton;
-    private JButton addUserButton, deleteUserButton;
-    private JButton addChannelButton, deleteChannelButton;
+    /** The add user button, which will add a user to the current channel. */
+    private JButton addUserButton;
+    /**
+     * The delete user button, which will delete a user from the current channel.
+     */
+    private JButton deleteUserButton;
+    /** The add channel button, which will add a new channel. */
+    private JButton addChannelButton;
+    /** The delete channel button, which will delete the current channel. */
+    private JButton deleteChannelButton;
+    /**
+     * The home button, which will send the user back to the home page (with
+     * friends).
+     */
     private JButton homeButton;
+    /** The leave channel button, which makes the user leave the channel. */
     private JButton leaveChannelButton;
+    /** The add friend button, which adds a friend. */
     private JButton addFriendButton;
+    /** The label that indicates and describes the friend page. */
     private JLabel friendsLabel;
+    /** The type field to type messages in. */
     private JTextField typeField;
 
+    /**
+     * The channel indicator, which tells the user what current channel they are in.
+     */
     private JLabel channelIndicator;
 
+    /** The associated client. */
     protected ChatClient client;
 
     /** Whether this client has already requested messages from this frame. */
     private boolean requestedMessages = false; // important to prevent event spam
 
-    // private ArrayList<ChannelPanel> activeChannelPanels;
-    // private ArrayList<UserPanel> activeUserPanels;
-
+    /**
+     * Constructs a new {@code MainFrame}.
+     * 
+     * @param client the associated client.
+     */
     public MainFrame(ChatClient client) {
         super("duberchat");
         this.client = client;
@@ -154,20 +200,8 @@ public class MainFrame extends DynamicFrame {
         });
 
         // Initialize defaults
-        UIManager.put("OptionPane.background", MAIN_COLOR);
-        UIManager.getLookAndFeelDefaults().put("OptionPane.background", MAIN_COLOR);
-        UIManager.put("Button.background", TEXT_COLOR);
-        UIManager.getLookAndFeelDefaults().put("Button.background", TEXT_COLOR);
-        UIManager.put("Button.foreground", MAIN_COLOR);
-        UIManager.getLookAndFeelDefaults().put("Button.foreground", MAIN_COLOR);
-        UIManager.put("Label.foreground", BRIGHT_TEXT_COLOR);
-        UIManager.getLookAndFeelDefaults().put("Label.foreground", BRIGHT_TEXT_COLOR);
-        UIManager.put("TextField.background", DARK_TEXTBOX_COLOR);
-        UIManager.getLookAndFeelDefaults().put("TextField.background", DARK_TEXTBOX_COLOR);
-        UIManager.put("TextField.foreground", BRIGHT_TEXT_COLOR);
-        UIManager.getLookAndFeelDefaults().put("TextField.foreground", BRIGHT_TEXT_COLOR);
-
-        initializeComponents(client);
+        this.initializeDefaultColours();
+        this.initializeComponents(client);
 
         GridBagLayout typingPanelLayout = new GridBagLayout();
         typingPanel.setLayout(typingPanelLayout);
@@ -183,100 +217,11 @@ public class MainFrame extends DynamicFrame {
         configPanel.add(profileConfigPanel);
         configPanel.add(channelConfigPanel);
 
-        // Implement channel scrolling
-        channelPanel.addMouseWheelListener(new MouseWheelListener() {
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                if (e.getWheelRotation() < 0) {
-                    if (channelOffset > 0) {
-                        channelOffset--;
-                        onlyReloadChannels();
-                    }
-                } else {
-                    if (channelOffset - 1 < client.getChannels().size() - 2) {
-                        channelOffset++;
-                        onlyReloadChannels();
-                    }
-                }
-            }
-        });
-        userPanel.addMouseWheelListener(new MouseWheelListener() {
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                if (e.getWheelRotation() < 0) {
-                    if (userOffset > 0) {
-                        userOffset--;
-                        onlyReloadUsers();
-                    }
-                } else {
-                    if (!client.hasCurrentChannel()) {
-                        return;
-                    }
-
-                    if (client.getCurrentChannel().getUsers().size() > maxSidePanelGrids
-                            && client.getCurrentChannel().getUsers().size() - userOffset > maxSidePanelGrids) {
-                        userOffset++;
-                        onlyReloadUsers();
-                    }
-                }
-            }
-        });
-
-        // TODO: make sure this is right, incorporate this into message loading
-        textPanel.addMouseWheelListener(new MouseWheelListener() {
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                if (!client.hasCurrentChannel()) {
-                    return;
-                }
-
-                if (e.getWheelRotation() > 0) {
-                    if (messageOffset > 0) {
-                        messageOffset--;
-                        onlyReloadMessages();
-                    }
-                } else {
-                    if (!client.hasCurrentChannel()) {
-                        return;
-                    }
-
-                    Channel curChannel = client.getCurrentChannel();
-
-                    if (curChannel.getMessages().size() > maxMessageGrids
-                            && curChannel.getMessages().size() - messageOffset > maxMessageGrids) {
-                        messageOffset++;
-                        onlyReloadMessages();
-                    } else if (curChannel.getMessages().size() >= Channel.LOCAL_SAVE_AMT
-                            && (curChannel.getMessages().size() - messageOffset) <= maxMessageGrids
-                            && !requestedMessages) {
-
-                        String clientUsername = client.getUser().getUsername();
-                        int startId = curChannel.getMessages().get(0).getMessageId();
-                        int channelId = curChannel.getChannelId();
-
-                        client.offerEvent(new ClientRequestMessageEvent(clientUsername, startId, channelId));
-                        requestedMessages = true;
-                    }
-                }
-            }
-        });
-        textPanel.addMouseWheelListener(new MouseWheelListener() {
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                if (client.hasCurrentChannel()) {
-                    return;
-                }
-
-                if (e.getWheelRotation() < 0) {
-                    if (friendOffset > 0) {
-                        friendOffset--;
-                        onlyReloadFriends();
-                    }
-                } else {
-                    if (client.getFriends().size() > maxMessageGrids
-                            && client.getFriends().size() - userOffset > maxSidePanelGrids) {
-                        friendOffset++;
-                        onlyReloadFriends();
-                    }
-                }
-            }
-        });
+        // Implement scrolling for each panel
+        channelPanel.addMouseWheelListener(new ChannelMouseWheelListener(client));
+        userPanel.addMouseWheelListener(new UserMouseWheelListener(client));
+        textPanel.addMouseWheelListener(new MessageMouseWheelListener(client));
+        textPanel.addMouseWheelListener(new FriendsMouseWheelListener(client));
 
         GridBagConstraints gbc = new GridBagConstraints();
         DynamicGridbagFrame.addConstrainedComponent(typeField, typingPanel, typingPanelLayout, gbc, 0, 0, 5, 1, 1.0,
@@ -297,6 +242,34 @@ public class MainFrame extends DynamicFrame {
         this.reload();
     }
 
+    /**
+     * Initialize default colours for each necessary component.
+     * <p>
+     * This helps us save some time on component factory methods, as the factory
+     * method will use the default colour if one is not provided.
+     */
+    private void initializeDefaultColours() {
+        UIManager.put("OptionPane.background", MAIN_COLOR);
+        UIManager.getLookAndFeelDefaults().put("OptionPane.background", MAIN_COLOR);
+        UIManager.put("Button.background", TEXT_COLOR);
+        UIManager.getLookAndFeelDefaults().put("Button.background", TEXT_COLOR);
+        UIManager.put("Button.foreground", MAIN_COLOR);
+        UIManager.getLookAndFeelDefaults().put("Button.foreground", MAIN_COLOR);
+        UIManager.put("Label.foreground", BRIGHT_TEXT_COLOR);
+        UIManager.getLookAndFeelDefaults().put("Label.foreground", BRIGHT_TEXT_COLOR);
+        UIManager.put("TextField.background", DARK_TEXTBOX_COLOR);
+        UIManager.getLookAndFeelDefaults().put("TextField.background", DARK_TEXTBOX_COLOR);
+        UIManager.put("TextField.foreground", BRIGHT_TEXT_COLOR);
+        UIManager.getLookAndFeelDefaults().put("TextField.foreground", BRIGHT_TEXT_COLOR);
+    }
+
+    /**
+     *
+     * Reinitializes all responsive layouts using the current screen height.
+     * <p>
+     * This allows for us to make our chat gui responsive and sizable without
+     * breaking.
+     */
     private void reinitializeLayouts() {
         channelPanel.removeAll();
         userPanel.removeAll();
@@ -313,6 +286,9 @@ public class MainFrame extends DynamicFrame {
         this.reload();
     }
 
+    /**
+     * Initializes all the required components for this frame.
+     */
     private void initializeComponents(ChatClient client) {
         // INITIALIZE PANELS ====================================================
         typingPanel = new JPanel();
@@ -333,106 +309,59 @@ public class MainFrame extends DynamicFrame {
         textPanel.setBackground(MAIN_COLOR);
 
         // INITIALIZE BUTTONS ====================================================
-        profileLabel = ComponentFactory.createLabel(this.client.getUser().getUsername(), TEXT_COLOR);
+        String profileText = this.client.getUser().getUsername() + " (" + this.client.getUser().getStringStatus() + ")";
+        profileLabel = ComponentFactory.createLabel(profileText, TEXT_COLOR);
         profileLabel.setFont(HEADING_FONT);
-        profileButton = ComponentFactory.createButton("", TEXT_COLOR, PANEL_COLOR,
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        System.out.println("max grids: " + maxSidePanelGrids); // TODO: yeet
-                        if (!hasActiveProfileFrame()) {
-                            profileFrame = new ProfileFrame(client);
-                            profileFrame.setVisible(true);
-
-                            System.out.println("SYSTEM: Opened profile frame");
-                        }
-                    }
-                });
+        profileButton = ComponentFactory.createButton("", TEXT_COLOR, PANEL_COLOR);
         profileButton.setBorder(null);
         profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
+        profileButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                displayProfile();
+            }
+        });
         profileConfigPanel.add(profileButton);
         profileConfigPanel.add(profileLabel);
 
+        // Create delete channel button
         deleteChannelButton = ComponentFactory.createImageButton("DELETE CHANNEL", "data/system/trash.png", 20, 20,
-                TEXT_COLOR, PANEL_COLOR,
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        JLabel label = ComponentFactory.createLabel("Are you sure you want to delete this channel?",
-                                BRIGHT_TEXT_COLOR);
-                        ActionListener action = new ActionListener() {
-                            public void actionPerformed(ActionEvent evt2) {
-                                String clientUsername = client.getUser().getUsername();
-                                int curChannelId = client.getCurrentChannel().getChannelId();
-                                client.offerEvent(new ChannelDeleteEvent(clientUsername, curChannelId));
-                            }
-                        };
+                TEXT_COLOR, PANEL_COLOR);
+        deleteChannelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                confirmDeletingChannel();
+            }
+        });
 
-                        JFrame deleteChannel = FrameFactory.createConfirmFrame("Delete channel", MAIN_COLOR, label,
-                                action);
-                        deleteChannel.setVisible(true);
-                    }
-                });
-
+        // Create add user button
         addUserButton = ComponentFactory.createImageButton("ADD USER", "data/system/adduser.png", 20, 20, TEXT_COLOR,
-                PANEL_COLOR, new ActionListener() {
+                PANEL_COLOR);
+        addUserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                        JLabel label = ComponentFactory.createLabel(
-                                "Add a username to add, starting with @ (eg. @EmeraldPhony)",
-                        BRIGHT_TEXT_COLOR);
-                JTextField input = ComponentFactory.createTextBox(20);
-                JButton submit = ComponentFactory.createButton("Add User", new ActionListener() {
-                    public void actionPerformed(ActionEvent evt2) {
-                                addUserToChannel(input.getText());
-                            }
-                });
-
-                JFrame addUser = FrameFactory.createRequestFrame("Add user", MAIN_COLOR, label, input, submit);
-                addUser.setVisible(true);
+                selectUserToAdd();
             }
         });
 
+        // Create delete user button
         deleteUserButton = ComponentFactory.createImageButton("REMOVE USER", "data/system/removeuser.png", 20, 20,
-                TEXT_COLOR, PANEL_COLOR, new ActionListener() {
+                TEXT_COLOR, PANEL_COLOR);
+        deleteUserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                        JLabel label = ComponentFactory.createLabel(
-                                "Add a username to remove, starting with @ (eg. @EmeraldPhony)",
-                        BRIGHT_TEXT_COLOR);
-                JTextField input = ComponentFactory.createTextBox(20);
-                JButton submit = ComponentFactory.createButton("Remove User", new ActionListener() {
-                    public void actionPerformed(ActionEvent evt2) {
-
-                        if (input.getText() != "") {
-                            String username = input.getText().replaceFirst("@", "");
-                            User removedUser = client.getCurrentChannel().getUsers().get(username);
-
-                            if (removedUser == null || client.getUser().equals(removedUser)) {
-                                return;
-                            }
-
-                                    String clientUsername = client.getUser().getUsername();
-                                    int curChannelId = client.getCurrentChannel().getChannelId();
-                                    client.offerEvent(
-                                            new ChannelRemoveMemberEvent(clientUsername, curChannelId,
-                                    username));
-
-                            System.out.println("SYSTEM: Removing user " + username);
-                        }
-                    }
-                });
-
-                JFrame removeUser = FrameFactory.createRequestFrame("Remove user", MAIN_COLOR, label, input, submit);
-                removeUser.setVisible(true);
+                selectUserToRemove();
             }
         });
 
-        sendButton = ComponentFactory.createButton("SEND", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
+        // Create send button
+        sendButton = ComponentFactory.createButton("SEND", MAIN_COLOR, TEXT_COLOR);
+        sendButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 if (client.getCurrentChannel() == null) {
                     return;
                 }
-                sendMessage(client);
+                sendMessage();
             }
         });
 
+        // Create quit button
         quitButton = ComponentFactory.createButton("QUIT", MAIN_COLOR, TEXT_COLOR, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 client.initiateShutdown();
@@ -440,52 +369,44 @@ public class MainFrame extends DynamicFrame {
             }
         });
 
+        // Create leave channel button
         leaveChannelButton = ComponentFactory.createImageButton("LEAVE", "data/system/leave.png", 20, 20, TEXT_COLOR,
-                PANEL_COLOR, new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        JLabel label = ComponentFactory.createLabel("Are you sure you want to leave this channel?",
-                                BRIGHT_TEXT_COLOR);
-                        ActionListener action = new ActionListener() {
-                            public void actionPerformed(ActionEvent evt2) {
-                                // This button will only exist if a current channel exists
-                                String clientUsername = client.getUser().getUsername();
-                                int curChannelId = client.getCurrentChannel().getChannelId();
-                                client.offerEvent(
-                                        new ChannelRemoveMemberEvent(clientUsername, curChannelId, clientUsername));
-                            }
-                        };
+                PANEL_COLOR);
+        leaveChannelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                confirmleavingChannel();
+            }
+        });
 
-                        JFrame removeConfirmPanel = FrameFactory.createConfirmFrame("Delete channel", MAIN_COLOR, label,
-                                action);
-                        removeConfirmPanel.setVisible(true);
-                    }
-                });
-
+        // Create add channel button
         addChannelButton = ComponentFactory.createImageButton("CREATE CHANNEL", "data/system/plus sign.png", 20, 20,
-                TEXT_COLOR, PANEL_COLOR,
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (hasActiveChannelCreateFrame()) {
-                            return;
-                        }
-
-                        addChannelFrame = new ChannelCreateFrame(client);
-                        addChannelFrame.setVisible(true);
-                    }
-                });
+                TEXT_COLOR, PANEL_COLOR);
         addChannelButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
+        addChannelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (hasActiveChannelCreateFrame()) {
+                    return;
+                }
 
-        homeButton = ComponentFactory.createImageButton("HOME", "data/system/home.png", 20, 20, MAIN_COLOR, PANEL_COLOR,
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        client.setCurrentChannel(null);
+                addChannelFrame = new ChannelCreateFrame(client);
+                addChannelFrame.setVisible(true);
+            }
+        });
+
+        // Create home button
+        homeButton = ComponentFactory.createImageButton("HOME", "data/system/home.png", 20, 20, MAIN_COLOR,
+                PANEL_COLOR);
+        homeButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
+        homeButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                client.setCurrentChannel(null);
 
                 switchChannelsToCurrent();
             }
         });
-        homeButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
 
         // INITIALIZE FRIENDS =================================================
+        // We don't use createImageLabel because we want both the text and image
         friendsLabel = ComponentFactory.createLabel("Friends", TEXT_COLOR);
         friendsLabel.setFont(HEADING_FONT);
         try {
@@ -494,23 +415,15 @@ public class MainFrame extends DynamicFrame {
         } catch (IOException e) {
             System.out.println("SYSTEM: Could not load friend image!");
         }
-        addFriendButton = ComponentFactory.createImageButton("ADD USER", "data/system/adduser.png", 20, 20, TEXT_COLOR,
-                PANEL_COLOR, new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        JLabel label = ComponentFactory.createLabel(
-                                "Add a friend's username, starting with @ (eg. @EmeraldPhony)", BRIGHT_TEXT_COLOR);
-                        JTextField input = ComponentFactory.createTextBox(20);
-                        JButton submit = ComponentFactory.createButton("Add Friend!", new ActionListener() {
-                            public void actionPerformed(ActionEvent evt2) {
-                                addFriend(input.getText());
-                            }
-                        });
 
-                        JFrame addFriend = FrameFactory.createRequestFrame("Add friend", MAIN_COLOR, label, input,
-                                submit);
-                        addFriend.setVisible(true);
-                    }
-                });
+        // create add friend button
+        addFriendButton = ComponentFactory.createImageButton("ADD USER", "data/system/adduser.png", 20, 20, TEXT_COLOR,
+                PANEL_COLOR);
+        addFriendButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                selectUserToBefriend();
+            }
+        });
 
         // INITIALIZE TYPING AREA =================================================
         typeField = ComponentFactory.createTextBox(20, BRIGHT_TEXT_COLOR, TEXTBOX_COLOR,
@@ -522,28 +435,13 @@ public class MainFrame extends DynamicFrame {
                         return;
                     }
 
-                    sendMessage(client);
+                    sendMessage();
                 }
             }
         });
 
         channelIndicator = ComponentFactory.createLabel("No channel selected.", SECONDARY_TEXT_COLOR);
         channelIndicator.setFont(HEADING_FONT);
-    }
-
-    private void sendMessage(ChatClient client) {
-        if (typeField.getText() == "") {
-            return;
-        }
-        
-        String clientUsername = client.getUser().getUsername();
-        String timestamp = new Date().toString();
-        int channelId = client.getCurrentChannel().getChannelId();
-        Message msg = new Message(typeField.getText(), clientUsername, -1, timestamp, channelId);
-        client.offerEvent(new MessageSentEvent(clientUsername, msg));
-        typeField.setText("");
-
-        System.out.println("SYSTEM: Sent message " + typeField.getText());
     }
 
     /**
@@ -615,6 +513,7 @@ public class MainFrame extends DynamicFrame {
      */
     public synchronized void reload() {
         if (client.getCurrentChannel() != null) {
+            // Remove aspects that need a current channel and reset for friends
             typeField.setEditable(true);
             typeField.setText("");
             channelIndicator.setText("Channel: " + client.getCurrentChannel().getChannelName());
@@ -629,6 +528,7 @@ public class MainFrame extends DynamicFrame {
                 channelConfigPanel.add(deleteChannelButton);
             }
         } else {
+            // Remove friends stuff and add channel specific components
             typeField.setText("Messaging Disabled...");
             typeField.setEditable(false);
             channelIndicator.setText("No channel selected.");
@@ -651,11 +551,23 @@ public class MainFrame extends DynamicFrame {
         this.revalidate();
     }
 
+    /**
+     * Reloads this frame's small profile picture component.
+     * <p>
+     * Only significant if the profile picture has changed.
+     */
     private synchronized void reloadProfile() {
         profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
     }
 
-    // TODO: make this a lot better
+    /**
+     * Reloads this frame's displayed message panels.
+     * <p>
+     * This method should be called whenever a channel's messages is edited in any
+     * way to ensure client has the most recent and most updated mesesages. This
+     * method will create new method panels and leave the old ones out for garbage
+     * collection.
+     */
     private synchronized void reloadMessages() {
         if (client.getCurrentChannel() == null) {
             return;
@@ -669,6 +581,8 @@ public class MainFrame extends DynamicFrame {
         HashSet<User> adminUsers = sourceChannel.getAdminUsers();
 
         for (int messageIndex = 0; messageIndex < messages.size(); messageIndex++) {
+            // Only display messages within the max message grids range, taking account
+            // message offset.
             if (messageIndex >= messages.size() - messageOffset
                     || messageIndex < (messages.size() - maxMessageGrids) - messageOffset) {
                 continue;
@@ -680,6 +594,8 @@ public class MainFrame extends DynamicFrame {
             boolean showAdmin = adminUsers.contains(client.getUser());
             boolean showHeader = false;
 
+            // If this message is the first message or is sent by a new person, show a
+            // header.
             if (messageIndex != 0) {
                 if (!(msg.getSenderUsername().equals(messages.get(messageIndex - 1).getSenderUsername()))) {
                     showHeader = true;
@@ -692,6 +608,13 @@ public class MainFrame extends DynamicFrame {
         }
     }
 
+    /**
+     * Reloads this frame's displayed user panels.
+     * <p>
+     * This method should be called whenever a change to a channel's users occur, in
+     * order to keep the users updated. This method will create new user panels and
+     * leave the old ones out for garbage collection.
+     */
     private synchronized void reloadUsers() {
         userPanel.removeAll();
 
@@ -705,15 +628,25 @@ public class MainFrame extends DynamicFrame {
         for (int userIndex = 0; userIterator.hasNext(); userIndex++) {
             User u = userIterator.next();
 
+            // Only show users that fall within the max side panel grids range, taking into
+            // account useroffset.
             if (userIndex < userOffset || userIndex >= maxSidePanelGrids + userOffset) {
                 continue;
             }
 
             userPanel.add(new UserPanel(client, u, curChannel.getAdminUsers().contains(u)));
+            // Limit the size of the panel so it doesn't take too much space.
             userPanel.setMaximumSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
         }
     }
 
+    /**
+     * Reloads this frame's displayed channel panels.
+     * <p>
+     * This method should be called whenever a change to the client's channels
+     * occur, to keep this main menu updated. This method will create new channel
+     * panels and leave the old ones out for garbage collection.
+     */
     private synchronized void reloadChannels() {
         channelPanel.removeAll();
 
@@ -722,45 +655,53 @@ public class MainFrame extends DynamicFrame {
             homeButton.setPreferredSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
             channelPanel.add(sideButtonPanel);
         }
-        // if (maxSidePanelGrids >= 2) {
-        // channelPanel.add(homeButton);
-        // channelPanel.add(addChannelButton);
-        // } else if (maxSidePanelGrids >= 1) {
-        // channelPanel.add(homeButton);
-        // }
 
-        if (this.client.getChannels().size() > 0) {
-            Iterator<Channel> channelIterator = this.client.getChannels().values().iterator();
-            for (int channelIndex = 0; channelIterator.hasNext(); channelIndex++) {
-                Channel c = channelIterator.next();
-
-                if (channelIndex < channelOffset || channelIndex >= (maxSidePanelGrids - 1) + channelOffset) {
-                    continue;
-                }
-
-                Color defaultColor = SIDE_COLOR;
-                // written this way so that if the current channel is null, that's okay
-                if (c.equals(this.client.getCurrentChannel())) {
-                    defaultColor = MAIN_COLOR;
-                }
-
-                channelPanel.add(new ChannelPanel(this.client, c, defaultColor));
-                channelPanel.setMaximumSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
-            }
-        }
-    }
-
-    private synchronized void reloadFriends() {
-        if (client.getCurrentChannel() != null) {
+        if (this.client.getChannels().size() == 0) {
             return;
         }
 
-        textPanel.removeAll();
+        Iterator<Channel> channelIterator = this.client.getChannels().values().iterator();
+        for (int channelIndex = 0; channelIterator.hasNext(); channelIndex++) {
+            Channel c = channelIterator.next();
+
+            // Only show channels in the max side panel grids range (minus one for the
+            // buttons), keeping in mind channel offset.
+            if (channelIndex < channelOffset || channelIndex >= (maxSidePanelGrids - 1) + channelOffset) {
+                continue;
+            }
+
+            Color defaultColor = SIDE_COLOR;
+            // written this way so that if the current channel is null, that's okay
+            if (c.equals(this.client.getCurrentChannel())) {
+                defaultColor = MAIN_COLOR;
+            }
+
+            channelPanel.add(new ChannelPanel(this.client, c, defaultColor));
+            // Ensure channels don't get too large.
+            channelPanel.setMaximumSize(new Dimension(maxChannelWidth, SIDE_PANEL_HEIGHT));
+        }
+    }
+
+    /**
+     * Reloads this frame's displayed friend panels, if any are displayed.
+     * <p>
+     * This method should be called whenever a change to the client's friends occur.
+     * This keeps the displayed friends updated. This method will create new friend
+     * panels and leave the old ones out for garbage collection.
+     */
+    private synchronized void reloadFriends() {
+        // Friends panel share the text panel, but only when the currentChannel is null.
+        if (client.hasCurrentChannel()) {
+            return;
+        }
+
+        textPanel.removeAll(); // remove existing components, for garbage collection
 
         Iterator<User> friendIterator = this.client.getFriends().values().iterator();
         for (int friendIndex = 0; friendIterator.hasNext(); friendIndex++) {
             User friend = friendIterator.next();
 
+            // Only show friends within the max message grid, keeping in mind friend offset
             if (friendIndex < friendOffset || friendIndex >= maxMessageGrids + friendOffset) {
                 continue;
             }
@@ -861,6 +802,11 @@ public class MainFrame extends DynamicFrame {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Destroying this frame will also destroy any subframes.
+     */
     public void destroy() {
         if (this.hasActiveChannelCreateFrame()) {
             this.addChannelFrame.destroy();
@@ -888,6 +834,24 @@ public class MainFrame extends DynamicFrame {
     }
 
     /**
+     * Attempts to send a message to the server.
+     */
+    private void sendMessage() {
+        if (typeField.getText() == "") {
+            return;
+        }
+
+        String clientUsername = client.getUser().getUsername();
+        String timestamp = new Date().toString();
+        int channelId = client.getCurrentChannel().getChannelId();
+        Message msg = new Message(typeField.getText(), clientUsername, -1, timestamp, channelId);
+        client.offerEvent(new MessageSentEvent(clientUsername, msg));
+        typeField.setText("");
+
+        System.out.println("SYSTEM: Sent message " + typeField.getText());
+    }
+
+    /**
      * Adds a specified user to the client's current channel.
      * 
      * @param user the username of the user to add.
@@ -905,6 +869,27 @@ public class MainFrame extends DynamicFrame {
     }
 
     /**
+     * Creates and displays a request frame for the user, prompting them to enter
+     * their new friend's username.
+     * <p>
+     * After confirming the friend name, this method will attempt to send an event
+     * to the server to add a friend.
+     */
+    private void selectUserToBefriend() {
+        JLabel label = ComponentFactory.createLabel("Add a friend's username, starting with @ (eg. @EmeraldPhony)",
+                BRIGHT_TEXT_COLOR);
+        JTextField input = ComponentFactory.createTextBox(20);
+        JButton submit = ComponentFactory.createButton("Add Friend!", new ActionListener() {
+            public void actionPerformed(ActionEvent evt2) {
+                addFriend(input.getText());
+            }
+        });
+
+        JFrame addFriend = FrameFactory.createRequestFrame("Add friend", MAIN_COLOR, label, input, submit);
+        addFriend.setVisible(true);
+    }
+
+    /**
      * Adds a specified user to the client's friend list.
      * 
      * @param user the username of the user to add.
@@ -917,5 +902,347 @@ public class MainFrame extends DynamicFrame {
         String clientUsername = client.getUser().getUsername();
         String userToBefriend = user.replaceFirst("@", "");
         client.offerEvent(new FriendAddEvent(clientUsername, userToBefriend));
+    }
+
+    /**
+     * Ensures a profile frame is being displayed to the user, if there is not one
+     * already.
+     */
+    private void displayProfile() {
+        if (!hasActiveProfileFrame()) {
+            profileFrame = new ProfileFrame(client);
+            profileFrame.setVisible(true);
+        }
+    }
+
+    /**
+     * Prompts the user as to whether they want to delete the current channel or
+     * not.
+     * <p>
+     * If the user presses yes, sends a channel delete event to the server.
+     */
+    private void confirmDeletingChannel() {
+        JLabel label = ComponentFactory.createLabel("Are you sure you want to delete this channel?", BRIGHT_TEXT_COLOR);
+        ActionListener action = new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                deleteCurrentChannel();
+            }
+        };
+
+        JFrame deleteChannel = FrameFactory.createConfirmFrame("Delete channel", MAIN_COLOR, label, action);
+        deleteChannel.setVisible(true);
+    }
+
+    /**
+     * Deletes the client's current channel and sends a channel delete event to the
+     * server.
+     */
+    private void deleteCurrentChannel() {
+        String clientUsername = client.getUser().getUsername();
+        int curChannelId = client.getCurrentChannel().getChannelId();
+        client.offerEvent(new ChannelDeleteEvent(clientUsername, curChannelId));
+    }
+
+    /**
+     * Prompts client to input a selected user to add to the current channel.
+     * <p>
+     * Once the client submits, sends a user add event to the server.
+     */
+    private void selectUserToAdd() {
+        JLabel label = ComponentFactory.createLabel("Add a username to add, starting with @ (eg. @EmeraldPhony)",
+                BRIGHT_TEXT_COLOR);
+        JTextField input = ComponentFactory.createTextBox(20);
+        JButton submit = ComponentFactory.createButton("Add User", new ActionListener() {
+            public void actionPerformed(ActionEvent evt2) {
+                addUserToChannel(input.getText());
+            }
+        });
+
+        JFrame addUser = FrameFactory.createRequestFrame("Add user", MAIN_COLOR, label, input, submit);
+        addUser.setVisible(true);
+    }
+
+    /**
+     * Prompts client to input a selected user to remove from the current channel.
+     * <p>
+     * Once the client submits, sends a user remove event to the server.
+     */
+    private void selectUserToRemove() {
+        JLabel label = ComponentFactory.createLabel("Add a username to remove, starting with @ (eg. @EmeraldPhony)",
+                BRIGHT_TEXT_COLOR);
+        JTextField input = ComponentFactory.createTextBox(20);
+        JButton submit = ComponentFactory.createButton("Remove User", new ActionListener() {
+            public void actionPerformed(ActionEvent evt2) {
+                removeUser(input.getText());
+            }
+        });
+
+        JFrame removeUser = FrameFactory.createRequestFrame("Remove user", MAIN_COLOR, label, input, submit);
+        removeUser.setVisible(true);
+    }
+
+    /**
+     * Removes a specified user from the channel, and sends a user remove event to
+     * the server.
+     * <p>
+     * If the provided username is of the client's user, or is "", returns early.
+     * 
+     * @param user the username of the user to remove.
+     */
+    private void removeUser(String user) {
+        if (user.equals("")) {
+            return;
+        }
+
+        String username = user.replaceFirst("@", "");
+        User removedUser = client.getCurrentChannel().getUsers().get(username);
+
+        if (removedUser == null || client.getUser().equals(removedUser)) {
+            return;
+        }
+
+        String clientUsername = client.getUser().getUsername();
+        int curChannelId = client.getCurrentChannel().getChannelId();
+        client.offerEvent(new ChannelRemoveMemberEvent(clientUsername, curChannelId, username));
+    }
+
+    /**
+     * Prompts the client as to whether they want to leave the channel or not.
+     * <p>
+     * If the client selects yes, sends a channel remove event with the client's
+     * user to the server.
+     */
+    private void confirmleavingChannel() {
+        JLabel label = ComponentFactory.createLabel("Are you sure you want to leave this channel?", BRIGHT_TEXT_COLOR);
+        ActionListener action = new ActionListener() {
+            public void actionPerformed(ActionEvent evt2) {
+                leaveChannel();
+            }
+        };
+
+        JFrame removeConfirmPanel = FrameFactory.createConfirmFrame("Delete channel", MAIN_COLOR, label, action);
+        removeConfirmPanel.setVisible(true);
+    }
+
+    /**
+     * Removes the client from the current channel and sends a channel remove event
+     * to the server with the client's user.
+     */
+    private void leaveChannel() {
+        // This button will only exist if a current channel exists
+        String clientUsername = client.getUser().getUsername();
+        int curChannelId = client.getCurrentChannel().getChannelId();
+        client.offerEvent(new ChannelRemoveMemberEvent(clientUsername, curChannelId, clientUsername));
+    }
+
+    /**
+     * The {@code FriendsMouseWheelListener} listener provides functionality for
+     * friend panel scrolling and reloading.
+     * <p>
+     * This {@code MouseWheelListener} will adjust the {@code friendOffset} field,
+     * which allows for scrolling.
+     * <p>
+     * Created <b> 2020-12-11 </b>
+     * 
+     * @since 1.0.0
+     * @version 1.0.0
+     * @author Joseph Wang
+     * @see java.awt.event.MouseWheelListener
+     */
+    private class FriendsMouseWheelListener implements MouseWheelListener {
+        /** The associated client. */
+        private ChatClient client;
+
+        /**
+         * Constructs a new {@code FriendsMouseWheelListener}.
+         * 
+         * @param client the associated client.
+         */
+        private FriendsMouseWheelListener(ChatClient client) {
+            this.client = client;
+        }
+
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (client.hasCurrentChannel()) {
+                return;
+            }
+
+            // Scrolls up
+            if (e.getWheelRotation() < 0) {
+                if (friendOffset > 0) {
+                    friendOffset--;
+                    onlyReloadFriends();
+                }
+            } else {
+                // Scrolls down
+                // Cap the scrolling at a point
+                if (client.getFriends().size() > maxMessageGrids
+                        && client.getFriends().size() - userOffset > maxSidePanelGrids) {
+                    friendOffset++;
+                    onlyReloadFriends();
+                }
+            }
+        }
+    }
+
+    /**
+     * The {@code MessageMouseWheelListener} listener provides functionality for
+     * message panel scrolling and reloading.
+     * <p>
+     * This {@code MouseWheelListener} will adjust the {@code messageOffset} field,
+     * which allows for scrolling of message panels.
+     * <p>
+     * Created <b> 2020-12-11 </b>
+     * 
+     * @since 1.0.0
+     * @version 1.0.0
+     * @author Joseph Wang
+     * @see java.awt.event.MouseWheelListener
+     */
+    private class MessageMouseWheelListener implements MouseWheelListener {
+        /** The associated client. */
+        private ChatClient client;
+
+        /**
+         * Constructs a new {@code MessageMouseWheelListener}.
+         * 
+         * @param client the associated client.
+         */
+        private MessageMouseWheelListener(ChatClient client) {
+            this.client = client;
+        }
+
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (!client.hasCurrentChannel()) {
+                return;
+            }
+
+            // scroll down
+            if (e.getWheelRotation() > 0) {
+                if (messageOffset > 0) {
+                    messageOffset--;
+                    onlyReloadMessages();
+                }
+            } else {
+                // scroll up
+                if (!client.hasCurrentChannel()) {
+                    return;
+                }
+
+                Channel curChannel = client.getCurrentChannel();
+                // if there are still messages, load them
+                if (curChannel.getMessages().size() > maxMessageGrids
+                        && curChannel.getMessages().size() - messageOffset > maxMessageGrids) {
+                    messageOffset++;
+                    onlyReloadMessages();
+
+                    // otherwise request more messages from the server
+                } else if (curChannel.getMessages().size() >= Channel.LOCAL_SAVE_AMT
+                        && (curChannel.getMessages().size() - messageOffset) <= maxMessageGrids && !requestedMessages) {
+
+                    String clientUsername = client.getUser().getUsername();
+                    int startId = curChannel.getMessages().get(0).getMessageId();
+                    int channelId = curChannel.getChannelId();
+
+                    client.offerEvent(new ClientRequestMessageEvent(clientUsername, startId, channelId));
+                    requestedMessages = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * The {@code UserMouseWheelListener} listener provides functionality for user
+     * panel scrolling and reloading.
+     * <p>
+     * This {@code MouseWheelListener} will adjust the {@code userOffset} field,
+     * which allows for scrolling of user panels.
+     * <p>
+     * Created <b> 2020-12-11 </b>
+     * 
+     * @since 1.0.0
+     * @version 1.0.0
+     * @author Joseph Wang
+     * @see java.awt.event.MouseWheelListener
+     */
+    private class UserMouseWheelListener implements MouseWheelListener {
+        /** The associated client. */
+        private ChatClient client;
+
+        /**
+         * Constructs a new {@code UserMouseWheelListener}.
+         * 
+         * @param client the associated client.
+         */
+        private UserMouseWheelListener(ChatClient client) {
+            this.client = client;
+        }
+
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            // scroll up
+            if (e.getWheelRotation() < 0) {
+                if (userOffset > 0) {
+                    userOffset--;
+                    onlyReloadUsers();
+                }
+            } else {
+                // scroll down
+                // If the user has no current channel, there are no users to show and no offset
+                // to adjust
+                if (!client.hasCurrentChannel()) {
+                    return;
+                }
+
+                if (client.getCurrentChannel().getUsers().size() > maxSidePanelGrids
+                        && client.getCurrentChannel().getUsers().size() - userOffset > maxSidePanelGrids) {
+                    userOffset++;
+                    onlyReloadUsers();
+                }
+            }
+        }
+    }
+
+    /**
+     * The {@code ChannelMouseWheelListener} listener provides functionality for
+     * channel panel scrolling and reloading.
+     * <p>
+     * This {@code MouseWheelListener} will adjust the {@code channelOffset} field,
+     * which allows for scrolling of channel panels.
+     * <p>
+     * Created <b> 2020-12-11 </b>
+     * 
+     * @since 1.0.0
+     * @version 1.0.0
+     * @author Joseph Wang
+     * @see java.awt.event.MouseWheelListener
+     */
+    private class ChannelMouseWheelListener implements MouseWheelListener {
+        /** The associated client. */
+        private ChatClient client;
+
+        /**
+         * Constructs a new {@code ChannelMouseWheelListener}.
+         * 
+         * @param client the associated client.
+         */
+        private ChannelMouseWheelListener(ChatClient client) {
+            this.client = client;
+        }
+
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            // scroll up
+            if (e.getWheelRotation() < 0) {
+                if (channelOffset > 0) {
+                    channelOffset--;
+                    onlyReloadChannels();
+                }
+            } else {
+                // scroll down
+                if (channelOffset < client.getChannels().size() - 1) {
+                    channelOffset++;
+                    onlyReloadChannels();
+                }
+            }
+        }
     }
 }

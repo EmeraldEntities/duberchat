@@ -25,22 +25,46 @@ import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
 import duberchat.client.ChatClient;
 
+/**
+ * The {@code ChannelCreateFrame} is the frame responsible for the pop-up that
+ * allows the client to input a name and users to add a channel to.
+ * <p>
+ * Created <b> 2020-12-09 </b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Joseph Wang
+ */
 @SuppressWarnings("serial")
 public class ChannelCreateFrame extends DynamicGridbagFrame {
+    /** The default size of this frame. */
     public static final Dimension DEFAULT_SIZE = new Dimension(400, 500);
 
+    /** The associated client. */
     protected ChatClient client;
 
+    /** The main panel of this frame. */
     JPanel mainPanel;
+    /** The field to type in the name of the channel. */
     JTextField nameField;
+    /** The field to type in users. */
     JTextField usersField;
+    /** The submit button, which attempts to create the new channel. */
     JButton submitButton;
 
+    /** The GridBagLayout for this main panel. */
     GridBagLayout layout;
+    /** The constraints for the layout. */
     GridBagConstraints constraints;
 
+    /** Whether this frame has sent a create request already or not. */
     private boolean alreadySentRequest = false;
 
+    /**
+     * Constructs a new {@code ChannelCreateFrame}.
+     * 
+     * @param client the associated client.
+     */
     public ChannelCreateFrame(ChatClient client) {
         super("Add a new channel");
 
@@ -51,6 +75,19 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setIconImage(new ImageIcon("data/system/logo.png").getImage());
 
+        this.initializeComponents();
+
+        this.getRootPane().setDefaultButton(submitButton);
+        this.add(mainPanel);
+    }
+
+    /**
+     * Initializes this frame's components, and adds them to the main panel.
+     * <p>
+     * Adding should only happen once at the initialization stage, so adding in this
+     * method is okay.
+     */
+    private void initializeComponents() {
         mainPanel = new JPanel();
         mainPanel.setBackground(MainFrame.MAIN_COLOR);
         mainPanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK));
@@ -70,7 +107,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
 
         JLabel channelNameLabel = ComponentFactory.createLabel("Channel Name:");
         JLabel userLabel = ComponentFactory.createLabel("Invite users.");
-        JLabel userDescriptionLabel = ComponentFactory.createLabel("Only existing users will be invited.",
+        JLabel userDescriptionLabel = ComponentFactory.createLabel("Leave blank if you want to invite no one.",
                 MainFrame.TEXT_COLOR);
         JLabel userSyntaxLabel = ComponentFactory.createLabel("Seperate users using a comma, and put @ before name.",
                 MainFrame.TEXT_COLOR);
@@ -100,9 +137,6 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
         addConstrainedComponent(submitButton, mainPanel, layout, constraints, 0, 9, 1, 1, GridBagConstraints.REMAINDER,
                 GridBagConstraints.CENTER, new Insets(8, 0, 8, 0));
-
-        this.getRootPane().setDefaultButton(submitButton);
-        this.add(mainPanel);
     }
 
     /**
