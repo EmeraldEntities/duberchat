@@ -11,13 +11,39 @@ import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
+/**
+ * the {@code ServerRequestMessageHandler} class provides the server-side
+ * implementation for handling any {@code ClientRequestMessageEvent}.
+ * <p>
+ * <p>
+ * Created <b>2020-12-08</b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Paula Yuan
+ * @see duberchat.events.ClientRequestMessageEvent
+ */
 public class ServerRequestMessageHandler implements Handleable {
+  /** The associated server this handler is attached to. */
   private ChatServer server;
 
+  /**
+   * Constructs a new {@code ServerRequestMessageHandler}.
+   * 
+   * @param server the server that this handler is attached to.
+   */
   public ServerRequestMessageHandler(ChatServer server) {
     this.server = server;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Ensures that the server sends the event with the requested messages to the
+   * requestor.
+   * 
+   * @param newEvent {@inheritDoc}
+   */
   public void handleEvent(SerializableEvent newEvent) {
     ClientRequestMessageEvent event = (ClientRequestMessageEvent) newEvent;
     String source = (String) event.getSource();
@@ -41,6 +67,7 @@ public class ServerRequestMessageHandler implements Handleable {
           messageBlock.add(0, messages.get(j));
         }
 
+        // Send back the event to the user who requested messages.
         try {
           output.writeObject(new ClientRequestMessageEvent(source, startMsgId, channel.getChannelId(), messageBlock));
           output.flush();

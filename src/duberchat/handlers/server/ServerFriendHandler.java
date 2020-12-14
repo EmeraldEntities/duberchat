@@ -16,13 +16,41 @@ import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
+/**
+ * the {@code ServerFriendHandler} class provides the server-side
+ * implementation for handling any {@code FriendEvent}.
+ * <p>
+ * <p>
+ * Created <b>2020-12-12</b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Paula Yuan
+ * @see duberchat.events.ChannelFriendEvent
+ * @see duberchat.events.ChannelAddFriendEvent
+ * @see duberchat.events.ChannelDeleteFriendEvent
+ */
 public class ServerFriendHandler implements Handleable {
+  /** The associated server this handler is attached to. */
   private ChatServer server;
 
+  /**
+   * Constructs a new {@code ServerFriendHandler}.
+   * 
+   * @param server the server that this handler is attached to.
+   */
   public ServerFriendHandler(ChatServer server) {
     this.server = server;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Ensures that the server has properly updated users, updates files, and sends
+   * the event to all relevant users.
+   * 
+   * @param newEvent {@inheritDoc}
+   */
   public void handleEvent(SerializableEvent newEvent) {
     FriendEvent event = (FriendEvent) newEvent;
     String friendUsername = event.getFriendUsername();

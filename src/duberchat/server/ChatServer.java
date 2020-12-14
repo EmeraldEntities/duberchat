@@ -126,6 +126,7 @@ public class ChatServer {
 
         Socket client = null; // hold the client connection
 
+        // start thread for normal file writing
         Thread fileWriteThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
@@ -153,6 +154,7 @@ public class ChatServer {
         this.serverFrame.getTextArea().append("Started file writing thread.\n");
         fileWriteThread.start();
 
+        // start thread for image file writing 
         Thread imageWriteThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
@@ -349,16 +351,16 @@ public class ChatServer {
                         handleLogin((ClientLoginEvent) event);
                         continue;
                     } else if (event instanceof ClientStatusUpdateEvent && 
-                               ((ClientStatusUpdateEvent) event).getStatus() == 0) {
+                               ((ClientStatusUpdateEvent) event).getStatus() == User.OFFLINE) {
                             eventHandlers.get(ClientStatusUpdateEvent.class).handleEvent(event);
                             continue;
                     }
                     eventQueue.add(event);
                 } catch (IOException e) {
                     ChatServer.this.serverFrame.getTextArea().append("Failed to receive msg from the client\n");
-                    user.setStatus(0);
+                    user.setStatus(User.OFFLINE);
                     eventHandlers.get(ClientStatusUpdateEvent.class)
-                            .handleEvent(new ClientStatusUpdateEvent(user.getUsername(), 0));
+                            .handleEvent(new ClientStatusUpdateEvent(user.getUsername(), User.OFFLINE));
                 } catch (ClassNotFoundException e1) {
                     ChatServer.this.serverFrame.getTextArea().append("Class not found :(\n");
                     e1.printStackTrace();

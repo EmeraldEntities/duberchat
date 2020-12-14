@@ -1,6 +1,5 @@
 package duberchat.handlers.server;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -42,9 +41,12 @@ public class ServerChannelCreateHandler implements Handleable {
   }
 
   /**
-   * Handles the {@code ChannelCreateEvent}.
+   * {@inheritDoc}
+   * <p>
+   * Ensures that the server has a properly updated channel list, updates files,
+   * and sends back the event to all relevant users.
    * 
-   * @param newEvent The {@code ChannelCreateEvent} to handle..
+   * @param newEvent {@inheritDoc}
    */
   public void handleEvent(SerializableEvent newEvent) {
     ChannelCreateEvent event = (ChannelCreateEvent) newEvent;
@@ -74,7 +76,6 @@ public class ServerChannelCreateHandler implements Handleable {
     // If this channel is a dm, check if the dm already exists.
     // If this channel is an already existing dm, return that dm instead.
     // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
-    // TODO: this is kinda scufffed lmao
     if (channelUsers.size() == 2) {
       Iterator<Integer> channelsItr = creator.getChannels().iterator();
       while (channelsItr.hasNext()) {
@@ -124,9 +125,7 @@ public class ServerChannelCreateHandler implements Handleable {
       
       // update all the users (and their files) with the new channel
       // Output a corresponding event to the user clients in the channel
-      Iterator<User> iterator = channelUsers.values().iterator();
-      while (iterator.hasNext()) {
-        User user = iterator.next();
+      for (User user : channelUsers.values()) {
         user.getChannels().add(id);
         String filePath = "data/users/" + user.getUsername();
         server.getFileWriteQueue().add(new FileWriteEvent(user, filePath));

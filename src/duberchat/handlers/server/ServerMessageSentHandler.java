@@ -2,8 +2,6 @@ package duberchat.handlers.server;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Date;
-import java.util.Iterator;
 
 import duberchat.chatutil.*;
 import duberchat.events.FileWriteEvent;
@@ -13,20 +11,19 @@ import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
 /**
- * A {@code ServerMessageSentHandler} is a handler that processes sent messages.
+ * the {@code ServerMessageSentHandler} class provides the server-side
+ * implementation for handling any {@code MessageSentEvent}.
  * <p>
- * The handler receives a {@code MessageSentEvent} from the server, which itself came from the 
- * client. The handler adds the message to the file writing queue and propagates the event with an  
- * updated {@code Message} object to all the currently online users in the channel.
- * 
  * <p>
- * Since <b>2020-12-06</b>.
+ * Created <b>2020-12-06</b>
  * 
  * @since 1.0.0
  * @version 1.0.0
  * @author Paula Yuan
+ * @see duberchat.events.ChannelMessageSentEvent
  */
 public class ServerMessageSentHandler implements Handleable {
+    /** The associated server this handler is attached to. */
     private ChatServer server;
 
     /**
@@ -38,11 +35,14 @@ public class ServerMessageSentHandler implements Handleable {
         this.server = server;
     }
 
-    /**
-     * Handles the {@code MessageSentEvent}.
-     * 
-     * @param newEvent The event to be handled. 
-     */
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Ensures that the server has a properly channel, updates files, and sends the
+   * event to all relevant users.
+   * 
+   * @param newEvent {@inheritDoc}
+   */
     public void handleEvent(SerializableEvent newEvent) {
         MessageSentEvent event = (MessageSentEvent) newEvent;
         Message toSend = event.getMessage();
@@ -64,14 +64,14 @@ public class ServerMessageSentHandler implements Handleable {
         }
         processedMsg.trim();
 
+        // update the server-side channel with the new message
         Message newMessage = new Message(processedMsg, senderUsername, msgId, timeStamp, destinationId);
         destination.getMessages().add(newMessage);
         destination.setTotalMessages(msgId + 1);
+
         try {
             // Send back a message sent event to every online user in the channel
-            Iterator<User> itr = destination.getUsers().values().iterator();
-            while (itr.hasNext()) {
-                User member = itr.next(); 
+            for (User member : destination.getUsers().values()) {
                 // skip offline users
                 if (!server.getCurUsers().containsKey(member)) continue;
                 ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();

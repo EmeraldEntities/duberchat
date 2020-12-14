@@ -9,19 +9,44 @@ import duberchat.server.ChatServer;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.Message;
 import duberchat.chatutil.User;
 
+/**
+ * the {@code ServerChannelRemoveMemberHandler} class provides the server-side
+ * implementation for handling any {@code ChannelRemoveMemberEvent}.
+ * <p>
+ * <p>
+ * Created <b>2020-12-06</b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Paula Yuan 
+ * @see duberchat.events.ChannelRemoveMemberEvent
+ */
 public class ServerChannelRemoveMemberHandler implements Handleable {
+  /** The associated server this handler is attached to. */
   private ChatServer server;
 
+  /**
+   * Constructs a new {@code ServerChannelRemoveMemberHandler}.
+   * 
+   * @param server the server that this handler is attached to.
+   */
   public ServerChannelRemoveMemberHandler(ChatServer server) {
     this.server = server;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Ensures that the server channel/user is properly updated, updates files, and
+   * sends the event to all relevant users.
+   * 
+   * @param newEvent {@inheritDoc}
+   */
   public void handleEvent(SerializableEvent newEvent) {
     ChannelRemoveMemberEvent event = (ChannelRemoveMemberEvent) newEvent;
     int id = event.getChannelId();
@@ -51,9 +76,7 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
       output.writeObject(new ChannelRemoveMemberEvent(source.getUsername(), id, username));
       output.flush();
       output.reset();
-      Iterator<User> itr = toDeleteFrom.getUsers().values().iterator();
-      while (itr.hasNext()) {
-        User member = itr.next();
+      for (User member : toDeleteFrom.getUsers().values()) {
         // skip offline users
         if (!server.getCurUsers().containsKey(member)) continue;
         output = server.getCurUsers().get(member).getOutputStream();

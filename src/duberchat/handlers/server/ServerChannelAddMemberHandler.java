@@ -1,8 +1,6 @@
 package duberchat.handlers.server;
 
 import java.io.*;
-import java.util.Iterator;
-import java.util.*;
 
 import duberchat.chatutil.*;
 import duberchat.events.ChannelAddMemberEvent;
@@ -12,13 +10,39 @@ import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
+/**
+ * the {@code ServerChannelAddMemberHandler} class provides the server-side
+ * implementation for handling any {@code ChannelAddMemberEvent}.
+ * <p>
+ * <p>
+ * Created <b>2020-12-05</b>
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Paula Yuan
+ * @see duberchat.events.ChannelAddMemberEvent
+ */
 public class ServerChannelAddMemberHandler implements Handleable {
+  /** The associated server this handler is attached to. */
   private ChatServer server;
 
+  /**
+   * Constructs a new {@code ServerChannelAddMemberHandler}.
+   * 
+   * @param server the server that this handler is attached to.
+   */
   public ServerChannelAddMemberHandler(ChatServer server) {
     this.server = server;
   }
    
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Ensures that the server has a properly updated user list, updates files, and
+   * sends the event to all relevant users.
+   * 
+   * @param newEvent {@inheritDoc}
+   */
   public void handleEvent(SerializableEvent newEvent) {
     ChannelAddMemberEvent event = (ChannelAddMemberEvent) newEvent;
     int id = event.getChannelId();
@@ -60,30 +84,11 @@ public class ServerChannelAddMemberHandler implements Handleable {
           event.setNewChannel(toAddTo);
           event.setNewUser(toAdd);
 
-          // output.writeObject(new ChannelAddMemberEvent(source.getUsername(), id,
-          // newUserUsername,
-          // toAdd, newChannel));
           output.writeObject(event);
           output.flush();
           output.reset();
       }
 
-      // Iterator<User> itr = toAddTo.getUsers().values().iterator();
-      // while (itr.hasNext()) {
-      // User member = itr.next();
-      // // skip offline users
-      // if (!server.getCurUsers().containsKey(member)) {
-      // continue;
-      // }
-      // ObjectOutputStream output =
-      // server.getCurUsers().get(member).getOutputStream();
-
-      // output.writeObject(new ChannelAddMemberEvent(source.getUsername(), id,
-      // newUserUsername,
-      // toAdd, toAddTo));
-      // output.flush();
-      // output.reset();
-      // }
       server.getServerFrame().getTextArea().append(
           newUserUsername + " added to channel " + id + " by " + source.getUsername() + " and events sent to users\n");
     } catch (IOException e) {
