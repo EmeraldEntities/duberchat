@@ -108,6 +108,7 @@ public class LoginFrame extends DynamicGridbagFrame {
         mainPanel.setSize(this.getSize());
         mainPanel.setBackground(MainFrame.MAIN_COLOR);
         mainPanel.setLayout(loginLayout);
+        mainPanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK));
 
         // Set window to middle of screen
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -282,7 +283,7 @@ public class LoginFrame extends DynamicGridbagFrame {
             settingsFrame.destroy();
         }
 
-        settingsFrame = new LoginSettingFrame(client);
+        settingsFrame = new LoginSettingFrame(this.client);
         settingsFrame.setVisible(true);
     }
 

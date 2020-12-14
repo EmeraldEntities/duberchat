@@ -3,7 +3,7 @@ package duberchat.client;
 import java.io.*;
 import java.net.*;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.HashMap;
 
 import duberchat.chatutil.*;
@@ -12,12 +12,13 @@ import duberchat.gui.frames.*;
 import duberchat.handlers.*;
 import duberchat.handlers.client.*;
 
-/* [ChatClient.java]
+/**
  * A not-so-pretty implementation of a basic chat client
- * @author Mangat
- * @ version 1.0a
+ * 
+ * @since 1.0.0
+ * @version 1.0.0
+ * @author Joseph Wang
  */
-
 public class ChatClient {
     private String ip = "";
     private int port = -1;
@@ -33,18 +34,17 @@ public class ChatClient {
     private ObjectInputStream input;
     private ObjectOutputStream output;
 
-    private boolean running = true; // thread status via boolean
+    private boolean running = true;
     private boolean currentlyLoggingIn = true;
     private boolean hasClosed = false;
 
-    private ConcurrentLinkedQueue<SerializableEvent> outgoingEvents;
-
+    private LinkedBlockingQueue<SerializableEvent> outgoingEvents;
     private LoginFrame loginWindow;
     private MainFrame mainMenu;
 
     public void start() {
         // call a method that connects to the server
-        this.outgoingEvents = new ConcurrentLinkedQueue<>();
+        this.outgoingEvents = new LinkedBlockingQueue<>();
         this.initializeHandlers();
         this.initializeOutgoingEventWorker();
         this.initializeConnectionInformation();
@@ -198,17 +198,19 @@ public class ChatClient {
             public synchronized void run() {
                 while (running) {
                     synchronized (outgoingEvents) {
-                        if (servSocket != null && outgoingEvents.peek() != null) {
-                            System.out.println("SYSTEM: logged event in queue.");
-                            SerializableEvent event = outgoingEvents.remove();
-                            System.out.println(event);
+                        if (servSocket != null) {
                             try {
+                                SerializableEvent event = outgoingEvents.take();
+                                System.out.println("SYSTEM: logged event in queue: " + event);
+
                                 output.writeObject(event);
                                 output.flush();
                                 output.reset();
                                 System.out.println("SYSTEM: sent event.");
+                            } catch (InterruptedException e) {
+                                System.out.println("SYSTEM: queue was interrupted while blocking.");
                             } catch (IOException e) {
-                                System.out.println("SYSTEM: Could not send a " + event.getClass().toString());
+                                System.out.println("SYSTEM: could not send an event.");
                             }
                         }
                     }

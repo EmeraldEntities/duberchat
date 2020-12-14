@@ -71,6 +71,8 @@ public class LoginSettingFrame extends DynamicGridbagFrame {
     public LoginSettingFrame(ChatClient client) {
         super("Login Settings");
 
+        this.client = client;
+
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(DEFAULT_SIZE);
         this.setResizable(false);

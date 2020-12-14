@@ -24,8 +24,6 @@ import duberchat.events.ChannelCreateEvent;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
 import duberchat.client.ChatClient;
-import duberchat.chatutil.Channel;
-import duberchat.chatutil.User;
 
 @SuppressWarnings("serial")
 public class ChannelCreateFrame extends DynamicGridbagFrame {

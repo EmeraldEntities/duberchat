@@ -565,6 +565,7 @@ public class MainFrame extends DynamicFrame {
 
         } else if (source instanceof ChannelAddMemberEvent || source instanceof ChannelRemoveMemberEvent) {
             this.reloadUsers();
+            this.reloadChannels();
 
         } else if (source instanceof ChannelHierarchyChangeEvent) {
             this.reloadUsers();

@@ -49,21 +49,28 @@ public class ClientHierarchyHandler implements Handleable {
 
         Channel localChannel = this.client.getChannels().get(updatedChannelId);
         User toHandle = localChannel.getUsers().get(hierarchyEvent.getUsername());
+        Channel curChannel = this.client.getCurrentChannel();
 
         if (localChannel.getAdminUsers().contains(toHandle)) {
             // Demoting this user
             localChannel.getAdminUsers().remove(toHandle);
+            if (curChannel != null && curChannel.getChannelId() == updatedChannelId) {
+                // Just in case these are not linked for some reason
+                // If they are then this has no effect
+                this.client.getCurrentChannel().getAdminUsers().remove(toHandle);
+                this.client.getMainMenuFrame().reload(event);
+            }
         } else {
             // Promoting this user
             localChannel.getAdminUsers().add(toHandle);
+
+            if (curChannel != null && curChannel.getChannelId() == updatedChannelId) {
+                this.client.getCurrentChannel().getAdminUsers().add(toHandle);
+                this.client.getMainMenuFrame().reload(event);
+            }
         }
 
-        Channel curChannel = this.client.getCurrentChannel();
         if (curChannel != null && curChannel.getChannelId() == updatedChannelId) {
-            // Just in case these are not linked for some reason
-            // If they are then this has no effect
-            this.client.getCurrentChannel().getAdminUsers().add(toHandle);
-
             // Reload the channel to reflect actual changes
             this.client.getMainMenuFrame().reload(event);
         }
