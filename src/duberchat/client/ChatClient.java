@@ -471,9 +471,7 @@ public class ChatClient {
      */
     private synchronized void logout() {
         if (!currentlyLoggingIn) {
-            User newUser = new User(this.user);
-            newUser.setStatus(0);
-            outgoingEvents.offer(new ClientProfileUpdateEvent(newUser));
+            outgoingEvents.offer(new ClientStatusUpdateEvent(this.user.getUsername(), 0));
         }
     
         this.closeSafely();
