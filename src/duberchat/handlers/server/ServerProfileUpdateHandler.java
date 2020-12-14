@@ -27,19 +27,25 @@ public class ServerProfileUpdateHandler implements Handleable {
   public void handleEvent(SerializableEvent newEvent) {
     String username = (String) newEvent.getSource();
     User user = server.getAllUsers().get(username);
-    
-    ClientStatusUpdateEvent statusEvent = (ClientStatusUpdateEvent) newEvent;
-    ClientPfpUpdateEvent pfpEvent = (ClientPfpUpdateEvent) newEvent;
-    ClientPasswordUpdateEvent passwordEvent = (ClientPasswordUpdateEvent) newEvent;
-    if (newEvent instanceof ClientStatusUpdateEvent && user.getStatus() != statusEvent.getStatus()) {
-      user.setStatus(statusEvent.getStatus());
-    } else if (newEvent instanceof ClientPfpUpdateEvent && !user.pfpEquals(pfpEvent.getNewPfp())) {
-      user.setPfp(pfpEvent.getNewPfp());
-      user.setPfpFormat(pfpEvent.getPfpFormat());
-      String imagePath = "data/images/" + username + "." + pfpEvent.getPfpFormat();
-      server.getImageWriteQueue().add(new FileWriteEvent(user.getPfp(), imagePath));
-    } else if (user.getHashedPassword() != passwordEvent.getHashedPassword()) {
-      user.setHashedPassword(passwordEvent.getHashedPassword());
+
+    if (newEvent instanceof ClientStatusUpdateEvent) {
+      ClientStatusUpdateEvent statusEvent = (ClientStatusUpdateEvent) newEvent;
+      if (user.getStatus() != statusEvent.getStatus()) {
+        user.setStatus(statusEvent.getStatus());
+      }
+    } else if (newEvent instanceof ClientPfpUpdateEvent) {
+      ClientPfpUpdateEvent pfpEvent = (ClientPfpUpdateEvent) newEvent;
+      if (!user.pfpEquals(pfpEvent.getNewPfp())) {
+        user.setPfp(pfpEvent.getNewPfp());
+        user.setPfpFormat(pfpEvent.getPfpFormat());
+        String imagePath = "data/images/" + username + "." + pfpEvent.getPfpFormat();
+        server.getImageWriteQueue().add(new FileWriteEvent(user.getPfp(), imagePath));
+      }
+    } else {
+      ClientPasswordUpdateEvent passwordEvent = (ClientPasswordUpdateEvent) newEvent;
+      if (user.getHashedPassword() != passwordEvent.getHashedPassword()) {
+        user.setHashedPassword(passwordEvent.getHashedPassword());
+      }
     }
 
     HashSet<String> alreadyNotified = new HashSet<>();
@@ -52,7 +58,7 @@ public class ServerProfileUpdateHandler implements Handleable {
       ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
       try {
         if (newEvent instanceof ClientStatusUpdateEvent) {
-          output.writeObject(new ClientStatusUpdateEvent(username, statusEvent.getStatus()));
+          output.writeObject(new ClientStatusUpdateEvent(username, user.getStatus()));
         } else if (newEvent instanceof ClientPfpUpdateEvent) {
           output.writeObject(new ClientPfpUpdateEvent(username, user.getPfp(), user.getPfpFormat()));
         } else {
@@ -79,7 +85,7 @@ public class ServerProfileUpdateHandler implements Handleable {
       ObjectOutputStream output = server.getCurUsers().get(friend).getOutputStream();
       try {
         if (newEvent instanceof ClientStatusUpdateEvent) {
-          output.writeObject(new ClientStatusUpdateEvent(username, statusEvent.getStatus()));
+          output.writeObject(new ClientStatusUpdateEvent(username, user.getStatus()));
         } else if (newEvent instanceof ClientPfpUpdateEvent) {
           output.writeObject(new ClientPfpUpdateEvent(username, user.getPfp(), user.getPfpFormat()));
         } else {
@@ -105,7 +111,7 @@ public class ServerProfileUpdateHandler implements Handleable {
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
           if (newEvent instanceof ClientStatusUpdateEvent) {
-            output.writeObject(new ClientStatusUpdateEvent(username, statusEvent.getStatus()));
+            output.writeObject(new ClientStatusUpdateEvent(username, user.getStatus()));
           } else if (newEvent instanceof ClientPfpUpdateEvent) {
             output.writeObject(new ClientPfpUpdateEvent(username, user.getPfp(), user.getPfpFormat()));
           } else {

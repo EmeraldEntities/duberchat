@@ -141,6 +141,7 @@ public class ChatServer {
                         ObjectOutputStream out = new ObjectOutputStream(fileOut);
                         out.writeObject(writeInfo.getObjectToWrite());
                         out.flush();
+                        out.reset();
                         out.close();
                         ChatServer.this.serverFrame.getTextArea().append("Wrote to file: " + filePath + "\n");
                     } catch (IOException e) {
@@ -349,7 +350,7 @@ public class ChatServer {
                         continue;
                     } else if (event instanceof ClientStatusUpdateEvent && 
                                ((ClientStatusUpdateEvent) event).getStatus() == 0) {
-                            eventHandlers.get(ClientProfileUpdateEvent.class).handleEvent(event);
+                            eventHandlers.get(ClientStatusUpdateEvent.class).handleEvent(event);
                             continue;
                     }
                     eventQueue.add(event);
@@ -419,6 +420,7 @@ public class ChatServer {
                 if (user == null || password != user.getHashedPassword()) {
                     output.writeObject(new AuthFailedEvent(event));
                     output.flush();
+                    output.reset();
                     return;
                 }
 

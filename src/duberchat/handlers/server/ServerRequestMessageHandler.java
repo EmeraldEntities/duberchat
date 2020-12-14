@@ -35,7 +35,7 @@ public class ServerRequestMessageHandler implements Handleable {
 
       // remember, new messages go at the end, so old messages go to the top
       if (curMessage.getMessageId() == lastMessageId) {
-        int startMsgId = messages.get(i - 1).getMessageId();
+        int startMsgId = messages.get(Math.max(i - 1, 0)).getMessageId();
         // Add the next thirty messages to the message block
         for (int j = i - 1; j >= Math.max(i - 30, 0); j--) {
           messageBlock.add(0, messages.get(j));
