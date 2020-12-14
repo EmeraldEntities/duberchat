@@ -442,9 +442,6 @@ public class ChatServer {
                         if (!curUsers.containsKey(member) || notifiedAlready.contains(member)) {
                             continue;
                         } 
-                        if (user.equals(member)) {
-                            member.setStatus(1);
-                        }
                         ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
                         userOut.writeObject(new ClientStatusUpdateEvent(user.getUsername(), 1));
                         userOut.flush();

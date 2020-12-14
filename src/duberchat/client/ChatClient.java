@@ -202,6 +202,21 @@ public class ChatClient {
                             try {
                                 SerializableEvent event = outgoingEvents.take();
                                 System.out.println("SYSTEM: logged event in queue: " + event);
+                                if (event instanceof ClientPfpUpdateEvent) {
+                                    try {
+                                        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                                        ObjectOutputStream objOut = new ObjectOutputStream(byteOut);
+                                        objOut.writeObject(event);
+                                        ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
+                                        ObjectInputStream objIn = new ObjectInputStream(byteIn);
+                                        ClientPfpUpdateEvent test = (ClientPfpUpdateEvent) objIn.readObject();
+                                        System.out.println(test.getNewPfp());
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    } catch (ClassNotFoundException e1) {
+                                        e1.printStackTrace();
+                                    }
+                                }
 
                                 output.writeObject(event);
                                 output.flush();
