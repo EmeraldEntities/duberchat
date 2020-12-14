@@ -88,7 +88,7 @@ public class ServerChannelCreateHandler implements Handleable {
         if (channelUsers.containsKey(user1) && channelUsers.containsKey(user2)) {
           ArrayList<Message> messageBlock = new ArrayList<>();
           ArrayList<Message> fullMessages = channel.getMessages();
-          for (int i = 0; i < Math.min(30, fullMessages.size()); i++) {
+          for (int i = 1; i < Math.min(30, fullMessages.size()); i++) {
             messageBlock.add(fullMessages.get(fullMessages.size() - i));
           }
           try {

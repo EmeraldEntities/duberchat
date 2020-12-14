@@ -424,7 +424,7 @@ public class ChatServer {
                     return;
                 }
 
-                user.setStatus(1);
+                user.setStatus(User.ONLINE);
                 fileWriteQueue.add(new FileWriteEvent(user, "data/users/" + username));
                 curUsers.put(user, this);
 
@@ -436,6 +436,7 @@ public class ChatServer {
                 while (itr.hasNext()) {
                     int id = itr.next();
                     Channel curChannel = channels.get(id);
+
                     Iterator<User> iterator = curChannel.getUsers().values().iterator();
                     while (iterator.hasNext()) {
                         User member = iterator.next();
@@ -443,18 +444,22 @@ public class ChatServer {
                             continue;
                         } 
                         ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
-                        userOut.writeObject(new ClientStatusUpdateEvent(user.getUsername(), 1));
+                        userOut.writeObject(new ClientStatusUpdateEvent(user.getUsername(), User.ONLINE));
                         userOut.flush();
                         userOut.reset();
                         notifiedAlready.add(member);
                     }
+
                     fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id));
                     ArrayList<Message> messages = curChannel.getMessages();
                     ArrayList<Message> messageBlock = new ArrayList<>();
-                    for (int i = Math.max(messages.size() - 30, 0); i < messages.size(); i++) {
+                    for (int i = Math.max(messages.size() - Channel.MESSAGE_CLUSTER_AMT, 0); i < messages.size(); i++) {
                         messageBlock.add(messages.get(i));
                     }
                     Channel correctedChannel = new Channel(curChannel);
+
+                    // Set the user as online in every channel
+                    correctedChannel.getUsers().get(user.getUsername()).setStatus(User.ONLINE);
                     correctedChannel.setMessages(messageBlock);
                     userChannels.put(id, correctedChannel);
                 }

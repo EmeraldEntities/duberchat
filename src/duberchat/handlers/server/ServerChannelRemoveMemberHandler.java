@@ -8,9 +8,11 @@ import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
+import duberchat.chatutil.Message;
 import duberchat.chatutil.User;
 
 public class ServerChannelRemoveMemberHandler implements Handleable {
@@ -61,6 +63,14 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
       }
       server.getServerFrame().getTextArea().append(
           username + " removed from channel " + id + " by " + source.getUsername() + " and events sent to users\n");
+
+      // Remove all the deleted user's messages
+      ArrayList<Message> allMessages = toDeleteFrom.getMessages();
+      for (int i = allMessages.size() - 1; i >= 0; i--) {
+          if (allMessages.get(i).getSenderUsername().equals(toDelete.getUsername())) {
+              allMessages.remove(i);
+          }
+      }
 
       // If this channel has no more users, purge it from the server and delete its
       // file. Otherwise, remove the user from the channel file.

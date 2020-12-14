@@ -53,6 +53,7 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
 
         mainPanel = new JPanel();
         mainPanel.setBackground(MainFrame.MAIN_COLOR);
+        mainPanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK));
 
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();

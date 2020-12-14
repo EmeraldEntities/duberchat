@@ -2,6 +2,7 @@ package duberchat.handlers.server;
 
 import java.io.*;
 import java.util.Iterator;
+import java.util.*;
 
 import duberchat.chatutil.*;
 import duberchat.events.ChannelAddMemberEvent;
@@ -50,19 +51,39 @@ public class ServerChannelAddMemberHandler implements Handleable {
       server.getFileWriteQueue().add(new FileWriteEvent(toAdd, userFilePath));
 
       // Send back a add member event to every online user in the channel
-      Iterator<User> itr = toAddTo.getUsers().values().iterator();
-      while (itr.hasNext()) {
-        User member = itr.next();
-        // skip offline users
-        if (!server.getCurUsers().containsKey(member)) {
-          continue;
-        }
-        ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
-        output.writeObject(new ChannelAddMemberEvent(source.getUsername(), id, newUserUsername, 
-                                                     toAdd, toAddTo)); 
-        output.flush();
-        output.reset();
+      for (User u : toAddTo.getUsers().values()) {
+          if (!server.getCurUsers().containsKey(u)) {
+              continue;
+          }
+
+          ObjectOutputStream output = server.getCurUsers().get(u).getOutputStream();
+          event.setNewChannel(toAddTo);
+          event.setNewUser(toAdd);
+
+          // output.writeObject(new ChannelAddMemberEvent(source.getUsername(), id,
+          // newUserUsername,
+          // toAdd, newChannel));
+          output.writeObject(event);
+          output.flush();
+          output.reset();
       }
+
+      // Iterator<User> itr = toAddTo.getUsers().values().iterator();
+      // while (itr.hasNext()) {
+      // User member = itr.next();
+      // // skip offline users
+      // if (!server.getCurUsers().containsKey(member)) {
+      // continue;
+      // }
+      // ObjectOutputStream output =
+      // server.getCurUsers().get(member).getOutputStream();
+
+      // output.writeObject(new ChannelAddMemberEvent(source.getUsername(), id,
+      // newUserUsername,
+      // toAdd, toAddTo));
+      // output.flush();
+      // output.reset();
+      // }
       server.getServerFrame().getTextArea().append(
           newUserUsername + " added to channel " + id + " by " + source.getUsername() + " and events sent to users\n");
     } catch (IOException e) {

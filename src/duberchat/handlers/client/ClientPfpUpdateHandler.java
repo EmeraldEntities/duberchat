@@ -3,6 +3,7 @@ package duberchat.handlers.client;
 import java.awt.image.BufferedImage;
 
 import duberchat.chatutil.Channel;
+import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
 import duberchat.events.ClientPfpUpdateEvent;
 import duberchat.events.SerializableEvent;
@@ -65,6 +66,13 @@ public class ClientPfpUpdateHandler implements Handleable {
             if (c.getUsers().containsKey(username)) {
                 c.getUsers().get(username).setPfp(newPfp);
                 c.getUsers().get(username).setPfpFormat(newPfpFormat);
+            }
+        }
+
+        for (User u: this.client.getFriends().values()) {
+            if (u.getUsername().equals(username)) {
+                u.setPfp(newPfp);
+                u.setPfpFormat(newPfpFormat);
             }
         }
 

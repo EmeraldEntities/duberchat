@@ -12,6 +12,13 @@ public class ServerFrame extends JFrame {
   private JPanel mainPanel;
 
   public ServerFrame() {
+    this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    this.addWindowListener(new WindowAdapter() {
+        public void windowClosing(WindowEvent e) {
+            setExtendedState(JFrame.ICONIFIED);
+        }
+    });
+    
     this.mainPanel = new JPanel();
     this.textArea = new JTextArea();
     this.scrollPane = new JScrollPane(textArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,

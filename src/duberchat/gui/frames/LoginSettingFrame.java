@@ -84,6 +84,7 @@ public class LoginSettingFrame extends DynamicGridbagFrame {
         mainPanel.setSize(this.getSize());
         mainPanel.setBackground(MainFrame.MAIN_COLOR);
         mainPanel.setLayout(layout);
+        mainPanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.BLACK));
 
         this.initializeComponents();
         this.addComponents();

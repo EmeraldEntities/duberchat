@@ -1,12 +1,17 @@
 package duberchat.chatutil;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 import javax.imageio.ImageIO;
 
@@ -26,18 +31,30 @@ import javax.imageio.ImageIO;
 public class User implements Serializable {
     static final long serialVersionUID = 15L;
 
+    /** An int constant representing an offline user. */
     public static final int OFFLINE = 0;
+    /** An int constant representing an online user. */
     public static final int ONLINE = 1;
+    /** An int constant representing an away user. */
     public static final int AWAY = 2;
+    /** An int constant representing a DND user. */
     public static final int DND = 3;
+    /** The total amount of statuses that can be set. */
     public static final int TOTAL_STATUSES = 4;
 
+    /** The user's username. */
     private String username;
+    /** The user's password, hashed for security. */
     private long hashedPassword;
+    /** The user's status, as an int constant. */
     private int status;
+    /** The user's profile picture. */
     private transient BufferedImage pfp;
+    /** The format that the user's profile picture is in. */
     private String pfpFormat;
+    /** The channels this user is in. */
     private HashSet<Integer> channels;
+    /** The friends that this user has. */
     private HashSet<String> friends;
 
     /**
@@ -63,18 +80,33 @@ public class User implements Serializable {
     }
 
     /**
-     * Constructor for a user given another user. In effect, makes a copy of the given user.
+     * Constructor for a user given another user. In effect, makes a deep copy of
+     * the given user.
      * 
-     * @param user The user to copy from
+     * @param user The user to copy from.
      */
     public User(User user) {
         this.username = user.getUsername();
         this.hashedPassword = user.getHashedPassword();
-        this.channels = user.getChannels();
-        this.pfp = user.getPfp();
+        this.channels = new HashSet<>(user.getChannels());
+        this.pfp = copyImage(user.getPfp());
         this.pfpFormat = user.getPfpFormat();
         this.status = user.getStatus();
-        this.friends = user.getFriends();
+        this.friends = new HashSet<>(user.getFriends());
+    }
+
+    /**
+     * Deep copies a {@code BufferedImage} and returns the copied image.
+     * 
+     * @param image the {@code BufferedImage} to copy.
+     * @return a copied version of the provided image.
+     * @see java.awt.image.BufferedImage
+     */
+    private static BufferedImage copyImage(BufferedImage image) {
+        ColorModel cm = image.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = image.copyData(image.getRaster().createCompatibleWritableRaster());
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
 
     /**
@@ -131,26 +163,35 @@ public class User implements Serializable {
     /**
      * Custom writeObject method because Images are not serializable.
      * 
-     * @param out The output stream writing out this user.
+     * @param out The output stream writing out this event.
      * @throws IOException
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
-        ImageIO.write(this.pfp, this.pfpFormat, out);
+
+        ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
+        ImageIO.write(this.pfp, this.pfpFormat, bufferStream);
+
+        byte[] bufferedBytes = bufferStream.toByteArray();
+        out.writeObject(bufferedBytes);
+        // ImageIO.write(this.pfp, this.pfpFormat, out);
     }
  
     /**
      * Custom readObject method because Images are not serializable.
      * 
-     * @param in The input stream reading in this user.
+     * @param in The input stream reading in this event.
      * @throws IOException
      * @throws ClassNotFoundException
      */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        this.pfp = ImageIO.read(in);
+
+        byte[] bytes = (byte[]) in.readObject();
+        this.pfp = ImageIO.read(new ByteArrayInputStream(bytes));
+        // this.pfp = ImageIO.read(in);
     }
- 
+
     /**
      * Retrieves the user's username.
      * 

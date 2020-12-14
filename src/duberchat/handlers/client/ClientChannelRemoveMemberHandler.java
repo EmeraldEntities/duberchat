@@ -1,6 +1,9 @@
 package duberchat.handlers.client;
 
+import java.util.ArrayList;
+
 import duberchat.chatutil.Channel;
+import duberchat.chatutil.Message;
 import duberchat.client.ChatClient;
 import duberchat.events.SerializableEvent;
 import duberchat.events.ChannelRemoveMemberEvent;
@@ -43,9 +46,10 @@ public class ClientChannelRemoveMemberHandler implements Handleable {
         ChannelRemoveMemberEvent memberEvent = (ChannelRemoveMemberEvent) event;
         int modifiedChannelId = memberEvent.getChannelId();
         Channel curChannel = this.client.getCurrentChannel();
+        String userToRemove = memberEvent.getUsername();
 
-        if (this.client.getUser().getUsername().equals(memberEvent.getUsername())) {
-            // This user is the user to delete
+        if (this.client.getUser().getUsername().equals(userToRemove)) {
+            // Client user is the user to delete
             this.client.getChannels().remove(modifiedChannelId);
             this.client.getUser().getChannels().remove(modifiedChannelId);
 
@@ -56,9 +60,17 @@ public class ClientChannelRemoveMemberHandler implements Handleable {
                 this.client.getMainMenuFrame().reload(event);
             }
         } else {
-            // This user is not the user to delete
+            // Client user is not the user to delete
             Channel localChannel = this.client.getChannels().get(modifiedChannelId);
             localChannel.getUsers().remove(memberEvent.getUsername());
+
+            // Remove all messages by this user.
+            ArrayList<Message> localMessages = localChannel.getMessages();
+            for (int i = localMessages.size() - 1; i >= 0; i--) {
+                if (localMessages.get(i).getSenderUsername().equals(userToRemove)) {
+                    localMessages.remove(i);
+                }
+            }
 
             // We only need to reload if we are currently looking at the channel
             if (curChannel != null && curChannel.getChannelId() == modifiedChannelId) {

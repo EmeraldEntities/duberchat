@@ -63,7 +63,15 @@ public class ChannelAddMemberEvent extends ChannelEvent {
         return this.newUser;
     }
 
+    public void setNewUser(User newUser) {
+        this.newUser = newUser;
+    }
+
     public Channel getNewChannel() {
         return this.newChannel;
+    }
+
+    public void setNewChannel(Channel channel) {
+        this.newChannel = channel;
     }
 }

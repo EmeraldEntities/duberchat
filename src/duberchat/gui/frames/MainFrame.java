@@ -563,9 +563,14 @@ public class MainFrame extends DynamicFrame {
         if (source instanceof MessageEvent) {
             this.reloadMessages();
 
-        } else if (source instanceof ChannelAddMemberEvent || source instanceof ChannelRemoveMemberEvent) {
+        } else if (source instanceof ChannelAddMemberEvent) {
             this.reloadUsers();
             this.reloadChannels();
+
+        } else if (source instanceof ChannelRemoveMemberEvent) {
+            this.reloadUsers();
+            this.reloadChannels();
+            this.reloadMessages();
 
         } else if (source instanceof ChannelHierarchyChangeEvent) {
             this.reloadUsers();
@@ -575,9 +580,7 @@ public class MainFrame extends DynamicFrame {
             this.reloadUsers();
             this.reloadFriends(); // to deal with friend discrepancies
             this.reloadMessages(); // to deal with message discrepancies (pfp)
-            if (this.client.getUser().equals(source.getSource())) {
-                this.reloadProfile();
-            }
+            this.reloadProfile();
 
         } else if (source instanceof ClientRequestMessageEvent) {
             this.resetRequestedMessages();

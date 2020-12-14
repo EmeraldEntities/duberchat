@@ -3,12 +3,15 @@ package duberchat.chatutil;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 
 public class Channel implements Serializable {
     static final long serialVersionUID = 7L;
 
+    /** The amount of messages that a message cluster can hold, max. */
     public static final int MESSAGE_CLUSTER_AMT = 30;
+    /** THe amount of messages that can be locally saved, by default. */
     public static final int LOCAL_SAVE_AMT = MESSAGE_CLUSTER_AMT;
 
     /** A count of all the message clusters this local channel has loaded. */
@@ -61,10 +64,29 @@ public class Channel implements Serializable {
         this.messageClusters = 0;
     }
 
+    /**
+     * Constructs a {@Channel} given another channel. In essence, creates a deep
+     * copy of the provided channel.
+     * 
+     * @param channel the channel to copy.
+     */
     public Channel(Channel channel) {
-        this.messages = channel.getMessages();
-        this.users = channel.getUsers();
-        this.adminUsers = channel.getAdminUsers();
+        this.messages = new ArrayList<>(LOCAL_SAVE_AMT);
+        for (Message m : channel.getMessages()) {
+            this.messages.add(new Message(m));
+        }
+
+        this.users = new LinkedHashMap<>();
+        for (User u : channel.getUsers().values()) {
+            this.users.put(u.getUsername(), new User(u));
+        }
+
+        this.adminUsers = new HashSet<>();
+        Iterator<User> adminIterator = channel.getAdminUsers().iterator();
+        while (adminIterator.hasNext()) {
+            User nextUser = adminIterator.next();
+            adminUsers.add(new User(nextUser));
+        }
 
         this.channelName = channel.getChannelName();
         this.channelId = channel.getChannelId();

@@ -4,6 +4,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
+
 
 import javax.imageio.ImageIO;
 
@@ -42,7 +46,13 @@ public class ClientPfpUpdateEvent extends ClientProfileUpdateEvent {
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
-        ImageIO.write(this.newPfp, this.pfpFormat, out);
+
+        ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
+        ImageIO.write(this.newPfp, this.pfpFormat, bufferStream);
+
+        byte[] bufferedBytes = bufferStream.toByteArray();
+        out.writeObject(bufferedBytes);
+        // ImageIO.write(this.pfp, this.pfpFormat, out);
     }
  
     /**
@@ -54,21 +64,44 @@ public class ClientPfpUpdateEvent extends ClientProfileUpdateEvent {
      */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        this.newPfp = ImageIO.read(in);
+
+        byte[] bytes = (byte[]) in.readObject();
+        this.newPfp = ImageIO.read(new ByteArrayInputStream(bytes));
+        // this.pfp = ImageIO.read(in);
     }
 
+    /**
+     * Retrieves this event's new pfp.
+     * 
+     * @return this event's new pfp.
+     */
     public BufferedImage getNewPfp() {
         return this.newPfp;
     }
 
+    /**
+     * Sets this event's new pfp to another pfp.
+     * 
+     * @param newPfp this event's new pfp.
+     */
     public void setNewPfp(BufferedImage newPfp) {
         this.newPfp = newPfp;
     }
 
+    /**
+     * Retrieves this event's pfp format.
+     * 
+     * @return this event's pfp format.
+     */
     public String getPfpFormat() {
         return this.pfpFormat;
     }
 
+    /**
+     * Sets this event's pfp format.
+     * 
+     * @return this event's pfp format.
+     */
     public void setPfpFormat(String pfpFormat) {
         this.pfpFormat = pfpFormat;
     }
