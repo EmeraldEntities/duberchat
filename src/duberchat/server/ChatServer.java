@@ -1,19 +1,56 @@
 package duberchat.server;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
-import java.net.*;
-import java.util.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.imageio.ImageIO;
 
-import duberchat.events.*;
+import duberchat.chatutil.Channel;
+import duberchat.chatutil.Message;
+import duberchat.chatutil.User;
+
+import duberchat.events.AuthFailedEvent;
+import duberchat.events.AuthSucceedEvent;
+import duberchat.events.ChannelAddMemberEvent;
+import duberchat.events.ChannelCreateEvent;
+import duberchat.events.ChannelDeleteEvent;
+import duberchat.events.ChannelDemoteMemberEvent;
+import duberchat.events.ChannelPromoteMemberEvent;
+import duberchat.events.ChannelRemoveMemberEvent;
+import duberchat.events.ClientLoginEvent;
+import duberchat.events.ClientPasswordUpdateEvent;
+import duberchat.events.ClientPfpUpdateEvent;
+import duberchat.events.ClientRequestMessageEvent;
+import duberchat.events.ClientStatusUpdateEvent;
+import duberchat.events.FileWriteEvent;
+import duberchat.events.FriendAddEvent;
+import duberchat.events.FriendRemoveEvent;
+import duberchat.events.MessageDeleteEvent;
+import duberchat.events.MessageEditEvent;
+import duberchat.events.MessageSentEvent;
+import duberchat.events.SerializableEvent;
+
 import duberchat.gui.frames.ServerFrame;
+
 import duberchat.handlers.Handleable;
 import duberchat.handlers.server.*;
-import duberchat.chatutil.*;
 
 /**
  * This is the ChatServer class, a server that manages Duber Chat.
