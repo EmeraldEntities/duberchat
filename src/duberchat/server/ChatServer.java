@@ -61,8 +61,11 @@ public class ChatServer {
         this.eventHandlers.put(ChannelAddMemberEvent.class, new ServerChannelAddMemberHandler(this));
         this.eventHandlers.put(ChannelRemoveMemberEvent.class, new ServerChannelRemoveMemberHandler(this));
         this.eventHandlers.put(ChannelDeleteEvent.class, new ServerChannelDeleteHandler(this));
-        this.eventHandlers.put(ClientProfileUpdateEvent.class, new ServerProfileUpdateHandler(this));
         this.eventHandlers.put(ClientRequestMessageEvent.class, new ServerRequestMessageHandler(this));
+        ServerProfileUpdateHandler profileHandler = new ServerProfileUpdateHandler(this);
+        this.eventHandlers.put(ClientStatusUpdateEvent.class, profileHandler);
+        this.eventHandlers.put(ClientPfpUpdateEvent.class, profileHandler);
+        this.eventHandlers.put(ClientPasswordUpdateEvent.class, profileHandler);
         ServerFriendHandler friendHandler = new ServerFriendHandler(this);
         this.eventHandlers.put(FriendAddEvent.class, friendHandler);
         this.eventHandlers.put(FriendRemoveEvent.class, friendHandler);
@@ -344,8 +347,8 @@ public class ChatServer {
                     if (event instanceof ClientLoginEvent) {
                         handleLogin((ClientLoginEvent) event);
                         continue;
-                    } else if (event instanceof ClientProfileUpdateEvent && 
-                               ((User) event.getSource()).getStatus() == 0) {
+                    } else if (event instanceof ClientStatusUpdateEvent && 
+                               ((ClientStatusUpdateEvent) event).getStatus() == 0) {
                             eventHandlers.get(ClientProfileUpdateEvent.class).handleEvent(event);
                             continue;
                     }
@@ -353,7 +356,8 @@ public class ChatServer {
                 } catch (IOException e) {
                     ChatServer.this.serverFrame.getTextArea().append("Failed to receive msg from the client\n");
                     user.setStatus(0);
-                    eventHandlers.get(ClientProfileUpdateEvent.class).handleEvent(new ClientProfileUpdateEvent(user));
+                    eventHandlers.get(ClientStatusUpdateEvent.class)
+                            .handleEvent(new ClientStatusUpdateEvent(user.getUsername(), 0));
                 } catch (ClassNotFoundException e1) {
                     ChatServer.this.serverFrame.getTextArea().append("Class not found :(\n");
                     e1.printStackTrace();
@@ -380,8 +384,9 @@ public class ChatServer {
                     // If the username is already taken, send auth failed event
                     if (ChatServer.this.allUsers.containsKey(username)) {
                         ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication failed\n");
-                        output.writeObject(new AuthFailedEvent(event));
+                        output.writeObject(new AuthFailedEvent(null));
                         output.flush();
+                        output.reset();
                         return;
                     }
 
@@ -391,14 +396,14 @@ public class ChatServer {
                     // make new user file
                     fileWriteQueue.add(new FileWriteEvent(user, "data/users/" + username));
 
-                    // TODO: NOTE: NOT THREAD SAFE
                     ChatServer.this.allUsers.put(username, user);
                     ChatServer.this.curUsers.put(user, this);
                     ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication succeded\n");
-                    output.writeObject(new AuthSucceedEvent(event, user, 
+                    output.writeObject(new AuthSucceedEvent(null, user, 
                                                             new HashMap<Integer, Channel>(), 
                                                             new HashMap<String, User>()));
                     output.flush();
+                    output.reset();
 
                     ChatServer.this.serverFrame.getTextArea().append("Sent " + username + "'s authentication event\n");
                 } catch (IOException e) {
@@ -410,7 +415,7 @@ public class ChatServer {
             // Case 2: already registered user
             try {
                 // If user doesn't exist or password is wrong give back an auth failed event to the client.
-                User user = allUsers.get(username);
+                user = allUsers.get(username);
                 if (user == null || password != user.getHashedPassword()) {
                     output.writeObject(new AuthFailedEvent(event));
                     output.flush();
@@ -439,8 +444,9 @@ public class ChatServer {
                             member.setStatus(1);
                         }
                         ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
-                        userOut.writeObject(new ClientProfileUpdateEvent(user));
+                        userOut.writeObject(new ClientStatusUpdateEvent(user.getUsername(), 1));
                         userOut.flush();
+                        userOut.reset();
                         notifiedAlready.add(member);
                     }
                     fileWriteQueue.add(new FileWriteEvent(curChannel, "data/channels/" + id));
@@ -466,8 +472,9 @@ public class ChatServer {
                     }
                 }
                 ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication succeded\n");
-                output.writeObject(new AuthSucceedEvent(event, user, userChannels, friendsMap));
+                output.writeObject(new AuthSucceedEvent(null, user, userChannels, friendsMap));
                 output.flush();
+                output.reset();
                 ChatServer.this.serverFrame.getTextArea().append("Sent " + username + "'s authentication event\n");
             } catch (IOException e1) {
                 e1.printStackTrace();
