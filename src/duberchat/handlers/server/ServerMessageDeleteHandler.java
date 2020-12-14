@@ -1,13 +1,16 @@
 package duberchat.handlers.server;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
+import duberchat.chatutil.Channel;
+import duberchat.chatutil.Message;
+import duberchat.chatutil.User;
 import duberchat.events.FileWriteEvent;
 import duberchat.events.MessageDeleteEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
 import duberchat.server.ChatServer;
-import duberchat.chatutil.*;
-
-import java.io.*;
 
 /**
  * the {@code ServerMessageDeleteHandler} class provides the server-side

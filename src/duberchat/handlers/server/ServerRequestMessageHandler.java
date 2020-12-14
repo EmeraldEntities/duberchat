@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
-import duberchat.chatutil.*;
+import duberchat.chatutil.Channel;
+import duberchat.chatutil.Message;
+import duberchat.chatutil.User;
 import duberchat.events.ClientRequestMessageEvent;
 import duberchat.events.RequestFailedEvent;
 import duberchat.events.SerializableEvent;

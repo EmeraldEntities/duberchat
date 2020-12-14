@@ -3,7 +3,9 @@ package duberchat.handlers.server;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
-import duberchat.chatutil.*;
+import duberchat.chatutil.Channel;
+import duberchat.chatutil.Message;
+import duberchat.chatutil.User;
 import duberchat.events.FileWriteEvent;
 import duberchat.events.MessageEditEvent;
 import duberchat.events.SerializableEvent;
