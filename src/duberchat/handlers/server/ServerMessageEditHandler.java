@@ -22,6 +22,7 @@ public class ServerMessageEditHandler implements Handleable {
     MessageEditEvent event = (MessageEditEvent) newEvent;
     Message edited = event.getMessage();
     Channel serverChannel = server.getChannels().get(edited.getChannel().getChannelId());
+    User source = server.getAllUsers().get(((User) event.getSource()).getUsername());
     for (Message msg : serverChannel.getMessages()) {
       if (msg.equals(edited)) {
         msg.setMessage(edited.getMessage());
@@ -39,11 +40,13 @@ public class ServerMessageEditHandler implements Handleable {
       }
       ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
       try {
-        output.writeObject(new MessageEditEvent((User) event.getSource(), edited));
+        output.writeObject(new MessageEditEvent(new User(source), edited));
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
+    server.getServerFrame().getTextArea()
+        .append(source.getUsername() + " edited a message in channel " + id + ".\n");
   }
   
 }

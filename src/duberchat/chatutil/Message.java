@@ -10,16 +10,16 @@ public class Message implements Serializable {
     private String senderUsername;
     private String message;
     private int messageId;
-    private Date timestamp;
-    private Channel associatedChannel;
+    private String timestamp;
+    private int associatedChannelId;
 
-    public Message(String message, String senderUsername, int messageId, Date timestamp, 
-                   Channel channel) {
+    public Message(String message, String senderUsername, int messageId, String timestamp, 
+                   int channelId) {
         this.senderUsername = senderUsername;
         this.message = message;
         this.messageId = messageId;
         this.timestamp = timestamp;
-        this.associatedChannel = channel;
+        this.associatedChannelId = channelId;
     }
 
     public Message(Message msg) {
@@ -27,7 +27,7 @@ public class Message implements Serializable {
         this.message = msg.getMessage();
         this.messageId = msg.getMessageId();
         this.timestamp = msg.getTimestamp();
-        this.associatedChannel = msg.getChannel();
+        this.associatedChannelId = msg.getChannelId();
     }
 
     /**
@@ -64,11 +64,11 @@ public class Message implements Serializable {
         return this.messageId;
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return this.timestamp;
     }
 
-    public Channel getChannel() {
-        return this.associatedChannel;
+    public int getChannelId() {
+        return this.associatedChannelId;
     }
 }

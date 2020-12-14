@@ -25,7 +25,7 @@ public class ServerChannelAddMemberHandler implements Handleable {
     Channel serverToAddTo = server.getChannels().get(toAddTo.getChannelId());
     String newUserUsername = event.getNewUserUsername();
     User toAdd = server.getAllUsers().get(newUserUsername);
-    User source = (User) event.getSource();
+    User source = server.getAllUsers().get(((User) event.getSource()).getUsername());
     int id = toAddTo.getChannelId();
     
     try {

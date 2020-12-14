@@ -70,7 +70,6 @@ public class ServerProfileUpdateHandler implements Handleable {
           continue;
         }
         alreadyNotified.add(member.getUsername());
-        System.out.println("hihi " + member.getUsername());
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
           output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
@@ -82,6 +81,7 @@ public class ServerProfileUpdateHandler implements Handleable {
       String channelFilePath = "data/channels/" + channelId;
       server.getFileWriteQueue().add(new FileWriteEvent(channel, channelFilePath));
     }
+    server.getServerFrame().getTextArea().append(user.getUsername() + "'s profile updated and events sent to users.\n");
 
     // Update the user file
     String userFilePath = "data/users/" + user.getUsername();

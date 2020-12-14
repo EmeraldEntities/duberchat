@@ -48,9 +48,8 @@ public class ServerMessageSentHandler implements Handleable {
         Message toSend = event.getMessage();
         String msgString = toSend.getMessage();
         String senderUsername = toSend.getSenderUsername();
-        Channel destination = toSend.getChannel();
-        Channel serverDestination = server.getChannels().get(destination.getChannelId());
-        int msgId = serverDestination.getTotalMessages();
+        Channel destination = server.getChannels().get(toSend.getChannel().getChannelId());
+        int msgId = destination.getTotalMessages();
         long timeStamp = toSend.getTimestamp().getTime();
 
         // Process text conversions and emoticon conversions
@@ -65,13 +64,12 @@ public class ServerMessageSentHandler implements Handleable {
         processedMsg.trim();
 
         Message newMessage = new Message(processedMsg, senderUsername, msgId, new Date(timeStamp), 
-                                         serverDestination);
-        serverDestination.getMessages().add(newMessage);
-        serverDestination.setTotalMessages(msgId + 1);
-        destination.setTotalMessages(msgId + 1);   // added for clarity TODO
+                                         destination);
+        destination.getMessages().add(newMessage);
+        destination.setTotalMessages(msgId + 1);
         try {
             // Send back a message sent event to every online user in the channel
-            Iterator<User> itr = serverDestination.getUsers().values().iterator();
+            Iterator<User> itr = destination.getUsers().values().iterator();
             while (itr.hasNext()) {
                 User member = itr.next(); 
                 // skip offline users
@@ -79,10 +77,12 @@ public class ServerMessageSentHandler implements Handleable {
                 ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
                 output.writeObject(new MessageSentEvent((User) event.getSource(), newMessage));
             }
+            server.getServerFrame().getTextArea()
+                    .append("New message sent to channel " + destination.getChannelId() + "and events sent to users\n");
 
             // Update the channel file.
             String filePath = "data/channels/" + destination.getChannelId();
-            server.getFileWriteQueue().add(new FileWriteEvent(serverDestination, filePath));
+            server.getFileWriteQueue().add(new FileWriteEvent(destination, filePath));
         } catch (IOException e) {
             e.printStackTrace();
         }

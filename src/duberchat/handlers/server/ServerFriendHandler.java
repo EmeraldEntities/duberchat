@@ -26,36 +26,35 @@ public class ServerFriendHandler implements Handleable {
   public void handleEvent(SerializableEvent newEvent) {
     FriendEvent event = (FriendEvent) newEvent;
     String friendUsername = event.getFriendUsername();
-    User user = ((User) event.getSource());
-    String userUsername = user.getUsername();
-    User serverUser = server.getAllUsers().get(user.getUsername());
-    HashSet<String> userFriends = user.getFriends();
+    String userUsername = ((User) event.getSource()).getUsername();
+    User serverUser = server.getAllUsers().get(userUsername);
     HashSet<String> serverUserFriends = serverUser.getFriends();
-    ObjectOutputStream userOutput = server.getCurUsers().get(user).getOutputStream();
+    ObjectOutputStream userOutput = server.getCurUsers().get(serverUser).getOutputStream();
     boolean adding; // adding = true, removing = false
 
-    // if the friend doesn't exist, return a request failed event to the user who sent the event
-    if (!server.getAllUsers().containsKey(friendUsername)) {
+    User friend = server.getAllUsers().get(friendUsername);
+
+    // if the friend doesn't exist or the friend is the user themeselves, return a
+    // request failed event to the user who sent the event
+    if (friend == null || friend.equals(serverUser)) {
       try {
         userOutput.writeObject(new RequestFailedEvent(new User(serverUser)));
         userOutput.flush();
+        server.getServerFrame().getTextArea()
+            .append(userUsername + " tried to add an invalid friend. Request failed event sent.\n");
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
 
-    User friend = server.getAllUsers().get(friendUsername);
-
     // update the friends sets depending on whether a friend is being added or removed
     if (serverUserFriends.contains(friendUsername)) {
       adding = false;
       serverUserFriends.remove(friendUsername);
-      userFriends.remove(friendUsername);
       friend.getFriends().remove(userUsername);
     } else {
       adding = true;
       serverUserFriends.add(friendUsername);
-      userFriends.add(friendUsername);
       friend.getFriends().add(userUsername);
     }
 
@@ -66,7 +65,7 @@ public class ServerFriendHandler implements Handleable {
     String friendFilePath = "data/users/" + friendUsername; 
     server.getFileWriteQueue().add(new FileWriteEvent(friend, friendFilePath));
     HashSet<Integer> unionChannels = new HashSet<Integer>(serverUser.getChannels());
-    unionChannels.addAll(user.getChannels());
+    unionChannels.addAll(friend.getChannels());
     Iterator<Integer> channelsItr = unionChannels.iterator();
     while (channelsItr.hasNext()) {
       int channelId = channelsItr.next();
@@ -92,6 +91,8 @@ public class ServerFriendHandler implements Handleable {
         userOutput.writeObject(new FriendRemoveEvent(new User(friend), friendUsername));
       }
       userOutput.flush();
+      server.getServerFrame().getTextArea()
+          .append(userUsername + " and " + friendUsername + " became friends and events sent to users\n");
     } catch (IOException e) {
       e.printStackTrace();
     }

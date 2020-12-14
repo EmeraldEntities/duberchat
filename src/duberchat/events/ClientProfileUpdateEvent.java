@@ -18,8 +18,6 @@ package duberchat.events;
 public class ClientProfileUpdateEvent extends ClientEvent {
     static final long serialVersionUID = 1L;
 
-    protected int status;
-
     /**
      * Constructs a new {@code ClientStatusUpdateEvent}.
      * 

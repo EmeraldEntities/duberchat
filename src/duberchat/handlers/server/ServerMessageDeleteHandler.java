@@ -23,6 +23,7 @@ public class ServerMessageDeleteHandler implements Handleable {
     Channel toDeleteFrom = server.getChannels().get(toDelete.getChannel().getChannelId());
     int index = toDeleteFrom.getMessages().indexOf(toDelete);
     Message serverToDelete = toDeleteFrom.getMessages().remove(index);
+    User source = (User) event.getSource();
 
     String filePath = "data/channels/" + toDeleteFrom.getChannelId();
     try {
@@ -35,10 +36,11 @@ public class ServerMessageDeleteHandler implements Handleable {
         User user = itr.next();
         if (!server.getCurUsers().containsKey(user)) continue;
         ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
-        output.writeObject(new MessageDeleteEvent(new User((User) event.getSource()), 
-                                                  new Message(serverToDelete)));
+        output.writeObject(new MessageDeleteEvent(new User(source), new Message(serverToDelete)));
         output.flush();
       }
+      server.getServerFrame().getTextArea().append("A message was removed from channel " + toDeleteFrom.getChannelId()
+          + " by " + source.getUsername() + " and events sent to users\n");
     } catch (IOException e) {
       e.printStackTrace();
     }

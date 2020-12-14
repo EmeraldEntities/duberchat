@@ -20,7 +20,7 @@ public class ServerRequestMessageHandler implements Handleable {
 
   public void handleEvent(SerializableEvent newEvent) {
     ClientRequestMessageEvent event = (ClientRequestMessageEvent) newEvent;
-    User source = (User) event.getSource();
+    User source = server.getAllUsers().get(((User) event.getSource()).getUsername());
     ObjectOutputStream output = server.getCurUsers().get(source).getOutputStream();
 
     Message lastMessage = event.getStartMsg();
@@ -46,10 +46,12 @@ public class ServerRequestMessageHandler implements Handleable {
           clientVer.setMessages(messageBlock);
           clientVer.setMessageClusters(clientVer.getMessageClusters() + 1);
           output.writeObject(new ClientRequestMessageEvent(source, startMsg, clientVer));
+          output.flush();
         } catch (IOException e) {
           e.printStackTrace();
         }
-
+        server.getServerFrame().getTextArea()
+            .append(source.getUsername() + " requested messages. Messages found, event sent to user.\n");
         return;
       }
     }
@@ -57,6 +59,9 @@ public class ServerRequestMessageHandler implements Handleable {
     // Send back a request failed if the message can't be found or the bounds are illegal.
     try {
       output.writeObject(new RequestFailedEvent(source));
+      output.flush();
+      server.getServerFrame().getTextArea()
+          .append(source.getUsername() + " requested messages. Request failed, sent event to users.\n");
     } catch (IOException e) {
       e.printStackTrace();
     }

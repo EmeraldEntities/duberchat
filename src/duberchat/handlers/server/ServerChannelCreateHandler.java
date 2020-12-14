@@ -52,8 +52,7 @@ public class ServerChannelCreateHandler implements Handleable {
     HashSet<String> usersFound = new HashSet<>();
     LinkedHashMap<String, User> channelUsers = new LinkedHashMap<>();
     String channelName = event.getChannel().getChannelName();
-    User creator = ((User) event.getSource());
-    String creatorName = creator.getUsername();
+    String creatorName = ((User) event.getSource()).getUsername();
     User serverCreator = server.getAllUsers().get(creatorName);
 
     channelUsers.put(creatorName, serverCreator);
@@ -94,11 +93,11 @@ public class ServerChannelCreateHandler implements Handleable {
           try {
             Channel newChannel = new Channel(channel);
             newChannel.setMessages(messageBlock);
-            output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), 
+            output.writeObject(new ChannelCreateEvent(new User(serverCreator), new Channel(newChannel), 
                                                       usersFound));
             output.flush();
-            server.getServerFrame().getTextArea().append(user1 + " + " + user2 + 
-                                                         ": DM found, thus new DM not created.\n");
+            server.getServerFrame().getTextArea()
+                .append(user1 + " + " + user2 + ": DM found, thus new DM not created.\n");
           } catch (IOException e) {
             e.printStackTrace();
           }
@@ -132,11 +131,11 @@ public class ServerChannelCreateHandler implements Handleable {
           continue;
         }
         output = server.getCurUsers().get(user).getOutputStream();
-        output.writeObject(new ChannelCreateEvent(new User(creator), new Channel(newChannel), usersFound));
+        output.writeObject(new ChannelCreateEvent(new User(serverCreator), new Channel(newChannel), usersFound));
         output.flush();
       }
       server.getServerFrame().getTextArea()
-          .append("New channel made by " + creator.getUsername() + " and events sent to users\n");
+          .append("New channel made by " + serverCreator.getUsername() + " and events sent to users\n");
 
     } catch (IOException e) {
       e.printStackTrace();

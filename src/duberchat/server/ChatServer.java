@@ -6,8 +6,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.imageio.ImageIO;
 
@@ -18,8 +17,7 @@ import duberchat.handlers.server.*;
 import duberchat.chatutil.*;
 
 /**
- * This is the ChatServer class, representing the server that manages Duber
- * Chat.
+ * This is the ChatServer class, a server that manages Duber Chat.
  * <p>
  * The server constantly looks for and establishes connections with clients. It
  * also constantly accepts client events, putting them into an event queue, and
@@ -36,11 +34,12 @@ public class ChatServer {
     static boolean running = true; // controls if the server is accepting clients
     private HashMap<Integer, Channel> channels; // channel id to all channels
     private int numChannelsCreated;
-    private ConcurrentHashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler runnables
+    private ConcurrentHashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler
+                                                                 // runnables
     private ConcurrentHashMap<String, User> allUsers; // map of all the usernames to their users
-    private ConcurrentLinkedQueue<SerializableEvent> eventQueue;
-    private ConcurrentLinkedQueue<FileWriteEvent> fileWriteQueue;
-    private ConcurrentLinkedQueue<FileWriteEvent> imageWriteQueue;
+    private LinkedBlockingQueue<SerializableEvent> eventQueue;
+    private LinkedBlockingQueue<FileWriteEvent> fileWriteQueue;
+    private LinkedBlockingQueue<FileWriteEvent> imageWriteQueue;
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
     private HashMap<String, String> textConversions; // For text commands or emojis
     private ServerFrame serverFrame;
@@ -49,10 +48,11 @@ public class ChatServer {
         this.curUsers = new ConcurrentHashMap<>();
         this.channels = new HashMap<>();
         this.allUsers = new ConcurrentHashMap<>();
-        this.eventQueue = new ConcurrentLinkedQueue<>();
-        this.fileWriteQueue = new ConcurrentLinkedQueue<>();
-        this.imageWriteQueue= new ConcurrentLinkedQueue<>();
+        this.eventQueue = new LinkedBlockingQueue<>();
+        this.fileWriteQueue = new LinkedBlockingQueue<>();
+        this.imageWriteQueue = new LinkedBlockingQueue<>();
 
+        // set up event handlers
         this.eventHandlers = new HashMap<>();
         this.eventHandlers.put(MessageSentEvent.class, new ServerMessageSentHandler(this));
         this.eventHandlers.put(MessageDeleteEvent.class, new ServerMessageDeleteHandler(this));
@@ -70,6 +70,7 @@ public class ChatServer {
         this.eventHandlers.put(ChannelPromoteMemberEvent.class, hierarchyHandler);
         this.eventHandlers.put(ChannelDemoteMemberEvent.class, hierarchyHandler);
 
+        // set up text conversions / emojis
         this.textConversions = new HashMap<>();
         this.textConversions.put("/shrug", "¯\\_(ツ)_/¯");
         this.textConversions.put("/tableflip", "(╯°□°）╯︵ ┻━┻");
@@ -89,7 +90,8 @@ public class ChatServer {
     }
 
     /**
-     * Go Starts the server
+     * Starts the server. Pre-loads all users and channels, then starts up threads
+     * for handling events, file/image writing, and accepting clients.
      */
     public void go() {
 
@@ -124,8 +126,12 @@ public class ChatServer {
         Thread fileWriteThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
-                    FileWriteEvent writeInfo = fileWriteQueue.poll();
-                    if (writeInfo == null) continue;
+                    FileWriteEvent writeInfo = null;
+                    try {
+                        writeInfo = fileWriteQueue.take();
+                    } catch (InterruptedException e1) {
+                        continue; // keep reading from the queue
+                    }
                     try {
                         String filePath = writeInfo.getFilePath();
                         FileOutputStream fileOut = new FileOutputStream(filePath);
@@ -146,8 +152,12 @@ public class ChatServer {
         Thread imageWriteThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
-                    FileWriteEvent writeInfo = imageWriteQueue.poll();
-                    if (writeInfo == null) continue;
+                    FileWriteEvent writeInfo = null;
+                    try {
+                        writeInfo = imageWriteQueue.take();
+                    } catch (InterruptedException e1) {
+                        continue; // keep reading from the queue
+                    }
                     try {
                         String filePath = writeInfo.getFilePath();
                         FileOutputStream fileOut = new FileOutputStream(filePath);
@@ -155,7 +165,7 @@ public class ChatServer {
 
                         String extension = filePath.substring(filePath.lastIndexOf("."), filePath.length());
                         ImageIO.write((BufferedImage) (writeInfo.getObjectToWrite()), extension, out);
-                        ChatServer.this.serverFrame.getTextArea().append("Wrote to image file: " + filePath +"\n");
+                        ChatServer.this.serverFrame.getTextArea().append("Wrote to image file: " + filePath + "\n");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -169,8 +179,12 @@ public class ChatServer {
         Thread eventsThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
-                    SerializableEvent event = eventQueue.poll();
-                    if (event == null) continue;
+                    SerializableEvent event = null;
+                    try {
+                        event = eventQueue.take();
+                    } catch (InterruptedException e) {
+                        continue; // keep reading from the queue
+                    }
                     eventHandlers.get(event.getClass()).handleEvent(event);
                 }
             }
@@ -200,38 +214,83 @@ public class ChatServer {
         }
     }
 
+    /**
+     * Retrieves this server's map of channel ids to channels.
+     * 
+     * @return a {@code HashMap} mapping the channel ids to the server channels.
+     */
     public HashMap<Integer, Channel> getChannels() {
         return this.channels;
     }
 
+    /**
+     * Retrieves the total number of channels that have been created.
+     * 
+     * @return an integer, the total number of channels that have been created.
+     */
     public int getNumChannelsCreated() {
         return this.numChannelsCreated;
     }
 
+    /**
+     * Assigns the total number of channels that have been created.
+     * 
+     * @param newNum The new total number of channels that have been created.
+     */
     public void setNumChannelsCreated(int newNum) {
         this.numChannelsCreated = newNum;
     }
 
+    /**
+     * Retrieves this user's profile picture.
+     * 
+     * @return BufferedImage, the profile picture.
+     */
     public ConcurrentHashMap<String, User> getAllUsers() {
         return this.allUsers;
     }
 
+    /**
+     * Retrieves this user's profile picture.
+     * 
+     * @return BufferedImage, the profile picture.
+     */
     public ConcurrentHashMap<User, ConnectionHandler> getCurUsers() {
         return this.curUsers;
     }
 
-    public ConcurrentLinkedQueue<FileWriteEvent> getFileWriteQueue() {
+    /**
+     * Retrieves this user's profile picture.
+     * 
+     * @return BufferedImage, the profile picture.
+     */
+    public LinkedBlockingQueue<FileWriteEvent> getFileWriteQueue() {
         return this.fileWriteQueue;
     }
 
-    public ConcurrentLinkedQueue<FileWriteEvent> getImageWriteQueue() {
+    /**
+     * Retrieves this user's profile picture.
+     * 
+     * @return BufferedImage, the profile picture.
+     */
+    public LinkedBlockingQueue<FileWriteEvent> getImageWriteQueue() {
         return this.imageWriteQueue;
     }
 
+    /**
+     * Retrieves this user's profile picture.
+     * 
+     * @return BufferedImage, the profile picture.
+     */
     public HashMap<String, String> getTextConversions() {
         return this.textConversions;
     }
 
+    /**
+     * Retrieves this user's profile picture.
+     * 
+     * @return BufferedImage, the profile picture.
+     */
     public ServerFrame getServerFrame() {
         return this.serverFrame;
     }

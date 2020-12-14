@@ -24,7 +24,7 @@ public class ServerHierarchyHandler implements Handleable {
   public void handleEvent(SerializableEvent newEvent) {
     ChannelHierarchyChangeEvent event = (ChannelHierarchyChangeEvent) newEvent;
     Channel channel = server.getChannels().get(event.getChannel().getChannelId());
-    User source = (User) event.getSource();
+    User source = server.getAllUsers().get(((User) event.getSource()).getUsername());
     User toChange = server.getAllUsers().get(event.getUsername());
     boolean promoting;
     if (channel.getAdminUsers().contains(toChange)) {
@@ -55,6 +55,8 @@ public class ServerHierarchyHandler implements Handleable {
         }
         output.flush();
       }
+      server.getServerFrame().getTextArea().append(toChange.getUsername() + "'s rank in channel "
+          + channel.getChannelId() + "was changed and events sent to users\n");
     } catch (IOException e) {
       e.printStackTrace();
     }
