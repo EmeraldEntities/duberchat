@@ -1,11 +1,9 @@
 package duberchat.events;
 
-import duberchat.chatutil.Message;
 import duberchat.chatutil.User;
 import duberchat.chatutil.Channel;
 
 import java.util.HashMap;
-import java.util.ArrayList;
 
 /**
  * An {@code AuthSucceedEvent} is a specific authentication event that

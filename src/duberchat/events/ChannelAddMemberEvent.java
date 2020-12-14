@@ -23,7 +23,8 @@ public class ChannelAddMemberEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
     protected String newUserUsername;
     protected User newUser;
-
+    protected Channel newChannel;
+    
     /**
      * Constructs a new {@code ChannelAddMemberEvent}.
      * 
@@ -31,14 +32,24 @@ public class ChannelAddMemberEvent extends ChannelEvent {
      * @param channelId       The associated channel's id with this event.
      * @param newUserUsername the new user's username.
      * @param newUser         the new user.
+     * @param newChannel      the new channel.
      */
-    public ChannelAddMemberEvent(Object source, int channelId, String newUserUsername, User newUser) {
+    public ChannelAddMemberEvent(Object source, int channelId, String newUserUsername, User newUser,
+            Channel newChannel) {
         super(source, channelId);
         this.newUserUsername = newUserUsername;
         this.newUser = newUser;
     }
-
+    
     public String getNewUserUsername() {
         return this.newUserUsername;
+    }
+
+    public User getNewUser() {
+        return this.newUser;
+    }
+
+    public Channel getNewChannel() {
+        return this.newChannel;
     }
 }

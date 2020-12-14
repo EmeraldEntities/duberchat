@@ -1,7 +1,4 @@
 package duberchat.events;
-
-import duberchat.chatutil.Channel;
-
 /**
  * A {@code ChannelRemoveMemberEvent} is an event that is created when a user
  * should be removed from a channel.

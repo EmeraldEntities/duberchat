@@ -1,6 +1,6 @@
 package duberchat.handlers.client;
 
-import duberchat.chatutil.Channel;
+import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
 import duberchat.events.SerializableEvent;
 import duberchat.events.ChannelAddMemberEvent;
@@ -40,22 +40,22 @@ public class ClientChannelAddMemberHandler implements Handleable {
      */
     public void handleEvent(SerializableEvent event) {
         ChannelAddMemberEvent memberEvent = (ChannelAddMemberEvent) event;
-        Channel modifiedChannel = memberEvent.getChannel();
+        int newChannelId = memberEvent.getChannelId();
 
-        if (!this.client.getChannels().containsKey(modifiedChannel.getChannelId())) {
+        if (!this.client.getChannels().containsKey(newChannelId)) {
             // This user is the new user
-            this.client.getChannels().put(modifiedChannel.getChannelId(), modifiedChannel);
-            this.client.getUser().getChannels().add(modifiedChannel.getChannelId());
+            this.client.getChannels().put(newChannelId, memberEvent.getNewChannel());
+            this.client.getUser().getChannels().add(newChannelId);
 
             this.client.getMainMenuFrame().reload(event);
         } else {
-
-            // TODO: this is a known issue involving serialization, fix later.
             // This user is not the new user
-            this.client.getChannels().get(modifiedChannel.getChannelId()).setUsers(modifiedChannel.getUsers());
+            User newUser = memberEvent.getNewUser();
+
+            this.client.getChannels().get(newChannelId).getUsers().put(newUser.getUsername(), newUser);
 
             // We only need to reload if we are currently looking at the channel
-            if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(modifiedChannel)) {
+            if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().getChannelId() == newChannelId) {
                 this.client.getMainMenuFrame().reload(event);
             }
         }
