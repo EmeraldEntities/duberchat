@@ -21,18 +21,18 @@ public class ServerMessageEditHandler implements Handleable {
   public void handleEvent(SerializableEvent newEvent) {
     MessageEditEvent event = (MessageEditEvent) newEvent;
     Message edited = event.getMessage();
-    Channel serverChannel = server.getChannels().get(edited.getChannel().getChannelId());
-    User source = server.getAllUsers().get(((User) event.getSource()).getUsername());
-    for (Message msg : serverChannel.getMessages()) {
+    Channel channel = server.getChannels().get(edited.getChannelId());
+    String source = (String) event.getSource();
+    for (Message msg : channel.getMessages()) {
       if (msg.equals(edited)) {
         msg.setMessage(edited.getMessage());
         break;
       }
     }
 
-    int id = serverChannel.getChannelId();
-    server.getFileWriteQueue().add(new FileWriteEvent(serverChannel, "data/channels/" + id));
-    Iterator<User> itr = serverChannel.getUsers().values().iterator();
+    int id = channel.getChannelId();
+    server.getFileWriteQueue().add(new FileWriteEvent(channel, "data/channels/" + id));
+    Iterator<User> itr = channel.getUsers().values().iterator();
     while (itr.hasNext()) {
       User user = itr.next();
       if (!server.getCurUsers().containsKey(user)) {
@@ -40,13 +40,14 @@ public class ServerMessageEditHandler implements Handleable {
       }
       ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
       try {
-        output.writeObject(new MessageEditEvent(new User(source), edited));
+        output.writeObject(new MessageEditEvent(source, edited));
+        output.flush();
+        output.reset();
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
-    server.getServerFrame().getTextArea()
-        .append(source.getUsername() + " edited a message in channel " + id + ".\n");
+    server.getServerFrame().getTextArea().append(source + " edited a message in channel " + id + ".\n");
   }
   
 }

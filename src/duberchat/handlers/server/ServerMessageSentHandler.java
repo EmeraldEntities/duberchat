@@ -48,9 +48,10 @@ public class ServerMessageSentHandler implements Handleable {
         Message toSend = event.getMessage();
         String msgString = toSend.getMessage();
         String senderUsername = toSend.getSenderUsername();
-        Channel destination = server.getChannels().get(toSend.getChannel().getChannelId());
+        int destinationId = toSend.getChannelId();
+        Channel destination = server.getChannels().get(destinationId);
         int msgId = destination.getTotalMessages();
-        long timeStamp = toSend.getTimestamp().getTime();
+        String timeStamp = toSend.getTimestamp();
 
         // Process text conversions and emoticon conversions
         String[] words = msgString.split(" ");
@@ -63,8 +64,7 @@ public class ServerMessageSentHandler implements Handleable {
         }
         processedMsg.trim();
 
-        Message newMessage = new Message(processedMsg, senderUsername, msgId, new Date(timeStamp), 
-                                         destination);
+        Message newMessage = new Message(processedMsg, senderUsername, msgId, timeStamp, destinationId);
         destination.getMessages().add(newMessage);
         destination.setTotalMessages(msgId + 1);
         try {
@@ -75,10 +75,12 @@ public class ServerMessageSentHandler implements Handleable {
                 // skip offline users
                 if (!server.getCurUsers().containsKey(member)) continue;
                 ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
-                output.writeObject(new MessageSentEvent((User) event.getSource(), newMessage));
+                output.writeObject(new MessageSentEvent(event.getSource(), newMessage));
+                output.flush();
+                output.reset();
             }
             server.getServerFrame().getTextArea()
-                    .append("New message sent to channel " + destination.getChannelId() + "and events sent to users\n");
+                    .append("New message sent to channel " + destinationId + "and events sent to users\n");
 
             // Update the channel file.
             String filePath = "data/channels/" + destination.getChannelId();

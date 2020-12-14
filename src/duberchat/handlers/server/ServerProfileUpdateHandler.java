@@ -8,7 +8,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import duberchat.chatutil.Channel;
+import duberchat.events.ClientPasswordUpdateEvent;
+import duberchat.events.ClientPfpUpdateEvent;
 import duberchat.events.ClientProfileUpdateEvent;
+import duberchat.events.ClientStatusUpdateEvent;
 import duberchat.events.FileWriteEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.handlers.Handleable;
@@ -22,58 +25,94 @@ public class ServerProfileUpdateHandler implements Handleable {
   }
 
   public void handleEvent(SerializableEvent newEvent) {
-    ClientProfileUpdateEvent event = (ClientProfileUpdateEvent) newEvent;
-    User user = (User) event.getSource();
-    User serverUser = server.getAllUsers().get(user.getUsername());
+    String username = (String) newEvent.getSource();
+    User user = server.getAllUsers().get(username);
     
-    if (serverUser.getStatus() != user.getStatus()) {
-      serverUser.setStatus(user.getStatus());
-    }
-
-    if (!serverUser.pfpEquals(user.getPfp())) {
-      serverUser.setPfp(user.getPfp());
-      String filePath = "data/images/" + serverUser.getUsername() + "." + serverUser.getPfpFormat();
-      server.getImageWriteQueue().add(new FileWriteEvent(user.getPfp(), filePath));
-    }
-
-    if (serverUser.getHashedPassword() != user.getHashedPassword()) {
-      serverUser.setHashedPassword(user.getHashedPassword());
+    ClientStatusUpdateEvent statusEvent = (ClientStatusUpdateEvent) newEvent;
+    ClientPfpUpdateEvent pfpEvent = (ClientPfpUpdateEvent) newEvent;
+    ClientPasswordUpdateEvent passwordEvent = (ClientPasswordUpdateEvent) newEvent;
+    if (newEvent instanceof ClientStatusUpdateEvent && user.getStatus() != statusEvent.getStatus()) {
+      user.setStatus(statusEvent.getStatus());
+    } else if (newEvent instanceof ClientPfpUpdateEvent && !user.pfpEquals(pfpEvent.getNewPfp())) {
+      user.setPfp(pfpEvent.getNewPfp());
+      user.setPfpFormat(pfpEvent.getPfpFormat());
+      String imagePath = "data/images/" + username + "." + pfpEvent.getPfpFormat();
+      server.getImageWriteQueue().add(new FileWriteEvent(user.getPfp(), imagePath));
+    } else if (user.getHashedPassword() != passwordEvent.getHashedPassword()) {
+      user.setHashedPassword(passwordEvent.getHashedPassword());
     }
 
     HashSet<String> alreadyNotified = new HashSet<>();
     // close down the appropriate client thread if the user logs off
-    if (serverUser.getStatus() == 0) {
+    if (user.getStatus() == 0) {
       server.getCurUsers().get(user).setRunning(false);
       server.getCurUsers().remove(user);
     } else {
-      alreadyNotified.add(serverUser.getUsername());
-      ObjectOutputStream output = server.getCurUsers().get(serverUser).getOutputStream();
+      alreadyNotified.add(user.getUsername());
+      ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
       try {
-        output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
+        if (newEvent instanceof ClientStatusUpdateEvent) {
+          output.writeObject(new ClientStatusUpdateEvent(username, statusEvent.getStatus()));
+        } else if (newEvent instanceof ClientPfpUpdateEvent) {
+          output.writeObject(new ClientPfpUpdateEvent(username, user.getPfp(), user.getPfpFormat()));
+        } else {
+          output.writeObject(new ClientPasswordUpdateEvent(username, user.getHashedPassword()));
+        }
         output.flush();
+        output.reset();
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
 
     // Send a status update event to every other user in every channel this user is in
+    // as well as all of this user's friends.
     // Also, update every channel's file because the user information has changed. :/
-    Iterator<Integer> setItr = serverUser.getChannels().iterator();
-    while (setItr.hasNext()) {
-      int channelId = setItr.next();
+    Iterator<String> friendsItr = user.getFriends().iterator();
+    while (friendsItr.hasNext()) {
+      String friendUsername = friendsItr.next();
+      User friend = server.getAllUsers().get(friendUsername);
+      if (!server.getCurUsers().containsKey(friend) || alreadyNotified.contains(friendUsername)) {
+        continue;
+      }
+      alreadyNotified.add(friendUsername);
+      ObjectOutputStream output = server.getCurUsers().get(friend).getOutputStream();
+      try {
+        if (newEvent instanceof ClientStatusUpdateEvent) {
+          output.writeObject(new ClientStatusUpdateEvent(username, statusEvent.getStatus()));
+        } else if (newEvent instanceof ClientPfpUpdateEvent) {
+          output.writeObject(new ClientPfpUpdateEvent(username, user.getPfp(), user.getPfpFormat()));
+        } else {
+          output.writeObject(new ClientPasswordUpdateEvent(username, user.getHashedPassword()));
+        }
+        output.flush();
+        output.reset();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    Iterator<Integer> channelsItr = user.getChannels().iterator();
+    while (channelsItr.hasNext()) {
+      int channelId = channelsItr.next();
       Channel channel = server.getChannels().get(channelId);
       Iterator<User> itr = channel.getUsers().values().iterator();
       while (itr.hasNext()) {
         User member = itr.next();
-        if (!server.getCurUsers().containsKey(member) ||
-            alreadyNotified.contains(member.getUsername())) {
+        if (!server.getCurUsers().containsKey(member) || alreadyNotified.contains(member.getUsername())) {
           continue;
         }
         alreadyNotified.add(member.getUsername());
         ObjectOutputStream output = server.getCurUsers().get(member).getOutputStream();
         try {
-          output.writeObject(new ClientProfileUpdateEvent(new User(serverUser)));
+          if (newEvent instanceof ClientStatusUpdateEvent) {
+            output.writeObject(new ClientStatusUpdateEvent(username, statusEvent.getStatus()));
+          } else if (newEvent instanceof ClientPfpUpdateEvent) {
+            output.writeObject(new ClientPfpUpdateEvent(username, user.getPfp(), user.getPfpFormat()));
+          } else {
+            output.writeObject(new ClientPasswordUpdateEvent(username, user.getHashedPassword()));
+          }
           output.flush();
+          output.reset();
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -85,6 +124,6 @@ public class ServerProfileUpdateHandler implements Handleable {
 
     // Update the user file
     String userFilePath = "data/users/" + user.getUsername();
-    server.getFileWriteQueue().add(new FileWriteEvent(serverUser, userFilePath));
+    server.getFileWriteQueue().add(new FileWriteEvent(user, userFilePath));
   }
 }

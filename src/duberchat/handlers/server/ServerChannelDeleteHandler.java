@@ -22,12 +22,12 @@ public class ServerChannelDeleteHandler implements Handleable {
 
   public void handleEvent(SerializableEvent newEvent) {
     ChannelDeleteEvent event = (ChannelDeleteEvent) newEvent;
-    int toDeleteId = event.getChannel().getChannelId();
-    Channel serverToDelete = server.getChannels().get(toDeleteId);
+    int toDeleteId = event.getChannelId();
+    Channel toDelete = server.getChannels().get(toDeleteId);
 
     try {
       // Remove the channel from all its users and their files
-      Iterator<User> itr = serverToDelete.getUsers().values().iterator();
+      Iterator<User> itr = toDelete.getUsers().values().iterator();
       while (itr.hasNext()) {
         User user = itr.next();
         user.getChannels().remove(toDeleteId);
@@ -37,9 +37,9 @@ public class ServerChannelDeleteHandler implements Handleable {
         // Give back a channel deletion event to all currently online users in the channel
         if (!server.getCurUsers().containsKey(user)) continue;
         ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
-        output.writeObject(new ChannelDeleteEvent(new User((User) event.getSource()), 
-                                                  new Channel(serverToDelete)));
+        output.writeObject(new ChannelDeleteEvent(event.getSource(), toDeleteId));
         output.flush();
+        output.reset();
       }
       server.getServerFrame().getTextArea()
           .append("Sent channel deletion events to all users in channel" + toDeleteId + "\n");

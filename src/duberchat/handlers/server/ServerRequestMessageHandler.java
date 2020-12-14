@@ -20,12 +20,13 @@ public class ServerRequestMessageHandler implements Handleable {
 
   public void handleEvent(SerializableEvent newEvent) {
     ClientRequestMessageEvent event = (ClientRequestMessageEvent) newEvent;
-    User source = server.getAllUsers().get(((User) event.getSource()).getUsername());
-    ObjectOutputStream output = server.getCurUsers().get(source).getOutputStream();
+    String source = (String) event.getSource();
+    User user = server.getAllUsers().get(source);
+    ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
 
-    Message lastMessage = event.getStartMsg();
-    Channel serverChannel = server.getChannels().get(event.getChannel().getChannelId());
-    ArrayList<Message> messages = serverChannel.getMessages();
+    int lastMessageId = event.getStartMsgId();
+    Channel channel = server.getChannels().get(event.getChannelId());
+    ArrayList<Message> messages = channel.getMessages();
     ArrayList<Message> messageBlock = new ArrayList<>();
 
     // loop through messages to find the starting section.
@@ -33,25 +34,22 @@ public class ServerRequestMessageHandler implements Handleable {
       Message curMessage = messages.get(i);
 
       // remember, new messages go at the end, so old messages go to the top
-      messageBlock.add(0, curMessage);
-      if (curMessage.equals(lastMessage)) {
-        Message startMsg = curMessage;
+      if (curMessage.getMessageId() == lastMessageId) {
+        int startMsgId = messages.get(i - 1).getMessageId();
         // Add the next thirty messages to the message block
         for (int j = i - 1; j >= Math.max(i - 30, 0); j--) {
           messageBlock.add(0, messages.get(j));
         }
 
         try {
-          Channel clientVer = new Channel(serverChannel);
-          clientVer.setMessages(messageBlock);
-          clientVer.setMessageClusters(clientVer.getMessageClusters() + 1);
-          output.writeObject(new ClientRequestMessageEvent(source, startMsg, clientVer));
+          output.writeObject(new ClientRequestMessageEvent(source, startMsgId, channel.getChannelId(), messageBlock));
           output.flush();
+          output.reset();
         } catch (IOException e) {
           e.printStackTrace();
         }
         server.getServerFrame().getTextArea()
-            .append(source.getUsername() + " requested messages. Messages found, event sent to user.\n");
+            .append(source + " requested messages. Messages found, event sent to user.\n");
         return;
       }
     }
@@ -60,8 +58,9 @@ public class ServerRequestMessageHandler implements Handleable {
     try {
       output.writeObject(new RequestFailedEvent(source));
       output.flush();
+      output.reset();
       server.getServerFrame().getTextArea()
-          .append(source.getUsername() + " requested messages. Request failed, sent event to users.\n");
+          .append(source + " requested messages. Request failed, sent event to users.\n");
     } catch (IOException e) {
       e.printStackTrace();
     }

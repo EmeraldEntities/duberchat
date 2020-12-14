@@ -22,18 +22,19 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
 
   public void handleEvent(SerializableEvent newEvent) {
     ChannelRemoveMemberEvent event = (ChannelRemoveMemberEvent) newEvent;
-    int id = event.getChannel().getChannelId();
+    int id = event.getChannelId();
     Channel toDeleteFrom = server.getChannels().get(id);
     String username = event.getUsername();
     User toDelete = server.getAllUsers().get(username);
-    User source = server.getAllUsers().get(((User) event.getSource()).getUsername());
+    User source = server.getAllUsers().get((String) event.getSource());
 
     try {
       // If the user doesn't exist, send back a request failed event
       if (toDelete == null) {
         ObjectOutputStream output = server.getCurUsers().get(source).getOutputStream();
-        output.writeObject(new RequestFailedEvent(new User(toDelete)));
+        output.writeObject(new RequestFailedEvent(source.getUsername()));
         output.flush();
+        output.reset();
         server.getServerFrame().getTextArea()
             .append(source.getUsername() + " tried to remove a nonexistent user. Sent request failed event\n");
         return;
@@ -45,37 +46,18 @@ public class ServerChannelRemoveMemberHandler implements Handleable {
       // Send back a message sent event to every online user in the channel, as well
       // as the removed user.
       ObjectOutputStream output = server.getCurUsers().get(toDelete).getOutputStream();
-
-      // testing
-      ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-      ObjectOutputStream objOut = new ObjectOutputStream(byteOut);
-      objOut.writeObject(new ChannelRemoveMemberEvent(new User(toDelete), new Channel(toDeleteFrom), username));
-      byte[] byteArr = byteOut.toByteArray();
-      System.out.println("servr bytes: " + byteArr.length);
-      ByteArrayInputStream byteIn = new ByteArrayInputStream(byteArr);
-      ObjectInputStream objIn = new ObjectInputStream(byteIn);
-      try {
-        ChannelRemoveMemberEvent test = (ChannelRemoveMemberEvent) objIn.readObject();
-        System.out.println("test" + test.getChannel().getUsers().size());
-      } catch (ClassNotFoundException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-
-      output.writeObject(new ChannelRemoveMemberEvent(new User(toDelete), new Channel(toDeleteFrom), username));
+      output.writeObject(new ChannelRemoveMemberEvent(source.getUsername(), id, username));
       output.flush();
+      output.reset();
       Iterator<User> itr = toDeleteFrom.getUsers().values().iterator();
       while (itr.hasNext()) {
         User member = itr.next();
         // skip offline users
         if (!server.getCurUsers().containsKey(member)) continue;
         output = server.getCurUsers().get(member).getOutputStream();
-        Channel toSend = new Channel(toDeleteFrom);
-        System.out.println(member.getUsername() + " " + toSend.getUsers().size());
-        output.writeObject(new ChannelRemoveMemberEvent(new User(toDelete), 
-                                                        new Channel(toDeleteFrom), 
-                                                        username));
+        output.writeObject(new ChannelRemoveMemberEvent(source.getUsername(), id, username)); 
         output.flush();
+        output.reset();
       }
       server.getServerFrame().getTextArea().append(
           username + " removed from channel " + id + " by " + source.getUsername() + " and events sent to users\n");

@@ -22,6 +22,7 @@ import duberchat.chatutil.Channel;
  */
 public class ChannelCreateEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
+    protected String channelName;
     protected HashSet<String> usernames;
     protected Channel newChannel;
 
@@ -38,6 +39,7 @@ public class ChannelCreateEvent extends ChannelEvent {
             Channel newChannel) {
         super(source, channelId);
 
+        this.channelName = channelName;
         this.usernames = usernames;
         this.newChannel = newChannel;
     }
@@ -56,9 +58,14 @@ public class ChannelCreateEvent extends ChannelEvent {
     public ChannelCreateEvent(Object source, int channelId, String channelName, String username, Channel newChannel) {
         super(source, channelId);
 
+        this.channelName = channelName;
         this.usernames = new HashSet<String>();
         this.usernames.add(username);
         this.newChannel = newChannel;
+    }
+
+    public String getChannelName() {
+        return this.channelName;
     }
 
     /**

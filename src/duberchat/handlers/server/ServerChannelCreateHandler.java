@@ -44,27 +44,28 @@ public class ServerChannelCreateHandler implements Handleable {
   /**
    * Handles the {@code ChannelCreateEvent}.
    * 
-   * @param newEvent The {@code ChanenelCreateEvent} to handle..
+   * @param newEvent The {@code ChannelCreateEvent} to handle..
    */
   public void handleEvent(SerializableEvent newEvent) {
     ChannelCreateEvent event = (ChannelCreateEvent) newEvent;
-    ObjectOutputStream output = server.getCurUsers().get((User) event.getSource()).getOutputStream();
+    String channelName = event.getChannelName();
+    String creatorName = (String) event.getSource();
+    User creator = server.getAllUsers().get(creatorName);
+
     HashSet<String> usersFound = new HashSet<>();
     LinkedHashMap<String, User> channelUsers = new LinkedHashMap<>();
-    String channelName = event.getChannel().getChannelName();
-    String creatorName = ((User) event.getSource()).getUsername();
-    User serverCreator = server.getAllUsers().get(creatorName);
-
-    channelUsers.put(creatorName, serverCreator);
-    usersFound.add(creatorName);
     HashSet<User> admins = new HashSet<>();
-    admins.add(serverCreator);
+
+    usersFound.add(creatorName);
+    channelUsers.put(creatorName, creator);
+    admins.add(creator);
+
     Iterator<String> itr = event.getUsernames().iterator();
     while (itr.hasNext()) {
       String username = itr.next();
-      // The channel creator is always automatically added, prevent them from being added twice
       User user = server.getAllUsers().get(username);
-      if (user != null && user != serverCreator) {
+      // The channel creator is always automatically addeds; prevent them from being added twice
+      if (user != null && user != creator) {
         usersFound.add(username);
         channelUsers.put(username, user);
       }
@@ -75,7 +76,7 @@ public class ServerChannelCreateHandler implements Handleable {
     // both parties in a dm are admins of the dm; otherwise, only the creator starts off as admin
     // TODO: this is kinda scufffed lmao
     if (channelUsers.size() == 2) {
-      Iterator<Integer> channelsItr = serverCreator.getChannels().iterator();
+      Iterator<Integer> channelsItr = creator.getChannels().iterator();
       while (channelsItr.hasNext()) {
         int channelId = channelsItr.next();
         Channel channel = server.getChannels().get(channelId);
@@ -93,9 +94,11 @@ public class ServerChannelCreateHandler implements Handleable {
           try {
             Channel newChannel = new Channel(channel);
             newChannel.setMessages(messageBlock);
-            output.writeObject(new ChannelCreateEvent(new User(serverCreator), new Channel(newChannel), 
-                                                      usersFound));
+            ObjectOutputStream output = server.getCurUsers().get(creator).getOutputStream();
+            output.writeObject(new ChannelCreateEvent(creatorName, channelId, channel.getChannelName(),
+                                                      usersFound, newChannel)); 
             output.flush();
+            output.reset();
             server.getServerFrame().getTextArea()
                 .append(user1 + " + " + user2 + ": DM found, thus new DM not created.\n");
           } catch (IOException e) {
@@ -130,12 +133,13 @@ public class ServerChannelCreateHandler implements Handleable {
         if (!server.getCurUsers().containsKey(user)) {
           continue;
         }
-        output = server.getCurUsers().get(user).getOutputStream();
-        output.writeObject(new ChannelCreateEvent(new User(serverCreator), new Channel(newChannel), usersFound));
+        ObjectOutputStream output = server.getCurUsers().get(user).getOutputStream();
+        output.writeObject(new ChannelCreateEvent(creatorName, id, channelName, usersFound, newChannel));
         output.flush();
+        output.reset();
       }
       server.getServerFrame().getTextArea()
-          .append("New channel made by " + serverCreator.getUsername() + " and events sent to users\n");
+          .append("New channel made by " + creator.getUsername() + " and events sent to users\n");
 
     } catch (IOException e) {
       e.printStackTrace();
