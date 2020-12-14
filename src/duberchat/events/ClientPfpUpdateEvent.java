@@ -1,6 +1,11 @@
 package duberchat.events;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
+import javax.imageio.ImageIO;
 
 /**
  * A {@code ClientPfpUpdateEvent} is an event that is created when a client
@@ -14,7 +19,7 @@ import java.awt.image.BufferedImage;
  */
 public class ClientPfpUpdateEvent extends ClientProfileUpdateEvent {
     static final long serialVersionUID = 1L;
-    protected BufferedImage newPfp;
+    protected transient BufferedImage newPfp;
     protected String pfpFormat;
 
     /**
@@ -27,6 +32,29 @@ public class ClientPfpUpdateEvent extends ClientProfileUpdateEvent {
 
         this.newPfp = img;
         this.pfpFormat = pfpFormat;
+    }
+
+    /**
+     * Custom writeObject method because Images are not serializable.
+     * 
+     * @param out The output stream writing out this event.
+     * @throws IOException
+     */
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        ImageIO.write(this.newPfp, this.pfpFormat, out);
+    }
+ 
+    /**
+     * Custom readObject method because Images are not serializable.
+     * 
+     * @param in The input stream reading in this event.
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.newPfp = ImageIO.read(in);
     }
 
     public BufferedImage getNewPfp() {
