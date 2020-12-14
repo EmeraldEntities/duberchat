@@ -108,7 +108,9 @@ public class ChatClient {
         this.eventHandlers.put(ChannelPromoteMemberEvent.class, hierarchyHandler);
         this.eventHandlers.put(ChannelDemoteMemberEvent.class, hierarchyHandler);
 
-        this.eventHandlers.put(ClientProfileUpdateEvent.class, new ClientProfileUpdateHandler(this));
+        this.eventHandlers.put(ClientPfpUpdateEvent.class, new ClientPfpUpdateHandler(this));
+        this.eventHandlers.put(ClientStatusUpdateEvent.class, new ClientStatusUpdateHandler(this));
+        this.eventHandlers.put(ClientPasswordUpdateEvent.class, new ClientPasswordUpdateHandler(this));
         this.eventHandlers.put(ClientRequestMessageEvent.class, new ClientRequestMessageHandler(this));
         this.eventHandlers.put(ChannelCreateEvent.class, new ClientChannelCreateHandler(this));
         this.eventHandlers.put(ChannelDeleteEvent.class, new ClientChannelDeleteHandler(this));

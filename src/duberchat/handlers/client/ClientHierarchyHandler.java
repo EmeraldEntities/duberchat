@@ -1,7 +1,5 @@
 package duberchat.handlers.client;
 
-import java.util.HashSet;
-
 import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
@@ -47,22 +45,26 @@ public class ClientHierarchyHandler implements Handleable {
      */
     public void handleEvent(SerializableEvent event) {
         ChannelHierarchyChangeEvent hierarchyEvent = (ChannelHierarchyChangeEvent) event;
-        Channel updatedChannel = hierarchyEvent.getChannel();
-        HashSet<User> updatedUsers = updatedChannel.getAdminUsers();
+        int updatedChannelId = hierarchyEvent.getChannelId();
 
-        Channel localChannel = this.client.getChannels().get(updatedChannel.getChannelId());
-        User toRemove = localChannel.getUsers().get(hierarchyEvent.getUsername());
+        Channel localChannel = this.client.getChannels().get(updatedChannelId);
+        User toHandle = localChannel.getUsers().get(hierarchyEvent.getUsername());
 
-        if (updatedUsers.contains(toRemove)) {
-            updatedUsers.remove(toRemove);
+        if (localChannel.getAdminUsers().contains(toHandle)) {
+            // Demoting this user
+            localChannel.getAdminUsers().remove(toHandle);
+        } else {
+            // Promoting this user
+            localChannel.getAdminUsers().add(toHandle);
         }
 
-        this.client.getChannels().get(updatedChannel.getChannelId()).setAdminUsers(updatedUsers);
-        if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(updatedChannel)) {
-            this.client.getCurrentChannel().setAdminUsers(updatedUsers);
-        }
+        Channel curChannel = this.client.getCurrentChannel();
+        if (curChannel != null && curChannel.getChannelId() == updatedChannelId) {
+            // Just in case these are not linked for some reason
+            // If they are then this has no effect
+            this.client.getCurrentChannel().getAdminUsers().add(toHandle);
 
-        if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(updatedChannel)) {
+            // Reload the channel to reflect actual changes
             this.client.getMainMenuFrame().reload(event);
         }
     }

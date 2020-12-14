@@ -198,10 +198,9 @@ public class MessagePanel extends JPanel {
     }
 
     private void deleteMessage() {
-        User clientUser = new User(client.getUser());
-        MessageDeleteEvent deleteEvent = new MessageDeleteEvent(clientUser, msg);
+        String clientUsername = client.getUser().getUsername();
+        MessageDeleteEvent deleteEvent = new MessageDeleteEvent(clientUsername, msg);
         client.offerEvent(deleteEvent);
-        System.out.println("SYSTEM: Deleted!");
 
         // If the client didn't have main menu or a channel, this panel wouldn't exist
         // It's okay to assume these two things exist
@@ -230,11 +229,12 @@ public class MessagePanel extends JPanel {
          */
         msg.setMessage(newText);
 
-        User clientUser = new User(client.getUser());
+        String clientUsername = client.getUser().getUsername();
+        // Make sure we're sending the new message...
         Message newMessage = new Message(msg);
         newMessage.setMessage(newText);
-        client.offerEvent(new MessageEditEvent(clientUser, newMessage));
-        System.out.println("SYSTEM: edited!");
+
+        client.offerEvent(new MessageEditEvent(clientUsername, newMessage));
 
         resetEditingMessage();
     }

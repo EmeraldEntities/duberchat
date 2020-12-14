@@ -1,7 +1,6 @@
 package duberchat.handlers.client;
 
 import duberchat.chatutil.Channel;
-import duberchat.chatutil.User;
 import duberchat.handlers.Handleable;
 import duberchat.client.ChatClient;
 import duberchat.events.ChannelCreateEvent;
@@ -43,14 +42,14 @@ public class ClientChannelCreateHandler implements Handleable {
      */
     public void handleEvent(SerializableEvent event) {
         ChannelCreateEvent channelEvent = (ChannelCreateEvent) event;
-        boolean isCreator = this.client.getUser().equals(((User) channelEvent.getSource()));
+        boolean isCreator = this.client.getUser().getUsername().equals(((String) channelEvent.getSource()));
 
         // Make sure the channel create frame is closed if this request succeeded
         if (isCreator && this.client.getMainMenuFrame().hasActiveChannelCreateFrame()) {
             this.client.getMainMenuFrame().closeChannelCreateFrame();
         }
 
-        Channel newChannel = channelEvent.getChannel();
+        Channel newChannel = channelEvent.getNewChannel();
         int newChannelId = newChannel.getChannelId();
 
         this.client.getUser().getChannels().add(newChannelId);
@@ -63,9 +62,8 @@ public class ClientChannelCreateHandler implements Handleable {
         // Make sure other users don't get forcefully pulled into the new
         // channel if they weren't the creator
         if (isCreator) {
-            // No need to access hashmap as this channel should be a reference to the same
-            // object
-            this.client.setCurrentChannel(newChannel);
+            // Access hashmap to ensure the same pointer
+            this.client.setCurrentChannel(this.client.getChannels().get(newChannelId));
         }
         
         // Force a refresh of the main menu frame

@@ -44,7 +44,7 @@ public class ClientMessageSentHandler implements Handleable {
         MessageSentEvent msgEvent = (MessageSentEvent) event;
         Message message = msgEvent.getMessage();
 
-        Channel localChannel = client.getChannels().get(message.getChannel().getChannelId());
+        Channel localChannel = client.getChannels().get(message.getChannelId());
 
         // If we got the MessageSentEvent, the client should have a copy of the channel
         localChannel.addMessage(message);

@@ -1,5 +1,6 @@
 package duberchat.handlers.client;
 
+import duberchat.chatutil.Channel;
 import duberchat.client.ChatClient;
 import duberchat.events.ChannelDeleteEvent;
 import duberchat.events.SerializableEvent;
@@ -41,9 +42,10 @@ public class ClientChannelDeleteHandler implements Handleable {
     public void handleEvent(SerializableEvent event) {
         ChannelDeleteEvent deleteEvent = (ChannelDeleteEvent) event;
 
-        this.client.getChannels().remove(deleteEvent.getChannel().getChannelId());
+        this.client.getChannels().remove(deleteEvent.getChannelId());
 
-        if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(deleteEvent.getChannel())) {
+        Channel curChannel = this.client.getCurrentChannel();
+        if (curChannel != null && curChannel.getChannelId() == deleteEvent.getChannelId()) {
             this.client.setCurrentChannel(null);
             this.client.getMainMenuFrame().switchChannelsToCurrent();
         } else {

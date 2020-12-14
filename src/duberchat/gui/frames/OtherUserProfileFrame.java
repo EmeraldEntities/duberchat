@@ -26,7 +26,6 @@ import duberchat.events.ChannelDemoteMemberEvent;
 import duberchat.events.FriendAddEvent;
 import duberchat.client.ChatClient;
 import duberchat.gui.util.ComponentFactory;
-import duberchat.chatutil.Channel;
 import duberchat.chatutil.User;
 
 /**
@@ -223,10 +222,10 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
      */
     private void promoteUser() {
         // client current channel should be this user panel's channel
-        User clientUser = new User(client.getUser());
-        Channel curChannel = new Channel(client.getCurrentChannel());
-        client.offerEvent(
-                new ChannelPromoteMemberEvent(clientUser, curChannel, otherUser.getUsername()));
+        String clientUsername = client.getUser().getUsername();
+        int curChannelId = client.getCurrentChannel().getChannelId();
+        String userToPromote = otherUser.getUsername();
+        client.offerEvent(new ChannelPromoteMemberEvent(clientUsername, curChannelId, userToPromote));
 
         this.destroy();
     }
@@ -235,10 +234,10 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
      * Demotes the user this frame is representing and sends a demotion event.
      */
     private void demoteUser() {
-        User clientUser = new User(client.getUser());
-        Channel curChannel = new Channel(client.getCurrentChannel());
-        client.offerEvent(
-                new ChannelDemoteMemberEvent(clientUser, curChannel, otherUser.getUsername()));
+        String clientUsername = client.getUser().getUsername();
+        int curChannelId = client.getCurrentChannel().getChannelId();
+        String userToDemote = otherUser.getUsername();
+        client.offerEvent(new ChannelDemoteMemberEvent(clientUsername, curChannelId, userToDemote));
 
         this.destroy();
     }
@@ -247,9 +246,10 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
      * Removes the user this frame is representing and sends a removal event.
      */
     private void removeUser() {
-        User clientUser = new User(client.getUser());
-        Channel curChannel = new Channel(client.getCurrentChannel());
-        client.offerEvent(new ChannelRemoveMemberEvent(clientUser, curChannel, otherUser.getUsername()));
+        String clientUsername = client.getUser().getUsername();
+        int curChannelId = client.getCurrentChannel().getChannelId();
+        String userToRemove = otherUser.getUsername();
+        client.offerEvent(new ChannelRemoveMemberEvent(clientUsername, curChannelId, userToRemove));
 
         this.destroy();
     }
@@ -258,8 +258,9 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
      * Adds this user to the client's friend page.
      */
     private void addFriend() {
-        User clientUser = new User(client.getUser());
-        client.offerEvent(new FriendAddEvent(clientUser, otherUser.getUsername()));
+        String clientUsername = client.getUser().getUsername();
+        String newFriend = otherUser.getUsername();
+        client.offerEvent(new FriendAddEvent(clientUsername, newFriend));
 
         this.destroy();
     }
@@ -282,9 +283,10 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
                 return;
             }
 
-            Channel newChannel = new Channel("@" + otherUser.getUsername());
-            User clientUser = new User(client.getUser());
-            client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, otherUser.getUsername()));
+            String clientUsername = client.getUser().getUsername();
+            String newChannelName = "@" + otherUser.getUsername();
+            client.offerEvent(
+                    new ChannelCreateEvent(clientUsername, -1, newChannelName, otherUser.getUsername(), null));
 
             destroy();
         }

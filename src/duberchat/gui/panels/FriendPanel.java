@@ -132,20 +132,17 @@ public class FriendPanel extends JPanel {
     }
 
     private void initializeChatting() {
-        HashSet<String> friendName = new HashSet<>();
-        friendName.add(friend.getUsername());
+        String friendName = friend.getUsername();
 
-        Channel newChannel = new Channel("@" + friend.getUsername());
-        User clientUser = new User(client.getUser());
-        client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, friendName));
-
-        System.out.println("Started chatting!");
+        String newChannelName = "@" + friend.getUsername();
+        String clientUsername = client.getUser().getUsername();
+        client.offerEvent(new ChannelCreateEvent(clientUsername, -1, newChannelName, friendName, null));
     }
 
     private void removeFriend() {
-        User clientUser = new User(client.getUser());
-        client.offerEvent(new FriendRemoveEvent(clientUser, friend.getUsername()));
-        System.out.println("SYSTEM: Friendship is over with " + friend.getUsername());
+        String clientUsername = client.getUser().getUsername();
+        String friendName = friend.getUsername();
+        client.offerEvent(new FriendRemoveEvent(clientUsername, friendName));
     }
 
     private final class PanelMouseListener extends MouseAdapter {

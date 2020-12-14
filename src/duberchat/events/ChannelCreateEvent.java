@@ -28,12 +28,14 @@ public class ChannelCreateEvent extends ChannelEvent {
     /**
      * Constructs a new {@code ChannelCreateEvent}.
      * 
-     * @param source     The source of this event.
-     * @param channelId  The channel id associated with this event.
-     * @param usernames  The usernames of the users to add initially.
-     * @param newChannel The new channel that was created.
+     * @param source      The source of this event.
+     * @param channelId   The channel id associated with this event.
+     * @param channelName The name of the channel.
+     * @param usernames   The usernames of the users to add initially.
+     * @param newChannel  The new channel that was created.
      */
-    public ChannelCreateEvent(Object source, int channelId, HashSet<String> usernames, Channel newChannel) {
+    public ChannelCreateEvent(Object source, int channelId, String channelName, HashSet<String> usernames,
+            Channel newChannel) {
         super(source, channelId);
 
         this.usernames = usernames;
@@ -45,12 +47,13 @@ public class ChannelCreateEvent extends ChannelEvent {
      * <p>
      * This will create a DM with the specified user.
      * 
-     * @param source     The source of this event.
-     * @param channelId  The channel id associated with this event.
-     * @param username   The username of the user to add.
-     * @param newChannel The new channel that was created.
+     * @param source      The source of this event.
+     * @param channelId   The channel id associated with this event.
+     * @param channelName The name of the channel.
+     * @param username    The username of the user to add.
+     * @param newChannel  The new channel that was created.
      */
-    public ChannelCreateEvent(Object source, int channelId, String username, Channel newChannel) {
+    public ChannelCreateEvent(Object source, int channelId, String channelName, String username, Channel newChannel) {
         super(source, channelId);
 
         this.usernames = new HashSet<String>();

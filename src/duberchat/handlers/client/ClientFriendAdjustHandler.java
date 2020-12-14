@@ -4,6 +4,7 @@ import duberchat.chatutil.User;
 import duberchat.client.ChatClient;
 import duberchat.events.SerializableEvent;
 import duberchat.events.FriendEvent;
+import duberchat.events.FriendAddEvent;
 import duberchat.handlers.Handleable;
 
 /**
@@ -45,12 +46,13 @@ public class ClientFriendAdjustHandler implements Handleable {
      */
     public void handleEvent(SerializableEvent event) {
         FriendEvent friendEvent = (FriendEvent) event;
-        User newUser = (User) friendEvent.getSource();
+        String friendUsername = friendEvent.getFriendUsername();
 
-        if (this.client.getFriends().containsKey(newUser.getUsername())) {
-            this.client.getFriends().remove(newUser.getUsername());
+        if (this.client.getFriends().containsKey(friendUsername)) {
+            this.client.getFriends().remove(friendUsername);
         } else {
-            this.client.getFriends().put(newUser.getUsername(), newUser);
+            User friend = ((FriendAddEvent) friendEvent).getFriend();
+            this.client.getFriends().put(friend.getUsername(), friend);
         }
 
         if (!this.client.hasCurrentChannel() && this.client.hasMainMenuFrame()) {

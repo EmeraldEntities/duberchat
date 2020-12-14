@@ -30,7 +30,10 @@ import java.awt.Insets;
 import duberchat.client.ChatClient;
 import duberchat.gui.filters.TextLengthFilter;
 import duberchat.gui.util.ComponentFactory;
+import duberchat.events.ClientStatusUpdateEvent;
+import duberchat.events.ClientPfpUpdateEvent;
 import duberchat.events.ClientProfileUpdateEvent;
+import duberchat.events.ClientPasswordUpdateEvent;
 import duberchat.events.SerializableEvent;
 import duberchat.chatutil.User;
 
@@ -54,6 +57,7 @@ public class ProfileFrame extends DynamicGridbagFrame {
     private JLabel succeedText;
 
     private BufferedImage currentPfp;
+    private String currentPfpFormat;
     private ImageIcon currentPfpIcon;
     private ImageIcon addPfpIcon;
     private int status;
@@ -64,9 +68,10 @@ public class ProfileFrame extends DynamicGridbagFrame {
     public ProfileFrame(ChatClient client) {
         super(client.getUser().getUsername());
 
-        this.client = client;
         User user = client.getUser();
+        this.client = client;
         this.status = user.getStatus();
+        this.currentPfpFormat = user.getPfpFormat();
 
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(DEFAULT_SIZE);
@@ -104,6 +109,9 @@ public class ProfileFrame extends DynamicGridbagFrame {
 
                 if (option == JFileChooser.APPROVE_OPTION) {
                     try {
+                        String fileLocation = fc.getSelectedFile().toString();
+                        currentPfpFormat = fileLocation.substring(fileLocation.lastIndexOf("."));
+
                         currentPfp = ImageIO.read(fc.getSelectedFile().getAbsoluteFile());
                         currentPfpIcon = new ImageIcon(currentPfp.getScaledInstance(128, 128, Image.SCALE_SMOOTH));
                         profilePicture.setIcon(currentPfpIcon);
@@ -131,14 +139,21 @@ public class ProfileFrame extends DynamicGridbagFrame {
         saveButton = ComponentFactory.createButton("SAVE", MainFrame.MAIN_COLOR, MainFrame.TEXT_COLOR,
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        User newUser = new User(client.getUser());
-                        newUser.setPfp(currentPfp);
-                        newUser.setStatus(status);
-                        if (!passwordField.getText().equals("")) {
-                            newUser.setHashedPassword(passwordField.getText().hashCode());
+                        String clientUsername = client.getUser().getUsername();
+
+                        if (client.getUser().getStatus() != status) {
+                            client.offerEvent(new ClientStatusUpdateEvent(clientUsername, status));
                         }
 
-                        client.offerEvent(new ClientProfileUpdateEvent(newUser));
+                        if (!client.getUser().pfpEquals(currentPfp)) {
+                            client.offerEvent(new ClientPfpUpdateEvent(clientUsername, currentPfp, currentPfpFormat));
+                        }
+
+                        if (!passwordField.getText().equals("")) {
+                            long newHashedPassword = passwordField.getText().hashCode();
+                            passwordField.setText("");
+                            client.offerEvent(new ClientPasswordUpdateEvent(clientUsername, newHashedPassword));
+                        }
                     }
                 });
         passwordLabel = ComponentFactory.createLabel("Change Password", MainFrame.TEXT_COLOR);

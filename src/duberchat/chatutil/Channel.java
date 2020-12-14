@@ -78,8 +78,8 @@ public class Channel implements Serializable {
      * if possible.
      * <p>
      * The message cluster must be the same size or less as dictated in the class
-     * constant {@code MESSAGE_CLUSTER_AMT}, or the load will fail. exists so that,
-     * for example, channels with 15 messages left will still load.
+     * constant {@code MESSAGE_CLUSTER_AMT}, or the load will fail. This exists so
+     * that, for example, channels with 15 messages left will still load.
      * 
      * @param messageCluster the cluster of messages to add to this channel's
      *                       messages.

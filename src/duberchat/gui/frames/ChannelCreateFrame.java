@@ -151,9 +151,8 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
             usernames.add(user);
         }
 
-        Channel newChannel = new Channel(channelName);
-        User clientUser = new User(client.getUser());
-        client.offerEvent(new ChannelCreateEvent(clientUser, newChannel, usernames));
+        String clientUsername = client.getUser().getUsername();
+        client.offerEvent(new ChannelCreateEvent(clientUsername, -1, channelName, usernames, null));
 
         alreadySentRequest = true;
         System.out.println("SYSTEM: Created new channel event.");

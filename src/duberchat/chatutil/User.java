@@ -287,6 +287,15 @@ public class User implements Serializable {
     }
 
     /**
+     * Sets this pfp format to a new format.
+     * 
+     * @param newFormat the new pfp format.
+     */
+    public void setPfpFormat(String newFormat) {
+        this.pfpFormat = newFormat;
+    }
+
+    /**
      * Retrieves the set of channels this user is in.
      * 
      * @return HashSet<Integer>, the set of channel ids representing the channels the user is in.

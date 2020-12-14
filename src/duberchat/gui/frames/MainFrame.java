@@ -246,10 +246,12 @@ public class MainFrame extends DynamicFrame {
                     } else if (curChannel.getMessages().size() >= Channel.LOCAL_SAVE_AMT
                             && (curChannel.getMessages().size() - messageOffset) <= maxMessageGrids
                             && !requestedMessages) {
-                        User clientUser = new User(client.getUser());
-                        Channel clientChannel = new Channel(client.getCurrentChannel());
-                        client.offerEvent(new ClientRequestMessageEvent(clientUser, curChannel.getMessages().get(0),
-                                clientChannel));
+
+                        String clientUsername = client.getUser().getUsername();
+                        int startId = curChannel.getMessages().get(0).getMessageId();
+                        int channelId = curChannel.getChannelId();
+
+                        client.offerEvent(new ClientRequestMessageEvent(clientUsername, startId, channelId));
                         requestedMessages = true;
                     }
                 }
@@ -358,12 +360,9 @@ public class MainFrame extends DynamicFrame {
                                 BRIGHT_TEXT_COLOR);
                         ActionListener action = new ActionListener() {
                             public void actionPerformed(ActionEvent evt2) {
-                                User clientUser = new User(client.getUser());
-                                Channel curChannel = new Channel(client.getCurrentChannel());
-                                client.offerEvent(new ChannelDeleteEvent(clientUser, curChannel));
-
-                                System.out.println(
-                                        "SYSTEM: Deleting channel " + client.getCurrentChannel().getChannelName());
+                                String clientUsername = client.getUser().getUsername();
+                                int curChannelId = client.getCurrentChannel().getChannelId();
+                                client.offerEvent(new ChannelDeleteEvent(clientUsername, curChannelId));
                             }
                         };
 
@@ -409,9 +408,10 @@ public class MainFrame extends DynamicFrame {
                                 return;
                             }
 
-                                    User clientUser = new User(client.getUser());
-                                    Channel curChannel = new Channel(client.getCurrentChannel());
-                                    client.offerEvent(new ChannelRemoveMemberEvent(clientUser, curChannel,
+                                    String clientUsername = client.getUser().getUsername();
+                                    int curChannelId = client.getCurrentChannel().getChannelId();
+                                    client.offerEvent(
+                                            new ChannelRemoveMemberEvent(clientUsername, curChannelId,
                                     username));
 
                             System.out.println("SYSTEM: Removing user " + username);
@@ -448,10 +448,10 @@ public class MainFrame extends DynamicFrame {
                         ActionListener action = new ActionListener() {
                             public void actionPerformed(ActionEvent evt2) {
                                 // This button will only exist if a current channel exists
-                                User clientUser = new User(client.getUser());
-                                Channel curChannel = new Channel(client.getCurrentChannel());
-                                client.offerEvent(new ChannelRemoveMemberEvent(clientUser, curChannel,
-                                        client.getUser().getUsername()));
+                                String clientUsername = client.getUser().getUsername();
+                                int curChannelId = client.getCurrentChannel().getChannelId();
+                                client.offerEvent(
+                                        new ChannelRemoveMemberEvent(clientUsername, curChannelId, clientUsername));
                             }
                         };
 
@@ -535,11 +535,12 @@ public class MainFrame extends DynamicFrame {
         if (typeField.getText() == "") {
             return;
         }
-
-        Message msg = new Message(typeField.getText(), client.getUser().getUsername(), -1, new Date(),
-                client.getCurrentChannel());
-        User clientUser = new User(client.getUser());
-        client.offerEvent(new MessageSentEvent(clientUser, msg));
+        
+        String clientUsername = client.getUser().getUsername();
+        String timestamp = new Date().toString();
+        int channelId = client.getCurrentChannel().getChannelId();
+        Message msg = new Message(typeField.getText(), clientUsername, -1, timestamp, channelId);
+        client.offerEvent(new MessageSentEvent(clientUsername, msg));
         typeField.setText("");
 
         System.out.println("SYSTEM: Sent message " + typeField.getText());
@@ -892,11 +893,11 @@ public class MainFrame extends DynamicFrame {
             return;
         }
 
-        User clientUser = new User(client.getUser());
-        Channel curChannel = new Channel(client.getCurrentChannel());
+        String userToAdd = user.replaceFirst("@", "");
+        String clientUsername = client.getUser().getUsername();
+        int curChannelId = client.getCurrentChannel().getChannelId();
 
-        client.offerEvent(
-                new ChannelAddMemberEvent(clientUser, curChannel, user.replaceFirst("@", "")));
+        client.offerEvent(new ChannelAddMemberEvent(clientUsername, curChannelId, userToAdd));
     }
 
     /**
@@ -909,8 +910,8 @@ public class MainFrame extends DynamicFrame {
             return;
         }
 
-        User clientUser = new User(client.getUser());
-
-        client.offerEvent(new FriendAddEvent(clientUser, user.replaceFirst("@", "")));
+        String clientUsername = client.getUser().getUsername();
+        String userToBefriend = user.replaceFirst("@", "");
+        client.offerEvent(new FriendAddEvent(clientUsername, userToBefriend));
     }
 }

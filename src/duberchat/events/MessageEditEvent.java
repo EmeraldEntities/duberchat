@@ -22,7 +22,7 @@ public class MessageEditEvent extends MessageEvent {
      * Constructs a new {@code MessageEditEvent}.
      * 
      * @param source  The source of this event.
-     * @param message The edited {@code Message}
+     * @param message The edited {@code Message}.
      */
     public MessageEditEvent(Object source, Message message) {
         super(source, message);

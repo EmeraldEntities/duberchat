@@ -55,6 +55,11 @@ public class ClientRequestFailedHandler implements Handleable {
             }
         } else if (failedEvent.getSource() instanceof ClientRequestMessageEvent) {
             System.out.println("SYSTEM: No more messages can be requested.");
+        } else {
+            // just in case, we reload everything
+            if (this.client.hasMainMenuFrame()) {
+                this.client.getMainMenuFrame().reload();
+            }
         }
     }
 }

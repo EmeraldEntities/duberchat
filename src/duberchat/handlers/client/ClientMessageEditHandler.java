@@ -45,7 +45,7 @@ public class ClientMessageEditHandler implements Handleable {
     public void handleEvent(SerializableEvent event) {
         MessageEditEvent msgEvent = (MessageEditEvent) event;
         Message message = msgEvent.getMessage();
-        Channel localChannel = client.getChannels().get(message.getChannel().getChannelId());
+        Channel localChannel = client.getChannels().get(message.getChannelId());
 
         // We replace the message with the new one, even if we are the ones that created
         // it. This ensures that if we don't handle it locally, nothing will

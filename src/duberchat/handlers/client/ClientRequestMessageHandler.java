@@ -1,6 +1,5 @@
 package duberchat.handlers.client;
 
-import duberchat.chatutil.Channel;
 import duberchat.client.ChatClient;
 import duberchat.events.ClientRequestMessageEvent;
 import duberchat.events.SerializableEvent;
@@ -41,19 +40,18 @@ public class ClientRequestMessageHandler implements Handleable {
      */
     public void handleEvent(SerializableEvent event) {
         ClientRequestMessageEvent msgEvent = (ClientRequestMessageEvent) event;
+        int updatedChannelId = msgEvent.getChannelId();
 
-        Channel updatedChannel = msgEvent.getChannel();
-        // simply replacing the entire channel
-        this.client.getChannels().put(updatedChannel.getChannelId(), updatedChannel);
+        // Load the message block
+        this.client.getChannels().get(updatedChannelId).loadMessageCluster(msgEvent.getNewMessageBlock());
 
-        if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(updatedChannel)) {
-            // we need to properly reset current channel pointer since we're replacing the entire channel
-            this.client.setCurrentChannel(this.client.getChannels().get(updatedChannel.getChannelId()));
+        if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().getChannelId() == updatedChannelId) {
+            // Properly resetting pointer in case something went wrong in between
+            this.client.setCurrentChannel(this.client.getChannels().get(updatedChannelId));
 
-            if (!this.client.hasMainMenuFrame()) {
-                   return;
+            if (this.client.hasMainMenuFrame()) {
+                this.client.getMainMenuFrame().reload(event);
             }
-            this.client.getMainMenuFrame().reload(event);
         }
     }
 }

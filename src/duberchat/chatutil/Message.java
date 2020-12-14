@@ -1,7 +1,6 @@
 package duberchat.chatutil;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class Message implements Serializable {
     static final long serialVersionUID = 2L;

@@ -145,7 +145,7 @@ public class FrameFactory {
 
             // Add components
             addConstrainedComponent(text, mainPanel, layout, constraints, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL,
-                    GridBagConstraints.CENTER, new Insets(0, 0, 8, 0));
+                    GridBagConstraints.CENTER, new Insets(16, 0, 8, 0));
             addConstrainedComponent(input, mainPanel, layout, constraints, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL,
                     GridBagConstraints.CENTER, new Insets(0, 0, 16, 0));
             addConstrainedComponent(submitButton, mainPanel, layout, constraints, 0, 2, 1, 1,

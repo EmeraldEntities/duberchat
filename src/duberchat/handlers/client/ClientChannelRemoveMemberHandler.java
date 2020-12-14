@@ -41,14 +41,15 @@ public class ClientChannelRemoveMemberHandler implements Handleable {
      */
     public void handleEvent(SerializableEvent event) {
         ChannelRemoveMemberEvent memberEvent = (ChannelRemoveMemberEvent) event;
-        Channel modifiedChannel = memberEvent.getChannel();
+        int modifiedChannelId = memberEvent.getChannelId();
+        Channel curChannel = this.client.getCurrentChannel();
 
         if (this.client.getUser().getUsername().equals(memberEvent.getUsername())) {
             // This user is the user to delete
-            this.client.getChannels().remove(modifiedChannel.getChannelId());
-            this.client.getUser().getChannels().remove(modifiedChannel.getChannelId());
+            this.client.getChannels().remove(modifiedChannelId);
+            this.client.getUser().getChannels().remove(modifiedChannelId);
 
-            if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(modifiedChannel)) {
+            if (curChannel != null && curChannel.getChannelId() == modifiedChannelId) {
                 this.client.setCurrentChannel(null);
                 this.client.getMainMenuFrame().switchChannelsToCurrent();
             } else {
@@ -56,11 +57,11 @@ public class ClientChannelRemoveMemberHandler implements Handleable {
             }
         } else {
             // This user is not the user to delete
-            Channel localChannel = this.client.getChannels().get(modifiedChannel.getChannelId());
+            Channel localChannel = this.client.getChannels().get(modifiedChannelId);
             localChannel.getUsers().remove(memberEvent.getUsername());
 
             // We only need to reload if we are currently looking at the channel
-            if (this.client.hasCurrentChannel() && this.client.getCurrentChannel().equals(modifiedChannel)) {
+            if (curChannel != null && curChannel.getChannelId() == modifiedChannelId) {
                 this.client.getMainMenuFrame().reload(event);
             }
         }

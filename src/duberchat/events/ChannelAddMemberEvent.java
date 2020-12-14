@@ -40,7 +40,21 @@ public class ChannelAddMemberEvent extends ChannelEvent {
         this.newUserUsername = newUserUsername;
         this.newUser = newUser;
     }
-    
+
+    /**
+     * Constructs a new {@code ChannelAddMemberEvent}.
+     * 
+     * @param source          The source of this event.
+     * @param channelId       The associated channel's id with this event.
+     * @param newUserUsername the new user's username.
+     * @param newUser         the new user.
+     * @param newChannel      the new channel.
+     */
+    public ChannelAddMemberEvent(Object source, int channelId, String newUserUsername) {
+        super(source, channelId);
+        this.newUserUsername = newUserUsername;
+    }
+
     public String getNewUserUsername() {
         return this.newUserUsername;
     }

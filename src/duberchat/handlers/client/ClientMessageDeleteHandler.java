@@ -44,7 +44,7 @@ public class ClientMessageDeleteHandler implements Handleable {
     public void handleEvent(SerializableEvent event) {
         MessageDeleteEvent msgEvent = (MessageDeleteEvent) event;
         Message message = msgEvent.getMessage();
-        Channel localChannel = client.getChannels().get(message.getChannel().getChannelId());
+        Channel localChannel = client.getChannels().get(message.getChannelId());
 
         // Remove the message regardless of sender to ensure a proper synchronized
         // message list
