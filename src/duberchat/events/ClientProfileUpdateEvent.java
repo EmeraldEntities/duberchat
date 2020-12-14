@@ -11,7 +11,7 @@ package duberchat.events;
  * @version 1.0.0
  * @author Joseph Wang, Paula Yuan
  */
-public class ClientProfileUpdateEvent extends ClientEvent {
+public abstract class ClientProfileUpdateEvent extends ClientEvent {
     static final long serialVersionUID = 1L;
 
     /**
