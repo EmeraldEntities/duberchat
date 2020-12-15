@@ -62,7 +62,7 @@ public class ClientChannelRemoveMemberHandler implements Handleable {
         } else {
             // Client user is not the user to delete
             Channel localChannel = this.client.getChannels().get(modifiedChannelId);
-            localChannel.getUsers().remove(memberEvent.getUsername());
+            localChannel.removeUser(localChannel.getUsers().get(userToRemove));
 
             // Remove all messages by this user.
             ArrayList<Message> localMessages = localChannel.getMessages();
