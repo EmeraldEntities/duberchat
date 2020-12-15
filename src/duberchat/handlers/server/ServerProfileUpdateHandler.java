@@ -56,7 +56,7 @@ public class ServerProfileUpdateHandler implements Handleable {
     String username = (String) newEvent.getSource();
     User user = server.getAllUsers().get(username);
 
-    // updat the server-side user depending on which type of event it is
+    // update the server-side user depending on which type of event it is
     if (newEvent instanceof ClientStatusUpdateEvent) {
       ClientStatusUpdateEvent statusEvent = (ClientStatusUpdateEvent) newEvent;
       if (user.getStatus() != statusEvent.getStatus()) {
@@ -64,7 +64,6 @@ public class ServerProfileUpdateHandler implements Handleable {
       }
     } else if (newEvent instanceof ClientPfpUpdateEvent) {
       ClientPfpUpdateEvent pfpEvent = (ClientPfpUpdateEvent) newEvent;
-
       if (!user.pfpEquals(pfpEvent.getNewPfp())) {
         user.setPfp(pfpEvent.getNewPfp());
         user.setPfpFormat(pfpEvent.getPfpFormat());
