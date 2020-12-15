@@ -138,8 +138,8 @@ public class ChatClient {
                 this.eventHandlers.get(newEvent.getClass()).handleEvent(newEvent);
             } catch (EOFException e) {
                 System.out.println("SYSTEM: End of input stream.");
-                this.running = false;
-                this.forceLogout();
+                // this.running = false;
+                // this.forceLogout();
             } catch (IOException e) {
                 System.out.println("SYSTEM: Failed to obtain an event from the server.");
             } catch (ClassNotFoundException e) {
@@ -319,7 +319,7 @@ public class ChatClient {
                                 System.out.println("SYSTEM: sent event.");
                             } catch (EOFException e) {
                                 System.out.println("SYSTEM: End of output stream.");
-                                forceLogout();
+                                // forceLogout();
                             } catch (InterruptedException e) {
                                 System.out.println("SYSTEM: queue was interrupted while blocking.");
                             } catch (IOException e) {
@@ -568,10 +568,6 @@ public class ChatClient {
      */
     private void closeEverything() throws IOException {
         if (this.hasMainMenuFrame()) {
-            if (this.mainMenu.hasActiveChannelCreateFrame()) {
-                this.mainMenu.getChannelCreateFrame().destroy();
-            }
-
             this.mainMenu.destroy();
         }
 

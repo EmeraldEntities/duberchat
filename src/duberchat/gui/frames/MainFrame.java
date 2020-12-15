@@ -842,10 +842,14 @@ public class MainFrame extends DynamicFrame {
      */
     public void destroy() {
         if (this.hasActiveChannelCreateFrame()) {
-            this.addChannelFrame.destroy();
+            this.addChannelFrame.dispose();
         }
 
-        super.destroy();
+        if (this.hasActiveProfileFrame()) {
+            this.profileFrame.dispose();
+        }
+
+        this.dispose();
     }
 
     /**
