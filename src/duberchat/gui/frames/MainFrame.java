@@ -850,6 +850,7 @@ public class MainFrame extends DynamicFrame {
         }
 
         this.dispose();
+        System.exit(0);
     }
 
     /**
