@@ -641,13 +641,15 @@ public class MainFrame extends DynamicFrame {
      */
     private synchronized void reloadUsers() {
         userPanel.removeAll();
+        // Update channel config panel buttons
+        channelConfigPanel.removeAll();
         
         if (client.getCurrentChannel() == null) {
+            channelConfigPanel.add(addFriendButton);
+            channelConfigPanel.add(friendsLabel);
             return;
         }
 
-        // Update channel config panel buttons
-        channelConfigPanel.removeAll();
         channelConfigPanel.add(leaveChannelButton);
         channelConfigPanel.add(addUserButton);
         if (client.getCurrentChannel().getAdminUsers().contains(client.getUser())) {
