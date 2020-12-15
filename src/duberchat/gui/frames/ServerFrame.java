@@ -1,9 +1,13 @@
 package duberchat.gui.frames;
 
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.Dimension;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 
-import java.awt.*;
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
 
 @SuppressWarnings("serial")
 public class ServerFrame extends JFrame {

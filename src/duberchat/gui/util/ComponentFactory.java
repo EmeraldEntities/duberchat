@@ -1,17 +1,27 @@
 package duberchat.gui.util;
 
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.event.ActionListener;
+
+import javax.swing.JTextField;
+import javax.swing.JCheckBox;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JPasswordField;
+import javax.swing.JLabel;
+import javax.swing.JComboBox;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.DocumentFilter;
 import javax.imageio.ImageIO;
 
 import java.awt.image.BufferedImage;
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 
-import java.awt.*;
 
 /**
  * The {@code ComponentFactory} class is a static factory class designed to
