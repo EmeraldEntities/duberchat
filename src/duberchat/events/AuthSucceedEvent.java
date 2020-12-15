@@ -23,8 +23,11 @@ import java.util.HashMap;
 public class AuthSucceedEvent extends AuthEvent {
     static final long serialVersionUID = 1L;
 
+    /** The user whose authentication has succeeded. */
     protected User user;
+    /** The channels of the user associated with this event. */
     protected HashMap<Integer, Channel> channels;
+    /** The friends of the user associatd with this event. */
     protected HashMap<String, User> friends;
 
     /**

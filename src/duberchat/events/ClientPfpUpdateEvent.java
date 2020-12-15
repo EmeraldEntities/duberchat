@@ -21,7 +21,9 @@ import javax.imageio.ImageIO;
  */
 public class ClientPfpUpdateEvent extends ClientProfileUpdateEvent {
     static final long serialVersionUID = 1L;
+    /** The new profile picture associated with this event. */
     protected transient BufferedImage newPfp;
+    /** The format of the profile picture associated with this event. */
     protected String pfpFormat;
 
     /**

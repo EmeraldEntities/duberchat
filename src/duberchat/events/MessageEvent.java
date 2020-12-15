@@ -21,6 +21,7 @@ import duberchat.chatutil.Message;
 public abstract class MessageEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
 
+    /** The message associated with the event. */
     protected Message message;
 
     /**

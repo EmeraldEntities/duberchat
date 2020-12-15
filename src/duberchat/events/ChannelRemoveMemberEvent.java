@@ -19,6 +19,8 @@ package duberchat.events;
  */
 public class ChannelRemoveMemberEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
+
+    /** The username of the user being removed. */
     private String username;
 
     /**

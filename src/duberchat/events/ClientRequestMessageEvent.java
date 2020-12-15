@@ -34,8 +34,11 @@ import duberchat.chatutil.Message;
 public class ClientRequestMessageEvent extends ClientEvent {
     static final long serialVersionUID = 1L;
 
+    /** The message ID acting as a marker for where new messages should start. */
     protected int startMsgId;
+    /** The ID of the channel associated with this event. */
     protected int channelId;
+    /** The new message block retrieved through this event. */
     protected ArrayList<Message> newMessageBlock;
 
     /**

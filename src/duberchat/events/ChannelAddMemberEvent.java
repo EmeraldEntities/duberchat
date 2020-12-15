@@ -21,8 +21,12 @@ import duberchat.chatutil.User;
  */
 public class ChannelAddMemberEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
+
+    /** The usrname of the user being added. */
     protected String newUserUsername;
+    /** The user associated with this event. */
     protected User newUser;
+    /** The channel associated with this event. */
     protected Channel newChannel;
     
     /**

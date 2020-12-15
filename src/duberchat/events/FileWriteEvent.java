@@ -13,7 +13,9 @@ package duberchat.events;
  * @author Paula Yuan
  */
 public class FileWriteEvent {
+  /** The object that is being written/needs to be written. */
   private Object toWrite;
+  /** The file path dictating where to write the object to. */
   private String filePath;
 
   /**

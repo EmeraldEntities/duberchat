@@ -50,7 +50,17 @@ import duberchat.events.SerializableEvent;
 import duberchat.gui.frames.ServerFrame;
 
 import duberchat.handlers.Handleable;
-import duberchat.handlers.server.*;
+import duberchat.handlers.server.ServerChannelAddMemberHandler;
+import duberchat.handlers.server.ServerChannelCreateHandler;
+import duberchat.handlers.server.ServerChannelDeleteHandler;
+import duberchat.handlers.server.ServerChannelRemoveMemberHandler;
+import duberchat.handlers.server.ServerFriendHandler;
+import duberchat.handlers.server.ServerHierarchyHandler;
+import duberchat.handlers.server.ServerMessageDeleteHandler;
+import duberchat.handlers.server.ServerMessageEditHandler;
+import duberchat.handlers.server.ServerMessageSentHandler;
+import duberchat.handlers.server.ServerProfileUpdateHandler;
+import duberchat.handlers.server.ServerRequestMessageHandler;
 
 /**
  * This is the ChatServer class, a server that manages Duber Chat.
@@ -61,23 +71,36 @@ import duberchat.handlers.server.*;
  * <p>
  * 2020-12-03
  * 
- * @since 0.1
- * @version 0.1
+ * @since 1.00
+ * @version 1.00
  * @author Mr. Mangat, Paula Yuan
  */
 public class ChatServer {
-    ServerSocket serverSock;// server socket for connection
-    static boolean running = true; // controls if the server is accepting clients
-    private HashMap<Integer, Channel> channels; // channel id to all channels
+    /** The server socket for connction. */
+    ServerSocket serverSock;
+    /** Controls whether the server is accepting clients. */
+    static boolean running = true; 
+    /** Maps channel ids, which identify channels, to the actual channls. */
+    private HashMap<Integer, Channel> channels; 
+    /** Represents the total number of channels created, used for channel id. */
     private int numChannelsCreated;
-    private ConcurrentHashMap<User, ConnectionHandler> curUsers; // map of all the online users to connection handler
-                                                                 // runnables
-    private ConcurrentHashMap<String, User> allUsers; // map of all the usernames to their users
+    /** Keeps track of currently connected users. */
+    private ConcurrentHashMap<User, ConnectionHandler> curUsers; 
+    /** Keeps track of all users stored in the system. */
+    private ConcurrentHashMap<String, User> allUsers; 
+
+    /** Queue to organize events that need to be processed. */
     private LinkedBlockingQueue<SerializableEvent> eventQueue;
+    /** Queue to organize file writing events. */
     private LinkedBlockingQueue<FileWriteEvent> fileWriteQueue;
+    /** Queue to organize file writing regarding images. */
     private LinkedBlockingQueue<FileWriteEvent> imageWriteQueue;
+    /** Keeps track of event handlers and the events they handle. */
     private HashMap<Class<? extends SerializableEvent>, Handleable> eventHandlers;
-    private HashMap<String, String> textConversions; // For text commands or emojis
+
+    /** Keeps track of text commands and emojis and what commands map to what. */
+    private HashMap<String, String> textConversions; 
+    /** The GUI associated with the server. */
     private ServerFrame serverFrame;
 
     public ChatServer() {
@@ -158,10 +181,6 @@ public class ChatServer {
         }
         this.serverFrame.getTextArea().append("User and channel preloading completed.\n");
 
-        this.serverFrame.getTextArea().append("Waiting for a client connection..\n");
-
-        Socket client = null; // hold the client connection
-
         // start thread for normal file writing
         Thread fileWriteThread = new Thread(new Runnable() {
             public void run() {
@@ -234,8 +253,11 @@ public class ChatServer {
         this.serverFrame.getTextArea().append("Started event handler thread." + "\n");
         eventsThread.start();
 
+        // start accepting client connections
+        this.serverFrame.getTextArea().append("Waiting for a client connection..\n");
+        Socket client = null; // hold the client connection
         try {
-            serverSock = new ServerSocket(5000); // assigns an port to the server
+            this.serverSock = new ServerSocket(5000); // assigns an port to the server
             while (running) { // this loops to accept multiple clients
                 client = serverSock.accept(); // wait for connection
                 this.serverFrame.getTextArea().append("Client connected\n");
@@ -413,6 +435,14 @@ public class ChatServer {
             }
         } // end of run()
 
+        /**
+         * Processs user login based on whether they are a new user or not, retrieves
+         * all necessary information, ensures the server copy of the user is updated,
+         * and sends back the appropriate events to all relevant users.
+         * <p>
+         * 
+         * @param event The login event to handle.
+         */
         public void handleLogin(ClientLoginEvent event) {
             String username = event.getUsername();
             long password = event.getHashedPassword();
@@ -464,7 +494,7 @@ public class ChatServer {
 
                 user.setStatus(User.ONLINE);
                 fileWriteQueue.add(new FileWriteEvent(user, "data/users/" + username));
-                curUsers.put(user, this);
+                ChatServer.this.curUsers.put(user, this);
 
                 // update channel files and all the users in those channels regarding this user's login
                 HashMap<Integer, Channel> userChannels = new HashMap<>();
@@ -475,14 +505,12 @@ public class ChatServer {
                     int id = itr.next();
                     Channel curChannel = channels.get(id);
 
-                    Iterator<User> iterator = curChannel.getUsers().values().iterator();
-                    while (iterator.hasNext()) {
-                        User member = iterator.next();
-                        if (!curUsers.containsKey(member) || notifiedAlready.contains(member)) {
+                    for (User member : curChannel.getUsers().values()) {
+                        if (!ChatServer.this.curUsers.containsKey(member) || notifiedAlready.contains(member)) {
                             continue;
                         } 
-                        ObjectOutputStream userOut = curUsers.get(member).getOutputStream();
-                        userOut.writeObject(new ClientStatusUpdateEvent(user.getUsername(), User.ONLINE));
+                        ObjectOutputStream userOut = ChatServer.this.curUsers.get(member).getOutputStream();
+                        userOut.writeObject(new ClientStatusUpdateEvent(username, User.ONLINE));
                         userOut.flush();
                         userOut.reset();
                         notifiedAlready.add(member);
@@ -497,12 +525,13 @@ public class ChatServer {
                     Channel correctedChannel = new Channel(curChannel);
 
                     // Set the user as online in every channel
-                    correctedChannel.getUsers().get(user.getUsername()).setStatus(User.ONLINE);
+                    // TODO: CHECK IF THIS IS NECESSARY
+                    //correctedChannel.getUsers().get(user.getUsername()).setStatus(User.ONLINE);
                     correctedChannel.setMessages(messageBlock);
                     userChannels.put(id, correctedChannel);
                 }
 
-                // retrieve the friends list
+                // retrieve the friends list and update all friends regarding this user's login.
                 HashMap<String, User> friendsMap = new HashMap<>();
                 Iterator<String> friendsItr = user.getFriends().iterator();
                 while (friendsItr.hasNext()) {
@@ -511,6 +540,10 @@ public class ChatServer {
                     // Theoretically, the friend should never be null, but better safe than sorry.
                     if (friend != null) {
                         friendsMap.put(friendUsername, friend);
+                        if (ChatServer.this.curUsers.containsKey(friend)) {
+                            ObjectOutputStream friendOut = ChatServer.this.curUsers.get(friend).getOutputStream();
+                            friendOut.writeObject(new ClientStatusUpdateEvent(username, User.ONLINE));
+                        }
                     }
                 }
                 ChatServer.this.serverFrame.getTextArea().append(username + "'s authentication succeded\n");
@@ -523,10 +556,21 @@ public class ChatServer {
             }
         }
 
+        /**
+         * Retrieves the outputstream associated with this client.
+         * 
+         * @return ObjectOutputStream, the associated outputstream.
+         */
         public ObjectOutputStream getOutputStream() {
             return this.output;
         }
 
+        /**
+         * Sets whether this client is running or not, and as such, whether the server
+         * should continue listening for events or close down the thread.
+         * 
+         * @return BufferedImage, the profile picture.
+         */
         public void setRunning(boolean newState) {
             this.running = newState;
         }

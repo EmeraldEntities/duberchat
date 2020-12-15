@@ -22,8 +22,12 @@ import duberchat.chatutil.Channel;
  */
 public class ChannelCreateEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
+
+    /** The name of the channel being created. */
     protected String channelName;
+    /** A set of all usernames of users that will be in this channel. */
     protected HashSet<String> usernames;
+    /** The channel associated with this event. */
     protected Channel newChannel;
 
     /**

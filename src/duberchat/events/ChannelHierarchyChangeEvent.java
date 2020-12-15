@@ -18,6 +18,8 @@ package duberchat.events;
  */
 public class ChannelHierarchyChangeEvent extends ChannelEvent {
     static final long serialVersionUID = 1L;
+
+    /** The username of the user being promoted/demoted. */
     private String username;
 
     /**

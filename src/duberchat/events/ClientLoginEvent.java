@@ -28,8 +28,11 @@ package duberchat.events;
 public class ClientLoginEvent extends ClientEvent {
     static final long serialVersionUID = 1L;
 
+    /** Determines whther this is a new user or not. */
     protected boolean isNewUser;
+    /** The username of the user logging in. */
     protected String username;
+    /** The hashed password associated with this event. */
     protected long hashedPassword;
 
     /**

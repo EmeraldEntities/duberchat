@@ -14,6 +14,7 @@ package duberchat.events;
 public class FriendEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
 
+    /** The username of the friend associated with this event. */
     protected String friendUsername;
 
     /**

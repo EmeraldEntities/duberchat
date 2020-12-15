@@ -18,6 +18,8 @@ package duberchat.events;
  */
 public abstract class ChannelEvent extends SerializableEvent {
     static final long serialVersionUID = 1L;
+
+    /** The id of the associated channel. */
     protected int associatedChannel;
 
     /**

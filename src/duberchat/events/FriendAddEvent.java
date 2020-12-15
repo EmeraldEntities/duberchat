@@ -13,6 +13,8 @@ import duberchat.chatutil.User;
  */
 public class FriendAddEvent extends FriendEvent {
     static final long serialVersionUID = 1L;
+
+    /** The friend user associated with this event. */
     protected User friend;
 
     /**
