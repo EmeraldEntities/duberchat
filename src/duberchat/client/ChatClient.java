@@ -568,10 +568,6 @@ public class ChatClient {
      */
     private void closeEverything() throws IOException {
         if (this.hasMainMenuFrame()) {
-            if (this.mainMenu.hasActiveProfileFrame()) {
-                this.mainMenu.getProfileFrame().destroy();
-            }
-
             if (this.mainMenu.hasActiveChannelCreateFrame()) {
                 this.mainMenu.getChannelCreateFrame().destroy();
             }
@@ -592,7 +588,7 @@ public class ChatClient {
      * safe shutdown, (eg. the client {@link #start() start loop} to detect events
      * has not begun), use {@link #forceLogout()}
      */
-    public void initiateShutdown() {
+    public synchronized void initiateShutdown() {
         this.logout();
     }
 
@@ -602,7 +598,7 @@ public class ChatClient {
      * This method will ensure that all queued outgoing events are properly served
      * and that all connections are closed before closing.
      */
-    private void logout() {
+    private synchronized void logout() {
         if (!currentlyLoggingIn && !hasClosed) {
             outgoingEvents.offer(new ClientStatusUpdateEvent(this.user.getUsername(), 0));
         }
@@ -621,7 +617,7 @@ public class ChatClient {
      * If the program has executed correctly and the {@link #start()} loop has not
      * failed, use {@link #initiateShutdown()} for a safer shutdown method.
      */
-    private void forceLogout() {
+    private synchronized void forceLogout() {
         try {
             this.closeEverything();
         } catch (IOException e) {
