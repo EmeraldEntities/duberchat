@@ -171,7 +171,7 @@ public class FriendPanel extends JPanel {
     private void initializeChatting() {
         String friendName = friend.getUsername();
 
-        String newChannelName = "@" + friend.getUsername();
+        String newChannelName = client.getUser().getUsername() + " - " + friend.getUsername();
         String clientUsername = client.getUser().getUsername();
         client.offerEvent(new ChannelCreateEvent(clientUsername, -1, newChannelName, friendName, null));
     }

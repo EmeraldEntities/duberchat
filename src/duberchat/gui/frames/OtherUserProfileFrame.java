@@ -284,7 +284,7 @@ public class OtherUserProfileFrame extends DynamicGridbagFrame {
             }
 
             String clientUsername = client.getUser().getUsername();
-            String newChannelName = "@" + otherUser.getUsername();
+            String newChannelName = client.getUser().getUsername() + " - " + otherUser.getUsername();
             client.offerEvent(
                     new ChannelCreateEvent(clientUsername, -1, newChannelName, otherUser.getUsername(), null));
 

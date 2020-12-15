@@ -258,8 +258,7 @@ public class ProfileFrame extends DynamicGridbagFrame {
         JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int option = fc.showDialog(ProfileFrame.this, "Upload");
-        fc.setFileFilter(new FileNameExtensionFilter("Image Files", ImageIO.getReaderFileSuffixes()));
-        fc.setAcceptAllFileFilterUsed(false);
+        fc.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "jpeg"));
 
         if (option == JFileChooser.APPROVE_OPTION) {
             try {

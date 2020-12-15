@@ -597,6 +597,8 @@ public class MainFrame extends DynamicFrame {
      * Only significant if the profile picture has changed.
      */
     private synchronized void reloadProfile() {
+        String profileText = this.client.getUser().getUsername() + " (" + this.client.getUser().getStringStatus() + ")";
+        profileLabel.setText(profileText);
         profileButton.setIcon(new ImageIcon(client.getUser().getPfp().getScaledInstance(48, 48, Image.SCALE_SMOOTH)));
     }
 

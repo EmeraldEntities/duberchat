@@ -137,7 +137,9 @@ public class ChatClient {
 
                 this.eventHandlers.get(newEvent.getClass()).handleEvent(newEvent);
             } catch (EOFException e) {
-                System.out.println("SYSTEM: End of stream.");
+                System.out.println("SYSTEM: End of input stream.");
+                this.running = false;
+                this.forceLogout();
             } catch (IOException e) {
                 System.out.println("SYSTEM: Failed to obtain an event from the server.");
             } catch (ClassNotFoundException e) {
@@ -316,9 +318,8 @@ public class ChatClient {
                                 output.reset();
                                 System.out.println("SYSTEM: sent event.");
                             } catch (EOFException e) {
-                                System.out.println("SYSTEM: End of stream.");
-                                running = false;
-                                ChatClient.this.forceLogout();
+                                System.out.println("SYSTEM: End of output stream.");
+                                forceLogout();
                             } catch (InterruptedException e) {
                                 System.out.println("SYSTEM: queue was interrupted while blocking.");
                             } catch (IOException e) {
@@ -548,21 +549,7 @@ public class ChatClient {
                     this.running = false;
                     try {
                         // Close all JFrames
-                        if (this.hasMainMenuFrame()) {
-                            if (this.mainMenu.hasActiveProfileFrame()) {
-                                this.mainMenu.getProfileFrame().destroy();
-                            }
-
-                            if (this.mainMenu.hasActiveChannelCreateFrame()) {
-                                this.mainMenu.getChannelCreateFrame().destroy();
-                            }
-
-                            this.mainMenu.destroy();
-                        }
-
-                        input.close();
-                        output.close();
-                        servSocket.close();
+                        closeEverything();
                         System.out.println("SYSTEM: closed socket.");
                     } catch (IOException e) {
                         System.out.println("SYSTEM: Failed to close socket.");
@@ -575,6 +562,29 @@ public class ChatClient {
     }
 
     /**
+     * Attempts to close all sockets and all frames.
+     * 
+     * @throws IOException if closing the sockets/frames throws an I/O error.
+     */
+    private void closeEverything() throws IOException {
+        if (this.hasMainMenuFrame()) {
+            if (this.mainMenu.hasActiveProfileFrame()) {
+                this.mainMenu.getProfileFrame().destroy();
+            }
+
+            if (this.mainMenu.hasActiveChannelCreateFrame()) {
+                this.mainMenu.getChannelCreateFrame().destroy();
+            }
+
+            this.mainMenu.destroy();
+        }
+
+        input.close();
+        output.close();
+        servSocket.close();
+    }
+
+    /**
      * Starts the client shutdown process.
      * <p>
      * This method should be used to signal that this client should begin shutting
@@ -582,7 +592,7 @@ public class ChatClient {
      * safe shutdown, (eg. the client {@link #start() start loop} to detect events
      * has not begun), use {@link #forceLogout()}
      */
-    public synchronized void initiateShutdown() {
+    public void initiateShutdown() {
         this.logout();
     }
 
@@ -592,7 +602,7 @@ public class ChatClient {
      * This method will ensure that all queued outgoing events are properly served
      * and that all connections are closed before closing.
      */
-    private synchronized void logout() {
+    private void logout() {
         if (!currentlyLoggingIn && !hasClosed) {
             outgoingEvents.offer(new ClientStatusUpdateEvent(this.user.getUsername(), 0));
         }
@@ -603,16 +613,20 @@ public class ChatClient {
     /**
      * Closes this client.
      * <p>
-     * This method ensures that all outgoing queued events are properly served and
-     * that all connections are closed, and closes the system from within this
-     * method. Use this method if the {@link #start()} loop has failed, and a safe
-     * shutdown from that method is not guaranteed.
+     * This method does NOT guarantee that outgoing events are served. This method
+     * is designed to close everything and then exit the system. Use this method if
+     * the {@link #start()} loop has failed, and a safe shutdown from that method is
+     * not guaranteed.
      * <p>
      * If the program has executed correctly and the {@link #start()} loop has not
      * failed, use {@link #initiateShutdown()} for a safer shutdown method.
      */
-    public synchronized void forceLogout() {
-        this.logout();
+    private void forceLogout() {
+        try {
+            this.closeEverything();
+        } catch (IOException e) {
+            System.out.println("SYSTEM: Failed to close socket.");
+        }
 
         System.exit(0);
     }

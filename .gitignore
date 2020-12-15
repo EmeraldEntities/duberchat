@@ -1,4 +1,3 @@
-*.txt
 src/**/*.class
 *.java~
 *.swp
