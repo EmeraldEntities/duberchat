@@ -134,19 +134,16 @@ public class ChatServer {
 
         // set up text conversions / emojis
         this.textConversions = new HashMap<>();
-        this.textConversions.put("/shrug", "¯\\_(ツ)_/¯");
-        this.textConversions.put("/tableflip", "(╯°□°）╯︵ ┻━┻");
-        this.textConversions.put("/unflip", "┬─┬ ノ( ゜-゜ノ)");
-        this.textConversions.put(":)", "🙂");
-        this.textConversions.put(":D", "😄");
-        this.textConversions.put(":P", "😛");
-        this.textConversions.put(":(", "😦");
-        this.textConversions.put(";)", "😉");
-        this.textConversions.put(":O", "😮");
-        this.textConversions.put(":'(", "😢");
-        this.textConversions.put(">:(", "😠");
-        this.textConversions.put(":|", "😐");
-        this.textConversions.put("<3", "❤");
+        this.textConversions.put(":)", "\uD83D\uDE42");
+        this.textConversions.put(":D", "\uD83D\uDE04");
+        this.textConversions.put(":P", "\uD83D\uDE1B");
+        this.textConversions.put(":(", "\uD83D\uDE26");
+        this.textConversions.put(";)", "\uD83D\uDE09");
+        this.textConversions.put(":O", "\uD83D\uDE2E");
+        this.textConversions.put(":'(", "\uD83D\uDE22");
+        this.textConversions.put(">:(", "\uD83D\uDE20");
+        this.textConversions.put(":|", "\uD83D\uDE10");
+        this.textConversions.put("<3", "\u2764");
 
         this.serverFrame = new ServerFrame();
     }
