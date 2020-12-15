@@ -71,10 +71,10 @@ public class ServerFriendHandler implements Handleable {
         userOutput.reset();
         server.getServerFrame().getTextArea()
             .append(userUsername + " tried to add an invalid friend. Request failed event sent.\n");
-        return;
       } catch (IOException e) {
         e.printStackTrace();
       }
+      return;
     }
 
     // update the friends sets depending on whether a friend is being added or removed
