@@ -884,8 +884,6 @@ public class MainFrame extends DynamicFrame {
         Message msg = new Message(typeField.getText(), clientUsername, -1, timestamp, channelId);
         client.offerEvent(new MessageSentEvent(clientUsername, msg));
         typeField.setText("");
-
-        System.out.println("SYSTEM: Sent message " + typeField.getText());
     }
 
     /**

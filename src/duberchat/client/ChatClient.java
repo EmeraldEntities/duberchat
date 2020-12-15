@@ -133,15 +133,13 @@ public class ChatClient {
             // a blocking call
             try {
                 SerializableEvent newEvent = (SerializableEvent) input.readObject();
-                System.out.println("SYSTEM: Handling event " + newEvent);
 
                 this.eventHandlers.get(newEvent.getClass()).handleEvent(newEvent);
             } catch (EOFException e) {
                 System.out.println("SYSTEM: End of input stream.");
-                // this.running = false;
-                // this.forceLogout();
             } catch (IOException e) {
                 System.out.println("SYSTEM: Failed to obtain an event from the server.");
+                this.forceLogout(1);
             } catch (ClassNotFoundException e) {
                 System.out.println("SYSTEM: Attempted to handle unknown event.");
             }
@@ -245,6 +243,15 @@ public class ChatClient {
                 }
             } catch (IOException e) {
                 System.out.println("SYSTEM: A connection issue occured.");
+                if (this.servSocket != null) {
+                    try {
+                        this.closeEverything();
+                    } catch (IOException e2) {
+                        System.out.println("SYSTEM: Failed to close everything.");
+                    }
+                }
+
+                System.exit(1);
             } catch (ClassNotFoundException e) {
                 System.out.println("SYSTEM: An error occured while reading from the server.");
             }
@@ -311,15 +318,12 @@ public class ChatClient {
                             try {
                                 // A blocking call
                                 SerializableEvent event = outgoingEvents.take();
-                                System.out.println("SYSTEM: logged event in queue: " + event);
 
                                 output.writeObject(event);
                                 output.flush();
                                 output.reset();
-                                System.out.println("SYSTEM: sent event.");
                             } catch (EOFException e) {
                                 System.out.println("SYSTEM: End of output stream.");
-                                // forceLogout();
                             } catch (InterruptedException e) {
                                 System.out.println("SYSTEM: queue was interrupted while blocking.");
                             } catch (IOException e) {
@@ -523,7 +527,7 @@ public class ChatClient {
                     }
 
                     FileWriter writer = new FileWriter(ipSettings);
-                    writer.write(ip + "\n" + Integer.toString(port) + "\n"); // TODO: replace with buffered?
+                    writer.write(ip + "\n" + Integer.toString(port) + "\n");
                     writer.close();
 
                     System.out.println("SYSTEM: IP settings saved!.");
@@ -612,14 +616,16 @@ public class ChatClient {
      * <p>
      * If the program has executed correctly and the {@link #start()} loop has not
      * failed, use {@link #initiateShutdown()} for a safer shutdown method.
+     * 
+     * @param status the status for the system exit.
      */
-    private synchronized void forceLogout() {
+    public synchronized void forceLogout(int status) {
         try {
             this.closeEverything();
         } catch (IOException e) {
             System.out.println("SYSTEM: Failed to close socket.");
         }
 
-        System.exit(0);
+        System.exit(status);
     }
 }

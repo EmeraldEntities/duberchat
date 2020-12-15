@@ -268,8 +268,6 @@ public class LoginFrame extends DynamicGridbagFrame {
 
         // Make sure user cannot bomb server with connection requests
         alreadySentRequest = true;
-
-        System.out.println("SYSTEM: offered login request.");
     }
 
     /**

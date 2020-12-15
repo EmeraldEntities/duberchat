@@ -525,8 +525,6 @@ public class ChatServer {
                     Channel correctedChannel = new Channel(curChannel);
 
                     // Set the user as online in every channel
-                    // TODO: CHECK IF THIS IS NECESSARY
-                    //correctedChannel.getUsers().get(user.getUsername()).setStatus(User.ONLINE);
                     correctedChannel.setMessages(messageBlock);
                     userChannels.put(id, correctedChannel);
                 }

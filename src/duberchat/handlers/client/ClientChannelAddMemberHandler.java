@@ -44,7 +44,6 @@ public class ClientChannelAddMemberHandler implements Handleable {
 
         if (!this.client.getChannels().containsKey(newChannelId)) {
             // This user is the new user
-            System.out.println(memberEvent.getNewChannel());
             this.client.getChannels().put(newChannelId, memberEvent.getNewChannel());
             this.client.getUser().getChannels().add(newChannelId);
 

@@ -48,13 +48,16 @@ public class ClientRequestFailedHandler implements Handleable {
     public void handleEvent(SerializableEvent event) {
         RequestFailedEvent failedEvent = (RequestFailedEvent) event;
 
+        // Early return, this is a common fail reason and doesn't need a reload.
+        if (failedEvent.getSource() instanceof ClientRequestMessageEvent) {
+            return;
+        }
+
         // Something went wrong with the channel creation
         if (failedEvent.getSource() instanceof ChannelCreateEvent) {
             if (this.client.getMainMenuFrame().hasActiveChannelCreateFrame()) {
                 this.client.getMainMenuFrame().getChannelCreateFrame().reload();
             }
-        } else if (failedEvent.getSource() instanceof ClientRequestMessageEvent) {
-            System.out.println("SYSTEM: No more messages can be requested.");
         } else {
             // just in case, we reload everything
             if (this.client.hasMainMenuFrame()) {

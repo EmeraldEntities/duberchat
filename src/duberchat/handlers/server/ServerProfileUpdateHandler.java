@@ -64,7 +64,7 @@ public class ServerProfileUpdateHandler implements Handleable {
       }
     } else if (newEvent instanceof ClientPfpUpdateEvent) {
       ClientPfpUpdateEvent pfpEvent = (ClientPfpUpdateEvent) newEvent;
-      System.out.println("user pfp: " + user.getPfp() + " event pfp: " + pfpEvent.getNewPfp());
+
       if (!user.pfpEquals(pfpEvent.getNewPfp())) {
         user.setPfp(pfpEvent.getNewPfp());
         user.setPfpFormat(pfpEvent.getPfpFormat());

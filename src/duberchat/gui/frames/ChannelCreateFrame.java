@@ -10,7 +10,6 @@ import java.awt.Color;
 import java.awt.Insets;
 
 import java.util.HashSet;
-import java.util.Arrays;
 
 import javax.swing.JPanel;
 import javax.swing.JFrame;
@@ -177,7 +176,6 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         String channelName = nameField.getText();
         String[] users = usersField.getText().replace("@", "").split(", *");
 
-        System.out.println(Arrays.toString(users));
         HashSet<String> usernames = new HashSet<>();
 
         for (String user : users) {
@@ -188,6 +186,5 @@ public class ChannelCreateFrame extends DynamicGridbagFrame {
         client.offerEvent(new ChannelCreateEvent(clientUsername, -1, channelName, usernames, null));
 
         alreadySentRequest = true;
-        System.out.println("SYSTEM: Created new channel event.");
     }
 }

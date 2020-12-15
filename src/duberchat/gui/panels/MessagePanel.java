@@ -189,7 +189,6 @@ public class MessagePanel extends JPanel {
         new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         initializeEditingMessage();
-                        System.out.println("Editing!");
                     }
                 });
         editButton.setVisible(false);
