@@ -557,29 +557,11 @@ public class MainFrame extends DynamicFrame {
             typeField.setEditable(true);
             typeField.setText("");
             channelIndicator.setText("Channel: " + client.getCurrentChannel().getChannelName());
-
-            channelConfigPanel.remove(friendsLabel);
-            channelConfigPanel.remove(addFriendButton);
-
-            channelConfigPanel.add(leaveChannelButton);
-            channelConfigPanel.add(addUserButton);
-            if (client.getCurrentChannel().getAdminUsers().contains(client.getUser())) {
-                channelConfigPanel.add(deleteUserButton);
-                channelConfigPanel.add(deleteChannelButton);
-            }
         } else {
             // Remove friends stuff and add channel specific components
             typeField.setText("Messaging Disabled...");
             typeField.setEditable(false);
             channelIndicator.setText("No channel selected.");
-
-            channelConfigPanel.remove(leaveChannelButton);
-            channelConfigPanel.remove(addUserButton);
-            channelConfigPanel.remove(deleteUserButton);
-            channelConfigPanel.remove(deleteChannelButton);
-
-            channelConfigPanel.add(friendsLabel);
-            channelConfigPanel.add(addFriendButton);
         }
 
         this.reloadMessages();
@@ -659,9 +641,18 @@ public class MainFrame extends DynamicFrame {
      */
     private synchronized void reloadUsers() {
         userPanel.removeAll();
-
+        
         if (client.getCurrentChannel() == null) {
             return;
+        }
+
+        // Update channel config panel buttons
+        channelConfigPanel.removeAll();
+        channelConfigPanel.add(leaveChannelButton);
+        channelConfigPanel.add(addUserButton);
+        if (client.getCurrentChannel().getAdminUsers().contains(client.getUser())) {
+            channelConfigPanel.add(deleteUserButton);
+            channelConfigPanel.add(deleteChannelButton);
         }
 
         Channel curChannel = client.getCurrentChannel();
