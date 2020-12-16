@@ -1,8 +1,6 @@
 package duberchat.gui.frames;
 
 import java.awt.Dimension;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowAdapter;
 
 import javax.swing.JPanel;
 import javax.swing.ImageIcon;
@@ -37,12 +35,7 @@ public class ServerFrame extends JFrame {
    * A constructor for the {@code ServerFrame}.
    */
   public ServerFrame() {
-    this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-    this.addWindowListener(new WindowAdapter() {
-        public void windowClosing(WindowEvent e) {
-            setExtendedState(JFrame.ICONIFIED);
-        }
-    });
+      this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     
     this.mainPanel = new JPanel();
     this.textArea = new JTextArea();

@@ -100,6 +100,8 @@ public class ChatClient {
     private boolean currentlyLoggingIn = true;
     /** Whether this client has closed or not. */
     private boolean hasClosed = false;
+    /** Whether this output should accept events. */
+    private boolean acceptEvents = true;
 
     /** A blocking queue for outgoing events to be sent. */
     private LinkedBlockingQueue<SerializableEvent> outgoingEvents;
@@ -137,6 +139,7 @@ public class ChatClient {
                 this.eventHandlers.get(newEvent.getClass()).handleEvent(newEvent);
             } catch (EOFException e) {
                 System.out.println("SYSTEM: End of input stream.");
+                this.forceLogout(0);
             } catch (IOException e) {
                 System.out.println("SYSTEM: Failed to obtain an event from the server.");
                 this.forceLogout(1);
@@ -313,7 +316,6 @@ public class ChatClient {
         Thread outgoingEventWorker = new Thread(new Runnable() {
             public synchronized void run() {
                 while (running) {
-                    synchronized (outgoingEvents) {
                         if (servSocket != null) {
                             try {
                                 // A blocking call
@@ -330,7 +332,6 @@ public class ChatClient {
                                 System.out.println("SYSTEM: could not send an event.");
                             }
                         }
-                    }
                 }
             }
         });
@@ -508,7 +509,9 @@ public class ChatClient {
      * @param event the event to be enqueued.
      */
     public synchronized void offerEvent(SerializableEvent event) {
-        this.outgoingEvents.offer(event);
+        if (this.acceptEvents) {
+            this.outgoingEvents.offer(event);
+        }
     }
 
     /**
@@ -545,21 +548,19 @@ public class ChatClient {
      * This method should be used whenever this client must be closed, and will
      * ensure that any to-be-outgoing events will be served before closing.
      */
-    private synchronized void closeSafely() {
+    private void closeSafely() {
         while (!hasClosed) {
             // Make sure all outgoing events are served
-            synchronized (outgoingEvents) {
-                if (this.outgoingEvents.peek() == null) {
-                    this.running = false;
-                    try {
-                        // Close all JFrames
-                        closeEverything();
-                        System.out.println("SYSTEM: closed socket.");
-                    } catch (IOException e) {
-                        System.out.println("SYSTEM: Failed to close socket.");
-                    }
+            if (this.outgoingEvents.peek() == null) {
+                this.running = false;
+                hasClosed = true;
 
-                    hasClosed = true;
+                try {
+                    // Close all JFrames
+                    closeEverything();
+                    System.out.println("SYSTEM: closed socket.");
+                } catch (IOException e) {
+                    System.out.println("SYSTEM: Failed to close socket.");
                 }
             }
         }
@@ -588,7 +589,8 @@ public class ChatClient {
      * safe shutdown, (eg. the client {@link #start() start loop} to detect events
      * has not begun), use {@link #forceLogout()}
      */
-    public synchronized void initiateShutdown() {
+    public void initiateShutdown() {
+        this.acceptEvents = false;
         this.logout();
     }
 
@@ -598,12 +600,9 @@ public class ChatClient {
      * This method will ensure that all queued outgoing events are properly served
      * and that all connections are closed before closing.
      */
-    private synchronized void logout() {
-        if (!currentlyLoggingIn && !hasClosed) {
-            outgoingEvents.offer(new ClientStatusUpdateEvent(this.user.getUsername(), 0));
-        }
-    
+    private void logout() {
         this.closeSafely();
+        System.exit(0);
     }
 
     /**
@@ -619,7 +618,8 @@ public class ChatClient {
      * 
      * @param status the status for the system exit.
      */
-    public synchronized void forceLogout(int status) {
+    public void forceLogout(int status) {
+        this.acceptEvents = false;
         try {
             this.closeEverything();
         } catch (IOException e) {

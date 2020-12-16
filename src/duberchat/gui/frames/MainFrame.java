@@ -645,8 +645,8 @@ public class MainFrame extends DynamicFrame {
         channelConfigPanel.removeAll();
         
         if (client.getCurrentChannel() == null) {
-            channelConfigPanel.add(addFriendButton);
             channelConfigPanel.add(friendsLabel);
+            channelConfigPanel.add(addFriendButton);
             return;
         }
 

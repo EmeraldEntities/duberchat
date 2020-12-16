@@ -399,23 +399,18 @@ public class ChatServer {
 
                     // ClientLoginEvents are handled separately because there may be no user-thread
                     // mapping that can inform the handler of what client to output to.
-                    // ClientStatusUpdateEvents are handled separately if they indicate that the 
-                    // user is logging out, since after this event the handler should not keep 
-                    // looking for events to handle.
                     if (event instanceof ClientLoginEvent) {
                         handleLogin((ClientLoginEvent) event);
                         continue;
-                    } else if (event instanceof ClientStatusUpdateEvent && 
-                               ((ClientStatusUpdateEvent) event).getStatus() == User.OFFLINE) {
-                            eventHandlers.get(ClientStatusUpdateEvent.class).handleEvent(event);
-                            continue;
                     }
                     eventQueue.add(event);
                 } catch (IOException e) {
                     ChatServer.this.serverFrame.getTextArea().append("Failed to receive msg from the client\n");
-                    user.setStatus(User.OFFLINE);
-                    eventHandlers.get(ClientStatusUpdateEvent.class)
-                            .handleEvent(new ClientStatusUpdateEvent(user.getUsername(), User.OFFLINE));
+                    if (user != null) {
+                        user.setStatus(User.OFFLINE);
+                        eventHandlers.get(ClientStatusUpdateEvent.class)
+                                .handleEvent(new ClientStatusUpdateEvent(user.getUsername(), User.OFFLINE));
+                    }
                 } catch (ClassNotFoundException e1) {
                     ChatServer.this.serverFrame.getTextArea().append("Class not found :(\n");
                     e1.printStackTrace();
